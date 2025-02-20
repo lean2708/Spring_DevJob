@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cảm ơn bạn đã đăng ký</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f0f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+            border: 3px solid #213555;
+        }
+        h1 {
+            color: #213555;
+            font-size: 24px;
+        }
+        p {
+            font-size: 16px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .footer {
+            font-size: 12px;
+            color: #666666;
+            margin-top: 20px;
+        }
+        a {
+            color: #213555;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Xin chào <span th:text="${name}"></span>!</h1>
+    <p><strong>Chúng tôi rất vui mừng thông báo rằng bạn đã đăng ký thành công dịch vụ Pro của DevJob!</strong></p>
+    <p>Giờ đây, bạn có thể tận hưởng các tính năng cao cấp như nhận thông báo việc làm hàng ngày, truy cập không giới hạn và nhiều hơn nữa.</p>
+    <p><strong>Thời gian sử dụng dịch vụ Pro của bạn sẽ kéo dài đến: <span th:text="${expiryDate}"></span></strong></p>
+    <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ, hãy liên hệ với chúng tôi.</p>
+
+    <div class="footer">
+        <p>Trân trọng,</p>
+        <p><strong>Đội ngũ DevJob.</strong></p>
+    </div>
+</div>
+</body>
+</html>
