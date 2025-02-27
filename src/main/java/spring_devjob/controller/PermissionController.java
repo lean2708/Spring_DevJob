@@ -73,7 +73,7 @@ public class PermissionController {
                                         @PathVariable long id){
         permissionService.delete(id);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Permission By Id")
                 .result(null)
                 .build();
@@ -84,7 +84,7 @@ public class PermissionController {
                                                    List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         permissionService.deletePermissions(ids);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Permissions")
                 .result(null)
                 .build();

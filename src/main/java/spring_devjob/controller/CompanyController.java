@@ -17,8 +17,6 @@ import spring_devjob.dto.response.JobResponse;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.service.CompanyService;
 import spring_devjob.service.JobService;
-
-import java.security.PublicKey;
 import java.util.List;
 
 @Slf4j
@@ -76,7 +74,7 @@ public class CompanyController {
     public ApiResponse<Void> delete(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1") @PathVariable long id){
         companyService.delete(id);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Company By Id")
                 .result(null)
                 .build();
@@ -87,7 +85,7 @@ public class CompanyController {
                                                  List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         companyService.deleteCompanies(ids);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Deleted Companies")
                 .result(null)
                 .build();

@@ -1,6 +1,9 @@
 package spring_devjob.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -176,11 +179,9 @@ public class SubscriberService {
         return response;
     }
 
-    public SubscriberResponse fetchByEmail(String email){
-        Subscriber subscriberDB = subscriberRepository.findByEmail(email);
-        if(subscriberDB == null){
-            throw new AppException(ErrorCode.USER_NOT_REGISTERED);
-        }
+    public SubscriberResponse fetchById(long id){
+        Subscriber subscriberDB = subscriberRepository.findById(id)
+                .orElseThrow(()->new AppException(ErrorCode.USER_NOT_REGISTERED));
 
         List<String> nameSkillsList = new ArrayList<>();
         for(Skill skill : subscriberDB.getSkills()){
@@ -221,13 +222,23 @@ public class SubscriberService {
                 .build();
     }
 
-    public void delete(String email){
-        Subscriber subscriberDB = subscriberRepository.findByEmail(email);
-        if(subscriberDB == null){
-            throw new AppException(ErrorCode.USER_NOT_REGISTERED);
-        }
+    public void delete(long id){
+        Subscriber subscriberDB = subscriberRepository.findById(id)
+                .orElseThrow(()->new AppException(ErrorCode.USER_NOT_REGISTERED));
+
         subscriberRepository.delete(subscriberDB);
     }
+
+    public void deleteSubscribers(List<Long> ids) {
+        List<Subscriber> subscriberList = subscriberRepository.findAllByIdIn(ids);
+
+        if(subscriberList.isEmpty()){
+            throw new AppException(ErrorCode.SUBSCRIBER_NOT_FOUND);
+        }
+
+        subscriberRepository.deleteAllInBatch(subscriberList);
+    }
+
 
     @Scheduled(cron = "0 0 */3 * * *")
     @Async
@@ -248,6 +259,5 @@ public class SubscriberService {
             }
         }
     }
-
 
 }

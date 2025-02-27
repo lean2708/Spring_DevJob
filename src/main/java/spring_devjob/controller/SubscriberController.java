@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,12 +56,12 @@ public class SubscriberController {
                 .build();
     }
 
-    @GetMapping("/subscribers/{email}")
-    public ApiResponse<SubscriberResponse> fetchByEmail(@PathVariable String email){
+    @GetMapping("/subscribers/{id}")
+    public ApiResponse<SubscriberResponse> fetchById(@PathVariable long id){
         return ApiResponse.<SubscriberResponse>builder()
                 .code(HttpStatus.OK.value())
-                .message("Fetch Subscriber By Email")
-                .result(subscriberService.fetchByEmail(email))
+                .message("Fetch Subscriber By Id")
+                .result(subscriberService.fetchById(id))
                 .build();
     }
 
@@ -77,13 +78,25 @@ public class SubscriberController {
                 .build();
     }
 
-    @DeleteMapping("/subscribers/{email}")
-    public ApiResponse<Void> delete(@PathVariable String email){
-        subscriberService.delete(email);
+    @DeleteMapping("/subscribers/{id}")
+    public ApiResponse<Void> delete(@PathVariable long id){
+        subscriberService.delete(id);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
-                .message("Delete Subscriber By Email")
+                .code(HttpStatus.NO_CONTENT.value())
+                .message("Delete Subscriber By Id")
                 .result(null)
                 .build();
     }
+
+    @DeleteMapping("/subscribers")
+    public ApiResponse<Void> deleteSubscribers(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
+                                         List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
+        subscriberService.deleteSubscribers(ids);
+        return ApiResponse.<Void>builder()
+                .code(HttpStatus.NO_CONTENT.value())
+                .message("Delete Subscribers")
+                .result(null)
+                .build();
+    }
+
 }

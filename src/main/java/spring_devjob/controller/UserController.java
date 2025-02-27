@@ -74,7 +74,7 @@ public class UserController {
                                         @PathVariable long id){
         userService.delete(id);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete User By Id")
                 .result(null)
                 .build();
@@ -85,7 +85,7 @@ public class UserController {
                                              List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         userService.deleteUsers(ids);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Users")
                 .result(null)
                 .build();

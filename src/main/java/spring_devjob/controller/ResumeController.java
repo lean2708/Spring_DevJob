@@ -72,7 +72,7 @@ public class ResumeController {
                                         @PathVariable long id){
         resumeService.delete(id);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Resume By Id")
                 .result(null)
                 .build();
@@ -82,7 +82,7 @@ public class ResumeController {
                                                List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         resumeService.deleteResumes(ids);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Resumes")
                 .result(null)
                 .build();

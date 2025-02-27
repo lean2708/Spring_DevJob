@@ -72,7 +72,7 @@ public class RoleController {
                                         @PathVariable long id){
         roleService.delete(id);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Role By Id")
                 .result(null)
                 .build();
@@ -83,7 +83,7 @@ public class RoleController {
                                              List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         roleService.deleteRoles(ids);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Roles")
                 .result(null)
                 .build();

@@ -41,7 +41,8 @@ public enum ErrorCode {
     RESUME_NOT_FOUND(1030, "Không tìm thấy resume nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
     JOB_NOT_FOUND(1031, "Không tìm thấy job nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
     PERMISSION_NOT_FOUND(1032, "Không tìm thấy permission nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
-    ROLE_NOT_FOUND(1033, "Không tìm thấy role nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND)
+    ROLE_NOT_FOUND(1033, "Không tìm thấy role nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
+    SUBSCRIBER_NOT_FOUND(1034, "Không tìm thấy subscriber nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND)
     ;
 
 

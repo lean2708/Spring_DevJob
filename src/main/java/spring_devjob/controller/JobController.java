@@ -76,7 +76,7 @@ public class JobController {
                                         @PathVariable long id){
         jobService.delete(id);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Job By Id")
                 .result(null)
                 .build();
@@ -87,7 +87,7 @@ public class JobController {
                                             List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         jobService.deleteJobs(ids);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Jobs")
                 .result(null)
                 .build();

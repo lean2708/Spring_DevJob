@@ -70,7 +70,7 @@ public class SkillController {
                                         @PathVariable long id){
         skillService.delete(id);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Skill By Id")
                 .result(null)
                 .build();
@@ -80,7 +80,7 @@ public class SkillController {
                                               List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         skillService.deleteSkills(ids);
         return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
+                .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Skills")
                 .result(null)
                 .build();
