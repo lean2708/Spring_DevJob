@@ -14,6 +14,10 @@ cd Spring_DevJob
 - Then, create and configure the **.env** file
 
 ## 2. Docker Guideline
+**Stop and Remove Old Containers:**
+```java
+docker-compose down
+```
 **Build Image**
 ```java
 docker build -t lean2708/spring-devjob:0.0.1 .
