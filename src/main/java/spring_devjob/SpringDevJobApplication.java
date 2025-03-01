@@ -18,11 +18,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class SpringDevJobApplication {
 	public static void main(String[] args) {
 		Dotenv dotenv = Dotenv.configure()
-				.directory("./") // Chỉ định thư mục chứa .env
+				.directory(System.getProperty("user.dir"))
 				.load();
-		// Nạp tất cả biến từ .env vào System Properties
-		dotenv.entries().forEach(entry ->
-				System.setProperty(entry.getKey(), entry.getValue()));
+		dotenv.entries().forEach(
+				entry -> System.setProperty(entry.getKey(), entry.getValue()));
 
 		SpringApplication.run(SpringDevJobApplication.class, args);
 	}
