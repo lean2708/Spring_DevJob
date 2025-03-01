@@ -10,8 +10,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.stereotype.Service;
+import spring_devjob.constants.TokenType;
+import spring_devjob.dto.request.ForgotPasswordRequest;
 import spring_devjob.dto.request.ResetPasswordRequest;
 import spring_devjob.entity.ForgotPasswordToken;
+import spring_devjob.entity.Token;
 import spring_devjob.entity.User;
 import spring_devjob.entity.VerificationCodeEntity;
 import spring_devjob.exception.AppException;
@@ -23,6 +26,7 @@ import spring_devjob.repository.VerificationCodeRepository;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -34,13 +38,12 @@ public class ForgotPasswordService {
     private final PasswordEncoder passwordEncoder;
     private final ForgotPasswordTokenRepository forgotPasswordTokenRepository;
     private final TokenService tokenService;
-    private final AuthService authService;
 
-    @Value("${jwt.accessToken.expiry-in-minutes}")
-    protected long tokenExpiration;
+    @Value("${jwt.reset.expiry-in-minutes}")
+    protected long resetTokenExpiration;
 
-    public VerificationCodeEntity forgotPassword(String email){
-        User user = userRepository.findByEmail(email).orElseThrow(
+    public VerificationCodeEntity forgotPassword(ForgotPasswordRequest request){
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         String verificationCode = generateVerificationCode();
@@ -55,11 +58,23 @@ public class ForgotPasswordService {
                     .expirationTime(expirationTimeInMinutes)
                     .build();
 
-            return verificationCodeRepository.save(verificationCodeEntity);
+            return saveVerificationCode(verificationCodeEntity);
         } catch (Exception e) {
             log.error("Lỗi gửi email: ", e);
             throw new AppException(ErrorCode.EMAIL_SEND_FAILED);
         }
+    }
+
+    private VerificationCodeEntity saveVerificationCode(VerificationCodeEntity code){
+        Optional<VerificationCodeEntity> entityOptional = verificationCodeRepository.findByEmail(code.getEmail());
+        if(entityOptional.isEmpty()){
+            return verificationCodeRepository.save(code);
+        }
+        VerificationCodeEntity entity = entityOptional.get();
+        entity.setVerificationCode(code.getVerificationCode());
+        entity.setExpirationTime(code.getExpirationTime());
+
+        return entity;
     }
 
     public ForgotPasswordToken verifyCode(String email, String verificationCode) throws JOSEException {
@@ -69,26 +84,25 @@ public class ForgotPasswordService {
             if (verificationCodeEntity.getExpirationTime() < System.currentTimeMillis() / 60000) {
                 throw new AppException(ErrorCode.VERIFICATION_CODE_EXPIRED);
             }
-            verificationCodeRepository.delete(verificationCodeEntity);
-
-            forgotPasswordTokenRepository.deleteAllByEmail(email);
 
             User user = userRepository.findByEmail(email).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-            String forgotPasswordToken = tokenService.generateToken(user, false);
+            String forgotPasswordToken = tokenService.generateToken(user, TokenType.RESET_PASSWORD_TOKEN);
             ForgotPasswordToken token = ForgotPasswordToken.builder()
                     .email(email)
                     .forgotPasswordToken(forgotPasswordToken)
-                    .expiryTime(LocalDateTime.now().plusDays(tokenExpiration))
+                    .expiryTime(LocalDateTime.now().plusMinutes(resetTokenExpiration))
                     .build();
+
+            verificationCodeRepository.delete(verificationCodeEntity);
 
             return forgotPasswordTokenRepository.save(token);
     }
 
     public void resetPassword(ResetPasswordRequest request) {
         try {
-            tokenService.verifyToken(request.getForgotPasswordToken());
+            tokenService.verifyToken(request.getForgotPasswordToken(), TokenType.RESET_PASSWORD_TOKEN);
         } catch (JOSEException | ParseException e) {
             throw new BadJwtException(e.getMessage());
         } catch (AppException ex){
@@ -109,14 +123,6 @@ public class ForgotPasswordService {
 
     private String generateVerificationCode() {
         return String.format("%06d", (int) (Math.random() * 1000000));
-    }
-
-    @Scheduled(cron = "0 */5 * * * *")
-    @Transactional
-    public void deleteExpiredVerificationCodes() {
-        long currentTimeInMinutes = System.currentTimeMillis() / 60000; // thoi diem hien tai (phut)
-
-        verificationCodeRepository.deleteByExpirationTimeBefore(currentTimeInMinutes);
     }
 
 }

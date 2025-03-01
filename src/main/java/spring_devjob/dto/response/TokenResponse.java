@@ -12,9 +12,7 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TokenResponse {
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     String accessToken;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     String refreshToken;
     boolean authenticated;
     String email; 

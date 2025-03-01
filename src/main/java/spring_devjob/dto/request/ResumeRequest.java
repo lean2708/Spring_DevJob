@@ -16,7 +16,7 @@ public class ResumeRequest {
     @EnumPattern(name = "status", regexp = "PENDING|REVIEWING|APPROVED|REJECTED")
     ResumeStateEnum status;
 
-    boolean primaryCv = false;
+    boolean primaryCv;
 
     @NotBlank(message = "Job không được để trống")
     String job;

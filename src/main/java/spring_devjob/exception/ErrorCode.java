@@ -42,7 +42,9 @@ public enum ErrorCode {
     JOB_NOT_FOUND(1031, "Không tìm thấy job nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
     PERMISSION_NOT_FOUND(1032, "Không tìm thấy permission nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
     ROLE_NOT_FOUND(1033, "Không tìm thấy role nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
-    SUBSCRIBER_NOT_FOUND(1034, "Không tìm thấy subscriber nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND)
+    SUBSCRIBER_NOT_FOUND(1034, "Không tìm thấy subscriber nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
+    INVALID_REFRESH_TOKEN(1035, "Refresh token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
+    TOKEN_TYPE_INVALID(1036, "Loại token không hợp lệ", HttpStatus.UNAUTHORIZED)
     ;
 
 

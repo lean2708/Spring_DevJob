@@ -28,7 +28,4 @@ public class UserResponse extends BaseResponse{
 
     CompanyBasic company;
     List<RoleBasic> roles;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    String accessToken;
 }

@@ -9,17 +9,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import spring_devjob.dto.request.TokenRequest;
+import spring_devjob.constants.TokenType;
+import spring_devjob.entity.Token;
 import spring_devjob.entity.User;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
-import spring_devjob.repository.RevokedTokenRepository;
+import spring_devjob.repository.TokenRepository;
 
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.UUID;
 
@@ -27,22 +28,42 @@ import java.util.UUID;
 @Service
 public class TokenService {
 
-    private final RevokedTokenRepository revokedTokenRepository;
+    private final TokenRepository tokenRepository;
 
     @Value("${jwt.signerKey}")
-    protected String SIGNER_KEY;
+    private String SIGNER_KEY;
     @Value("${jwt.accessToken.expiry-in-minutes}")
-    protected long accessTokenExpiration;
-    @Value("${jwt.refreshToken.expiry-in-days}")
-    protected long refreshTokenExpiration;
+    private long accessTokenExpiration;
 
-    public String generateToken(User user, boolean isRefreshToken) throws JOSEException {
+    @Value("${jwt.refreshKey}")
+    private String REFRESH_KEY;
+
+    @Value("${jwt.refreshToken.expiry-in-days}")
+    private long refreshTokenExpiration;
+
+    @Value("${jwt.resetKey}")
+    private String RESET_PASSWORD_KEY;
+
+    @Value("${jwt.reset.expiry-in-minutes}")
+    private long resetTokenExpiration;
+
+    // save de token
+    public Token saveToken(Token token){
+        Optional<Token> optionalToken = tokenRepository.findByEmail(token.getEmail());
+        if(optionalToken.isEmpty()){
+            return tokenRepository.save(token);
+        }
+        Token currentToken  = optionalToken.get();
+        currentToken.setAccessToken(token.getAccessToken());
+        currentToken.setRefreshToken(token.getRefreshToken());
+        return currentToken;
+    }
+
+    public String generateToken(User user, TokenType type) throws JOSEException {
         // header
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
-        long durationInSeconds = isRefreshToken
-                ? Duration.ofDays(refreshTokenExpiration).toSeconds()
-                : Duration.ofMinutes(accessTokenExpiration).toSeconds();
+        long durationInSeconds = getDurationByToken(type);
 
         // payload
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
@@ -57,9 +78,26 @@ public class TokenService {
 
         JWSObject jwsObject = new JWSObject(header,payload);
 
-        jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
+        jwsObject.sign(new MACSigner(getKey(type).getBytes()));
 
         return jwsObject.serialize();
+    }
+
+    private String getKey(TokenType type){
+        switch (type){
+            case ACCESS_TOKEN -> {return SIGNER_KEY;}
+            case REFRESH_TOKEN -> {return REFRESH_KEY;}
+            case RESET_PASSWORD_TOKEN -> {return RESET_PASSWORD_KEY;}
+            default -> throw new AppException(ErrorCode.TOKEN_TYPE_INVALID);
+        }
+    }
+    private long getDurationByToken(TokenType type) {
+        switch (type) {
+            case ACCESS_TOKEN -> {return Duration.ofMinutes(accessTokenExpiration).getSeconds();}
+            case REFRESH_TOKEN -> {return Duration.ofDays(refreshTokenExpiration).getSeconds();}
+            case RESET_PASSWORD_TOKEN -> {return Duration.ofMinutes(resetTokenExpiration).getSeconds();}
+            default -> throw new AppException(ErrorCode.TOKEN_TYPE_INVALID);
+        }
     }
 
     public String buildScope(User user) {
@@ -72,8 +110,8 @@ public class TokenService {
         return stringJoiner.toString();
     }
 
-    public SignedJWT verifyToken(String token) throws JOSEException, ParseException {
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+    public SignedJWT verifyToken(String token, TokenType type) throws JOSEException, ParseException {
+        JWSVerifier verifier = new MACVerifier(getKey(type).getBytes());
 
         SignedJWT signedJWT = SignedJWT.parse(token);
 
@@ -85,10 +123,6 @@ public class TokenService {
 
         if(!isVerified || expirationTime.before(new Date()) || jwtId == null){
             throw new AppException(ErrorCode.UNAUTHENTICATED);
-        }
-
-        if(revokedTokenRepository.existsById(jwtId)){
-            throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         return signedJWT;
     }

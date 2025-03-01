@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Component;
+import spring_devjob.constants.TokenType;
 import spring_devjob.dto.request.TokenRequest;
 import spring_devjob.exception.AppException;
 import spring_devjob.service.AuthService;
@@ -28,7 +29,7 @@ public class CustomJwtDecoder implements JwtDecoder {
     @Override
     public Jwt decode(String token) throws JwtException {
         try {
-            tokenService.verifyToken(token);
+            tokenService.verifyToken(token, TokenType.ACCESS_TOKEN);
         } catch (JOSEException | ParseException e) {
             throw new BadJwtException(e.getMessage());
         } catch (AppException ex){

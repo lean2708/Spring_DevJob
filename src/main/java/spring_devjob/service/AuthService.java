@@ -9,21 +9,22 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring_devjob.constants.RoleEnum;
+import spring_devjob.constants.TokenType;
 import spring_devjob.dto.basic.CompanyBasic;
 import spring_devjob.dto.basic.RoleBasic;
 import spring_devjob.dto.request.*;
 import spring_devjob.dto.response.TokenResponse;
 import spring_devjob.dto.response.UserResponse;
-import spring_devjob.entity.RevokedToken;
 import spring_devjob.entity.Role;
+import spring_devjob.entity.Token;
 import spring_devjob.entity.User;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.CompanyMapper;
 import spring_devjob.mapper.RoleMapper;
 import spring_devjob.mapper.UserMapper;
-import spring_devjob.repository.RevokedTokenRepository;
 import spring_devjob.repository.RoleRepository;
+import spring_devjob.repository.TokenRepository;
 import spring_devjob.repository.UserRepository;
 
 import java.text.ParseException;
@@ -42,41 +43,48 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
-    private final RevokedTokenRepository revokedTokenRepository;
+    private final TokenRepository tokenRepository;
 
 
     public TokenResponse login(LoginRequest request) throws JOSEException {
         User userDB = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        PasswordEncoder passwordEncoder  = new BCryptPasswordEncoder(10);
         boolean isAuthenticated = passwordEncoder.matches(request.getPassword(), userDB.getPassword());
 
         if(!isAuthenticated){
             throw new AppException(ErrorCode.INVALID_PASSWORD);
         }
 
-        String accessToken = tokenService.generateToken(userDB, false);
-
         List<String> roleNames = userDB.getRoles()
                 .stream().map(Role::getName).collect(Collectors.toList());
 
+        String accessToken = tokenService.generateToken(userDB, TokenType.ACCESS_TOKEN);
+
+        String refreshToken = tokenService.generateToken(userDB, TokenType.REFRESH_TOKEN);
+
+        tokenService.saveToken(Token.builder()
+                        .email(userDB.getEmail())
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken)
+                .build());
+
         return TokenResponse.builder()
                 .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .authenticated(true)
                 .email(userDB.getEmail())
                 .role(roleNames)
                 .build();
     }
 
-    public UserResponse register(RegisterRequest request) throws JOSEException {
+    public TokenResponse register(RegisterRequest request) throws JOSEException {
         if(userRepository.existsByEmail(request.getEmail())){
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
         User user = userMapper.toUser(request);
 
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         Role userRole = roleRepository.findByName(RoleEnum.USER.name()).orElseThrow(
@@ -89,12 +97,28 @@ public class AuthService {
         user.setRoles(roles);
 
         emailService.sendUserEmailWithRegister(user);
+        userRepository.save(user);
 
-        UserResponse response = convertUserResponse(userRepository.save(user));
+        List<String> roleNames = user.getRoles()
+                .stream().map(Role::getName).collect(Collectors.toList());
 
-        response.setAccessToken(tokenService.generateToken(user, false));
+        String accessToken = tokenService.generateToken(user, TokenType.ACCESS_TOKEN);
 
-        return response;
+        String refreshToken = tokenService.generateToken(user, TokenType.REFRESH_TOKEN);
+
+        tokenService.saveToken(Token.builder()
+                .email(user.getEmail())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build());
+
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .authenticated(true)
+                .email(user.getEmail())
+                .role(roleNames)
+                .build();
     }
 
     public UserResponse getMyInfo() {
@@ -105,29 +129,29 @@ public class AuthService {
     }
 
     public TokenResponse refreshToken(TokenRequest request) throws ParseException, JOSEException {
-        SignedJWT  signedJWT = tokenService.verifyToken(request.getToken());
+        // check token
+        Token token = tokenRepository.findByRefreshToken(request.getRefreshToken())
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_REFRESH_TOKEN));
 
-        String jit = signedJWT.getJWTClaimsSet().getJWTID();
-        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        // verify refresh token
+        SignedJWT  signedJWT = tokenService.verifyToken(request.getRefreshToken(), TokenType.REFRESH_TOKEN);
+
         String email = signedJWT.getJWTClaimsSet().getSubject();
-
-        RevokedToken revokedToken = RevokedToken.builder()
-                .id(jit)
-                .expiryTime(expiryTime)
-                .build();
-
-        revokedTokenRepository.save(revokedToken);
-
         User user = userRepository.findByEmail(email).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        String refreshToken = tokenService.generateToken(user, true);
+        // new access token
+        String accessToken = tokenService.generateToken(user, TokenType.ACCESS_TOKEN);
+        token.setAccessToken(accessToken);
+
+        tokenService.saveToken(token);
 
         List<String> roleNames = user.getRoles()
                 .stream().map(Role::getName).collect(Collectors.toList());
 
         return TokenResponse.builder()
-                .refreshToken(refreshToken)
+                .accessToken(accessToken)
+                .refreshToken(request.getRefreshToken())
                 .email(email)
                 .role(roleNames)
                 .build();
@@ -140,11 +164,19 @@ public class AuthService {
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new AppException(ErrorCode.INVALID_OLD_PASSWORD);
         }
-
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
 
+    public void logout(TokenRequest request) {
+        // check token
+        Token token = tokenRepository.findByRefreshToken(request.getRefreshToken())
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_REFRESH_TOKEN));
+
+        tokenRepository.delete(token);
+    }
+
+    // info tu access token
     public String getCurrentUsername(){
         var context = SecurityContextHolder.getContext();
         var authentication = context.getAuthentication();
@@ -152,19 +184,6 @@ public class AuthService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         return authentication.getName(); // email
-    }
-
-    public void logout(TokenRequest request) throws ParseException, JOSEException {
-        SignedJWT signToken = tokenService.verifyToken(request.getToken());
-        String wti = signToken.getJWTClaimsSet().getJWTID();
-        Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
-
-        RevokedToken revokedToken = RevokedToken.builder()
-                .id(wti)
-                .expiryTime(expiryTime)
-                .build();
-
-        revokedTokenRepository.save(revokedToken);
     }
 
     public UserResponse convertUserResponse(User user){

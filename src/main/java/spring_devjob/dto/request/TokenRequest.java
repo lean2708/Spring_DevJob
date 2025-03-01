@@ -9,5 +9,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TokenRequest {
-    String token;
+    @NotBlank(message = "refreshToken không được để trống")
+    String refreshToken;
 }

@@ -35,8 +35,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ApiResponse<UserResponse> register(@Valid @RequestBody RegisterRequest request) throws JOSEException {
-        return ApiResponse.<UserResponse>builder()
+    public ApiResponse<TokenResponse> register(@Valid @RequestBody RegisterRequest request) throws JOSEException {
+        return ApiResponse.<TokenResponse>builder()
                 .code(HttpStatus.CREATED.value())
                 .result(authService.register(request))
                 .message("Register")
@@ -82,12 +82,10 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ApiResponse<VerificationCodeEntity> forgotPassword(@NotBlank(message = "Email không được để trống")
-                                                                  @Pattern(regexp = "^[A-Za-z0-9._%+-]+@gmail\\.com$", message = "Email phải có định dạng hợp lệ")
-                                                                  String email) {
+    public ApiResponse<VerificationCodeEntity> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         return ApiResponse.<VerificationCodeEntity>builder()
                 .code(HttpStatus.OK.value())
-                .result(forgotPasswordService.forgotPassword(email))
+                .result(forgotPasswordService.forgotPassword(request))
                 .message("Mã xác nhận đã được gửi vào email của bạn")
                 .build();
     }
