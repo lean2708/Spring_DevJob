@@ -94,9 +94,9 @@ public class SkillService {
             jobRepository.save(job);
         });
 
-    skillDB.getSubscribers().forEach(subscriber -> {
-        subscriber.getSkills().remove(skillDB);
-        subscriberRepository.save(subscriber);
+        skillDB.getSubscribers().forEach(subscriber -> {
+            subscriber.getSkills().remove(skillDB);
+            subscriberRepository.save(subscriber);
         });
 
         skillRepository.delete(skillDB);

@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import spring_devjob.constants.RoleEnum;
 import spring_devjob.dto.basic.CompanyBasic;
 import spring_devjob.dto.basic.RoleBasic;
 import spring_devjob.dto.request.UserRequest;
@@ -24,6 +25,7 @@ import spring_devjob.mapper.UserMapper;
 import spring_devjob.repository.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,21 +48,24 @@ public class UserService {
 
     public UserResponse create(UserRequest request){
         if(userRepository.existsByEmail(request.getEmail())){
-            throw new AppException(ErrorCode.USER_EXISTED);
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
 
         User user = userMapper.toUser(request);
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        if(request.getCompany() != null && !request.getCompany().isEmpty()){
-            Company company = companyRepository.findByName(request.getCompany());
-            user.setCompany(company);
+        if(request.getCompanyId() != null){
+            companyRepository.findById(request.getCompanyId()).ifPresent(user::setCompany);
         }
 
-        if(request.getRole() != null && !request.getRole().isEmpty()){
-            List<Role> roles = roleRepository.findAllByNameIn(request.getRole());
+        if(request.getRoleId() != null && !request.getRoleId().isEmpty()){
+            List<Role> roles = roleRepository.findAllByIdIn(request.getRoleId());
             user.setRoles(roles);
+        }else{
+            Role userRole = roleRepository.findByName(RoleEnum.USER.name()).orElseThrow(
+                    () -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+            user.setRoles(List.of(userRole));
         }
 
        return convertUserResponse(userRepository.save(user));
@@ -100,13 +105,12 @@ public class UserService {
 
         userDB.setPassword(passwordEncoder.encode(userDB.getPassword()));
 
-        if(request.getCompany() != null && !request.getCompany().isEmpty()){
-            Company company = companyRepository.findByName(request.getCompany());
-            userDB.setCompany(company);
+        if(request.getCompanyId() != null){
+            companyRepository.findById(request.getCompanyId()).ifPresent(userDB::setCompany);
         }
 
-        if(request.getRole() != null && !request.getRole().isEmpty()){
-            List<Role> roles = roleRepository.findAllByNameIn(request.getRole());
+        if(request.getRoleId() != null && !request.getRoleId().isEmpty()){
+            List<Role> roles = roleRepository.findAllByIdIn(request.getRoleId());
             userDB.setRoles(roles);
         }
 
@@ -118,8 +122,10 @@ public class UserService {
         User userDB = userRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        userDB.getCompany().getUsers().remove(userDB);
-        companyRepository.save(userDB.getCompany());
+        if(userDB.getCompany() != null){
+            userDB.getCompany().getUsers().remove(userDB);
+            companyRepository.save(userDB.getCompany());
+        }
 
         resumeRepository.deleteAll(userDB.getResumes());
 
@@ -133,8 +139,10 @@ public class UserService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         for(User user : userList){
-            user.getCompany().getUsers().remove(user);
-            companyRepository.save(user.getCompany());
+            if(user.getCompany() != null){
+                user.getCompany().getUsers().remove(user);
+                companyRepository.save(user.getCompany());
+            }
             resumeRepository.deleteAll(user.getResumes());
         }
         userRepository.deleteAllInBatch(userList);

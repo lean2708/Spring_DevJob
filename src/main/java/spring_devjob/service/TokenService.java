@@ -60,12 +60,12 @@ public class TokenService {
     }
 
     public String generateToken(User user, TokenType type) throws JOSEException {
-        // header
+        // Header
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
+        // Payload
         long durationInSeconds = getDurationByToken(type);
 
-        // payload
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getEmail())
                 .issuer(user.getName())
@@ -78,6 +78,7 @@ public class TokenService {
 
         JWSObject jwsObject = new JWSObject(header,payload);
 
+        // Signature
         jwsObject.sign(new MACSigner(getKey(type).getBytes()));
 
         return jwsObject.serialize();

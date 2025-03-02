@@ -12,11 +12,14 @@ import java.util.List;
 
 @Repository
 public interface ResumeRepository extends JpaRepository<Resume,Long> {
+
     boolean existsByName(String name);
+
     List<Resume> findAllByIdIn(List<Long> ids);
 
     Page<Resume> findAllByUser(User user, Pageable pageable);
 
     List<Resume> findAllByUserId(long userId);
+
     Page<Resume> findAllByJob(Job job, Pageable pageable);
 }

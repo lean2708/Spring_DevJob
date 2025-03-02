@@ -15,5 +15,5 @@ public class PaymentCallbackRequest {
     String responseCode;
     @Positive(message = "Amount phải lớn hơn 0")
     long amount;
-    List<String> skills;
+    List<Long> skillIds;
 }

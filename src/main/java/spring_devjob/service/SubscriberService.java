@@ -108,8 +108,8 @@ public class SubscriberService {
             subscriber = subscriberRepository.findByEmail(user.getEmail());
         }
 
-        if(request.getSkills() != null && !request.getSkills().isEmpty()){
-            List<Skill> skills = skillRepository.findAllByNameIn(request.getSkills());
+        if(request.getSkillIds() != null && !request.getSkillIds().isEmpty()){
+            List<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
             subscriber.setSkills(skills);
         }
 

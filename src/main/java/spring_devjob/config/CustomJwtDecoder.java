@@ -21,10 +21,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Component
 public class CustomJwtDecoder implements JwtDecoder {
-    @Value("${jwt.signerKey}")
-    protected String SIGNER_KEY;
+
     private final TokenService tokenService;
-    private NimbusJwtDecoder nimbusJwtDecoder = null;
+    private final NimbusJwtDecoder nimbusJwtDecoder;
 
     @Override
     public Jwt decode(String token) throws JwtException {
@@ -34,12 +33,6 @@ public class CustomJwtDecoder implements JwtDecoder {
             throw new BadJwtException(e.getMessage());
         } catch (AppException ex){
             throw new BadJwtException("Token không hợp lệ");
-        }
-        if (Objects.isNull(nimbusJwtDecoder)) {
-            SecretKeySpec secretKeySpec = new SecretKeySpec(SIGNER_KEY.getBytes(), "HS512");
-            nimbusJwtDecoder = NimbusJwtDecoder.withSecretKey(secretKeySpec)
-                    .macAlgorithm(MacAlgorithm.HS512)
-                    .build();
         }
         return nimbusJwtDecoder.decode(token);
     }

@@ -19,7 +19,6 @@ import java.util.List;
 @NoArgsConstructor
 @Table(name = "tbl_role")
 public class Role extends BaseEntity {
-    String name;
     String description;
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)

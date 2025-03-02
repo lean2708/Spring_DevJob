@@ -32,6 +32,7 @@ import spring_devjob.repository.criteria.SearchCriteria;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,13 +59,13 @@ public class JobService {
         }
         Job job = jobMapper.toJob(request);
 
-        if(request.getCompany() != null && !request.getCompany().isEmpty()){
-            Company company = companyRepository.findByName(request.getCompany());
-            job.setCompany(company);
+        if(request.getCompanyId() != null){
+            companyRepository.findById(request.getCompanyId())
+            .ifPresent(job::setCompany);
         }
 
-        if(request.getSkills() != null && !request.getSkills().isEmpty()){
-            List<Skill> skills = skillRepository.findAllByNameIn(request.getSkills());
+        if(request.getSkillIds() != null && !request.getSkillIds().isEmpty()){
+            List<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
             job.setSkills(skills);
         }
 
@@ -102,13 +103,13 @@ public class JobService {
 
         jobMapper.updateJob(jobDB, request);
 
-        if(request.getCompany() != null && !request.getCompany().isEmpty()){
-            Company company = companyRepository.findByName(request.getCompany());
-            jobDB.setCompany(company);
+        if(request.getCompanyId() != null){
+            companyRepository.findById(request.getCompanyId())
+                    .ifPresent(jobDB::setCompany);
         }
 
-        if(request.getSkills() != null && !request.getSkills().isEmpty()){
-            List<Skill> skills = skillRepository.findAllByNameIn(request.getSkills());
+        if(request.getSkillIds() != null && !request.getSkillIds().isEmpty()){
+            List<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
             jobDB.setSkills(skills);
         }
 

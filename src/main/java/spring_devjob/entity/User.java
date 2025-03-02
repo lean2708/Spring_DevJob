@@ -20,6 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @Table(name = "tbl_user")
 public class User extends BaseEntity {
+    @Column(unique = true)
     String email;
     String password;
     String avatarUrl;
@@ -30,7 +31,7 @@ public class User extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "company_id")
-    private Company company;
+    Company company;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
@@ -41,5 +42,4 @@ public class User extends BaseEntity {
     @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     List<Role> roles;
-
 }

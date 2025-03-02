@@ -29,6 +29,6 @@ public class UserRequest {
     GenderEnum gender;
     String address;
 
-    String company;
-    List<String> role;
+    Long companyId;
+    List<Long> roleId;
 }

@@ -9,7 +9,9 @@ import java.util.List;
 
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission,Long> {
+
     boolean existsByName(String name);
+
     List<Permission> findAllByNameIn(List<String> names);
 
     List<Permission> findAllByIdIn(List<Long> ids);

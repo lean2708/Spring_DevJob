@@ -55,8 +55,8 @@ public class ResumeService {
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED));
         resume.setUser(user);
 
-        if(request.getJob() != null && !request.getJob().isEmpty()) {
-            Job job = jobRepository.findByName(request.getJob()).orElseThrow(
+        if(request.getJobId() != null) {
+            Job job = jobRepository.findById(request.getJobId()).orElseThrow(
                     () -> new AppException(ErrorCode.JOB_NOT_EXISTED));
             resume.setJob(job);
         }
@@ -95,12 +95,12 @@ public class ResumeService {
 
         resumeMapper.updateResume(resumeDB, request);
 
-        User user = userRepository.findByEmail(authService.getCurrentUsername()).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = userRepository.findByEmail(authService.getCurrentUsername())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         resumeDB.setUser(user);
 
-        if(request.getJob() != null && !request.getJob().isEmpty()) {
-            Job job = jobRepository.findByName(request.getJob()).orElseThrow(
+        if(request.getJobId() != null) {
+            Job job = jobRepository.findById(request.getJobId()).orElseThrow(
                     () -> new AppException(ErrorCode.JOB_NOT_EXISTED));
             resumeDB.setJob(job);
         }

@@ -9,7 +9,6 @@ import java.util.List;
 @Repository
 public interface CompanyRepository  extends JpaRepository<Company,Long> {
     boolean existsByName(String name);
-    Company findByName(String name);
-    List<Company> findAllByIdIn(List<Long> ids);
 
+    List<Company> findAllByIdIn(List<Long> ids);
 }

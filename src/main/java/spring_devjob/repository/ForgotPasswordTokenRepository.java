@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Repository
 public interface ForgotPasswordTokenRepository extends JpaRepository<ForgotPasswordToken, Long> {
-    void deleteAllByEmail(String email);
+
     Optional<ForgotPasswordToken> findByForgotPasswordToken(String forgotPasswordToken);
+
 }

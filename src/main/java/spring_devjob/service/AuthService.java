@@ -80,7 +80,7 @@ public class AuthService {
 
     public TokenResponse register(RegisterRequest request) throws JOSEException {
         if(userRepository.existsByEmail(request.getEmail())){
-            throw new AppException(ErrorCode.USER_EXISTED);
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
 
         User user = userMapper.toUser(request);

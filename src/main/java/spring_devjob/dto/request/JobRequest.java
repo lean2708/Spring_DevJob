@@ -37,7 +37,7 @@ public class JobRequest {
     @JsonFormat(pattern = "dd/MM/yyyy")
     LocalDate endDate;
 
-    String company;
+    Long companyId;
 
-    List<String> skills;
+    List<Long> skillIds;
 }

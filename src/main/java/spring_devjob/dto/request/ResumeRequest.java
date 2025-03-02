@@ -1,6 +1,7 @@
 package spring_devjob.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import spring_devjob.constants.ResumeStateEnum;
@@ -18,7 +19,7 @@ public class ResumeRequest {
 
     boolean primaryCv;
 
-    @NotBlank(message = "Job không được để trống")
-    String job;
+    @NotNull(message = "Job không được để trống")
+    Long jobId;
 
 }
