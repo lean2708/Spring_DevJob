@@ -34,7 +34,7 @@ public class SecurityConfig {
 
     private final CustomJwtDecoder customJwtDecoder;
 
-    private final String[] PUBLIC_ENDPOINTS = {
+    private final String[] PUBLIC_URLS  = {
             "/v1/auth/login", "/v1/auth/register", "/v1/auth/logout",
             "/v1/auth/forgot-password", "/v1/auth/forgot-password/verify-code",
             "/v1/auth/forgot-password/reset-password"
@@ -45,14 +45,17 @@ public class SecurityConfig {
         httpSecurity.csrf(csrf->csrf.disable())
                 .cors(Customizer.withDefaults())
 
-                .authorizeHttpRequests(request-> request.requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                .authorizeHttpRequests(request-> request.requestMatchers(PUBLIC_URLS).permitAll()
                         .anyRequest().authenticated())
 
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
-                        .decoder(customJwtDecoder)
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                .oauth2ResourceServer(oauth2 ->
+                        oauth2.jwt(
+                                jwtConfigurer -> jwtConfigurer
+                                        .decoder(customJwtDecoder)
+                                        .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                                )
                         .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
-        );
+                );
 
         return httpSecurity.build();
     }
@@ -61,8 +64,8 @@ public class SecurityConfig {
     JwtAuthenticationConverter jwtAuthenticationConverter(){
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
 
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
 
         return jwtAuthenticationConverter;

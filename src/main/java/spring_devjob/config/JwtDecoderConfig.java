@@ -11,7 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 @Configuration
 public class JwtDecoderConfig {
 
-    @Value("${jwt.signerKey}")
+    @Value("${jwt.signer-key}")
     protected String SIGNER_KEY;
 
     @Bean

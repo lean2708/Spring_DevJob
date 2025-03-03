@@ -30,18 +30,18 @@ public class TokenService {
 
     private final TokenRepository tokenRepository;
 
-    @Value("${jwt.signerKey}")
+    @Value("${jwt.signer-key}")
     private String SIGNER_KEY;
-    @Value("${jwt.accessToken.expiry-in-minutes}")
+    @Value("${jwt.access-token.expiry-in-minutes}")
     private long accessTokenExpiration;
 
-    @Value("${jwt.refreshKey}")
+    @Value("${jwt.refresh-key}")
     private String REFRESH_KEY;
 
-    @Value("${jwt.refreshToken.expiry-in-days}")
+    @Value("${jwt.refresh-token.expiry-in-days}")
     private long refreshTokenExpiration;
 
-    @Value("${jwt.resetKey}")
+    @Value("${jwt.reset-key}")
     private String RESET_PASSWORD_KEY;
 
     @Value("${jwt.reset.expiry-in-minutes}")

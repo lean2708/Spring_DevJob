@@ -1,0 +1,68 @@
+server:
+  port: 8080
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+# Database
+  datasource:
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/devjob}
+    username: ${DATABASE_USERNAME:root}
+    password: ${DATABASE_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+
+# Email
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
+
+# File
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:30MB}
+      max-request-size: ${MAX_REQUEST_SIZE:30MB}
+
+# JWT
+jwt:
+  signer-key: ${JWT_SIGNER_KEY}
+  refresh-key: ${JWT_REFRESH_KEY}
+  reset-key: ${JWT_RESET_KEY}
+  access-token:
+    expiry-in-minutes: ${JWT_ACCESS_TOKEN_IN_MINUTES:15}
+  refresh-token:
+    expiry-in-days: ${JWT_REFRESH_TOKEN_IN_DAYS:20}
+  reset:
+    expiry-in-minutes: ${JWT_RESET_TOKEN_IN_MINUTES:15}
+
+# VNPAY
+payment:
+  vnPay:
+    url: ${VNPAY_URL}
+    tmn-code: ${VNPAY_TMN_CODE}
+    secret-key: ${VNPAY_SECRET_KEY}
+    return-url: ${VNPAY_RETURN_URL}
+    version: ${VNPAY_VERSION}
+    command: ${VNPAY_COMMAND}
+    order-type: ${VNPAY_ORDER_TYPE}
+
+# AWS
+aws:
+  bucket:
+    name: ${AWS_BUCKET_NAME}
+  access-key: ${AWS_ACCESS_KEY}
+  secret-key: ${AWS_SECRET_KEY}

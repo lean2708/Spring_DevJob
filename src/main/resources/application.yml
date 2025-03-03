@@ -1,0 +1,10 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /devjob
+
+spring:
+  application:
+    name: Spring_DevJob
+  profiles:
+    active: dev
