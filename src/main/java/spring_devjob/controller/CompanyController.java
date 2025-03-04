@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.CompanyRequest;
@@ -25,9 +26,11 @@ import java.util.List;
 @RequestMapping("/v1")
 @RestController
 public class CompanyController {
+
     private final CompanyService companyService;
     private final JobService jobService;
 
+    @PostAuthorize("hasAuthority('CREATE_COMPANY')")
     @PostMapping("/companies")
     public ApiResponse<CompanyResponse> create(@Valid @RequestBody CompanyRequest request){
         return ApiResponse.<CompanyResponse>builder()

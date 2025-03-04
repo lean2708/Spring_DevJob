@@ -78,7 +78,6 @@ public class UserService {
         return convertUserResponse(userDB);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public PageResponse<UserResponse> fetchAllUsers(int pageNo, int pageSize, String sortBy){
         pageNo = pageNo - 1;
 
@@ -117,7 +116,7 @@ public class UserService {
         return convertUserResponse(userRepository.save(userDB));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+
     public void delete(long id){
         User userDB = userRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -132,7 +131,7 @@ public class UserService {
         userRepository.delete(userDB);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+
     public void deleteUsers(List<Long> ids){
         List<User> userList = userRepository.findAllByIdIn(ids);
         if(userList.isEmpty()){

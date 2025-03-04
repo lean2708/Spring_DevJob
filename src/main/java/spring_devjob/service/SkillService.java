@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 @Service
 public class SkillService {
+
     private final SkillRepository skillRepository;
     private final SkillMapper skillMapper;
     private final JobRepository jobRepository;

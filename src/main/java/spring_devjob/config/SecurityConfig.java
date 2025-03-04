@@ -33,6 +33,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final CustomJwtDecoder customJwtDecoder;
+    private final CustomJwtAuthenticationConverter customJwtAuthenticationConverter;
 
     private final String[] PUBLIC_URLS  = {
             "/v1/auth/login", "/v1/auth/register", "/v1/auth/logout",
@@ -52,7 +53,7 @@ public class SecurityConfig {
                         oauth2.jwt(
                                 jwtConfigurer -> jwtConfigurer
                                         .decoder(customJwtDecoder)
-                                        .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                                        .jwtAuthenticationConverter(customJwtAuthenticationConverter)
                                 )
                         .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
                 );
@@ -60,16 +61,16 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
-    @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter(){
-        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
-
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
-
-        return jwtAuthenticationConverter;
-    }
+//    @Bean
+//    JwtAuthenticationConverter jwtAuthenticationConverter(){
+//        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+//        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
+//
+//        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+//        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+//
+//        return jwtAuthenticationConverter;
+//    }
 
     @Bean
     public CorsFilter corsFilter(){
@@ -98,12 +99,6 @@ public class SecurityConfig {
         return web ->
                 web.ignoring().requestMatchers("/actuator/**","/v3/**", "webjar/**",
                         "/swagger-ui*/*swagger-initializer.js","/swagger-ui*/**");
-    }
-
-
-    @Bean
-    public Dotenv dotenv() {
-        return Dotenv.configure().load();
     }
 
     @Bean

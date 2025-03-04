@@ -115,7 +115,6 @@ public class ResumeService {
         resumeRepository.delete(resumeDB);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public void deleteResumes(List<Long> ids){
         List<Resume> resumeList = resumeRepository.findAllByIdIn(ids);
         if(resumeList.isEmpty()){
@@ -145,7 +144,6 @@ public class ResumeService {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('HR')")
     public PageResponse<ResumeResponse> getResumesByJob(int pageNo, int pageSize, String sortBy, long jobId){
         pageNo = pageNo - 1;
 

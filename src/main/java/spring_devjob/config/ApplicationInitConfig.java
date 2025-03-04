@@ -86,7 +86,7 @@ public class ApplicationInitConfig {
                         () -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
 
                 User admin = User.builder()
-                        .name(RoleEnum.ADMIN.name())
+                        .name("Admin")
                         .email(ADMIN_EMAIL)
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
                         .roles(List.of(adminRole))

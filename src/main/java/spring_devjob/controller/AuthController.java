@@ -22,6 +22,7 @@ import java.text.ParseException;
 @RequiredArgsConstructor
 @RequestMapping("/v1/auth")
 public class AuthController {
+
     private final AuthService authService;
     private final ForgotPasswordService forgotPasswordService;
 

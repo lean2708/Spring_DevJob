@@ -71,7 +71,6 @@ public class TokenService {
                 .issuer(user.getName())
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plusSeconds(durationInSeconds)))
-                .claim("scope", buildScope(user))
                 .jwtID(UUID.randomUUID().toString())
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -99,16 +98,6 @@ public class TokenService {
             case RESET_PASSWORD_TOKEN -> {return Duration.ofMinutes(resetTokenExpiration).getSeconds();}
             default -> throw new AppException(ErrorCode.TOKEN_TYPE_INVALID);
         }
-    }
-
-    public String buildScope(User user) {
-        StringJoiner stringJoiner = new StringJoiner(" ");
-        if(!CollectionUtils.isEmpty(user.getRoles())){
-            user.getRoles().forEach(
-                    role -> {stringJoiner.add("ROLE_" + role.getName());
-                    });
-        }
-        return stringJoiner.toString();
     }
 
     public SignedJWT verifyToken(String token, TokenType type) throws JOSEException, ParseException {

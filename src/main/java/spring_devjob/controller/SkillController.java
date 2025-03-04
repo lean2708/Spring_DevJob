@@ -75,6 +75,7 @@ public class SkillController {
                 .result(null)
                 .build();
     }
+
     @DeleteMapping("/skills")
     public ApiResponse<Void> deleteSkills(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                               List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){

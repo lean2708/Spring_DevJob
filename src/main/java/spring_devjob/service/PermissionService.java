@@ -34,7 +34,6 @@ public class PermissionService {
     private final RoleRepository roleRepository;
     private final PageableService pageableService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     public PermissionResponse create(PermissionRequest request){
         if(permissionRepository.existsByName(request.getName())){
             throw new AppException(ErrorCode.PERMISSION_EXISTED);
@@ -45,7 +44,6 @@ public class PermissionService {
         return permissionMapper.toPermissionResponse(permissionRepository.save(permission));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public PermissionResponse fetchPermissionById(long id){
         Permission permissionDB = permissionRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_EXISTED));
@@ -53,7 +51,6 @@ public class PermissionService {
         return permissionMapper.toPermissionResponse(permissionDB);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public PageResponse<PermissionResponse> fetchAllPermissions(int pageNo, int pageSize,  String sortBy){
         pageNo = pageNo - 1;
 
@@ -76,7 +73,7 @@ public class PermissionService {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+
     public PermissionResponse update(long id, PermissionRequest request){
         Permission permissionDB = permissionRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_EXISTED));
