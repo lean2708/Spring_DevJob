@@ -18,10 +18,6 @@ cd Spring_DevJob
 ```java
 docker-compose down
 ```
-**Build Image**
-```java
-docker build -t lean2708/spring-devjob:0.0.1 .
-```
 **Run Your Application**
 ```java
 docker-compose up -d
