@@ -14,6 +14,7 @@ public interface RoleMapper {
     @Mapping(target = "permissions", ignore = true)
     Role toRole(RoleRequest request);
 
+    @Mapping(source = "permissions", target = "permissions")
     RoleResponse toRoleResponse(Role role);
 
     List<RoleBasic> toRoleBasics(List<Role> roles);

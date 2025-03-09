@@ -80,7 +80,6 @@ public class RoleService {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public RoleResponse update(long id, RoleRequest request){
         Role roleDB = roleRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));

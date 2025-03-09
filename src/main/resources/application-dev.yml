@@ -20,22 +20,16 @@ spring:
 
 # Email
   mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD:}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
           auth: ${MAIL_SMTP_AUTH:true}
           starttls:
             enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
-
-# File
-  servlet:
-    multipart:
-      max-file-size: ${MAX_FILE_SIZE:30MB}
-      max-request-size: ${MAX_REQUEST_SIZE:30MB}
 
 # JWT
 jwt:
@@ -60,9 +54,12 @@ payment:
     command: ${VNPAY_COMMAND}
     order-type: ${VNPAY_ORDER_TYPE}
 
-# AWS
-aws:
-  bucket:
-    name: ${AWS_BUCKET_NAME}
-  access-key: ${AWS_ACCESS_KEY}
-  secret-key: ${AWS_SECRET_KEY}
+# Cloudinary
+cloud:
+  name: ${CLOUDINARY_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+  folder-image: devjob/image
+  max-size-image: 10MB
+  folder-video: devjob/video
+  max-size-video: 100MB

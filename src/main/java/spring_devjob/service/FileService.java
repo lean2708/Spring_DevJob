@@ -1,24 +1,17 @@
 package spring_devjob.service;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.*;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import spring_devjob.dto.response.FileResponse;
+import spring_devjob.constants.FileType;
+import spring_devjob.entity.FileEntity;
 import spring_devjob.exception.FileException;
-
-import java.io.File;
-import java.io.FileOutputStream;
+import spring_devjob.repository.FileRepository;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 
@@ -26,114 +19,87 @@ import java.util.*;
 @RequiredArgsConstructor
 @Service
 public class FileService {
-    @Value("${aws.bucket.name}")
-    private String bucketName;
+    private final Cloudinary cloudinary;
+    private final FileRepository fileRepository;
 
-    private final AmazonS3 s3Client;
+    private static final List<String> IMAGE_TYPES = Arrays.asList("image/jpeg", "image/png", "image/gif", "image/webp");
+    private static final List<String> VIDEO_TYPES = Arrays.asList("video/mp4", "video/avi", "video/mov", "video/mkv");
 
-    public FileResponse uploadFile(MultipartFile multipartFile) throws IOException, FileException {
-        if (multipartFile == null || multipartFile.isEmpty()) {
+    @Value("${cloud.folder-image}")
+    private String folderImage;
+
+    @Value("${cloud.max-size-image}")
+    private String maxSizeImage;
+
+    @Value("${cloud.folder-video}")
+    private String folderVideo;
+
+    @Value("${cloud.max-size-video}")
+    private String maxSizeVideo;
+
+
+    private long parseSize(String size) {
+        size = size.toUpperCase();
+        return Long.parseLong(size.replace("MB", "").trim()) * 1024 * 1024;
+    }
+
+    public FileEntity uploadFile(MultipartFile file, FileType type) throws IOException, FileException {
+        if (file == null || file.isEmpty()) {
             throw new FileException("File trống. Không thể lưu trữ file");
         }
-        boolean isValidFile = isValidFile(multipartFile);
+        String folder = determineUploadFolder(file, type);
 
-        List<String> allowedFileExtensions = new ArrayList<>(Arrays.asList("jpg", "jpeg", "png", "gif", "bmp","svg", "webp"));
+        Map<String, Object> options = ObjectUtils.asMap("folder", folder);
+        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
 
-        if (!isValidFile || !allowedFileExtensions.contains(FilenameUtils.getExtension(multipartFile.getOriginalFilename()))){
-            throw new FileException("File " +  multipartFile.getOriginalFilename() + " không hợp lệ. Định dạng file hoặc tên file không được hỗ trợ.");
-        }
-
-        // convert multipart file  to a file
-        File file = new File(System.getProperty("java.io.tmpdir"), multipartFile.getOriginalFilename());
-        try (FileOutputStream fileOutputStream = new FileOutputStream(file)){
-            fileOutputStream.write(multipartFile.getBytes());
-        }
-
-        // generate file name
-        String fileName = generateFileName(multipartFile);
-        // upload file
-        PutObjectRequest request = new PutObjectRequest(bucketName, fileName, file);
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentType("plain/"+ FilenameUtils.getExtension(multipartFile.getOriginalFilename()));
-        metadata.addUserMetadata("Title", "File Upload - " + fileName);
-        metadata.setContentLength(file.length());
-        request.setMetadata(metadata);
-        s3Client.putObject(request);
-
-        String fileUrl = s3Client.getUrl(bucketName, fileName).toString();
-
-        // delete file
-        file.delete();
-
-        return FileResponse.builder()
-                .fileName(fileName)
-                .url(fileUrl)
+        FileEntity fileEntity = FileEntity.builder()
+                .id(uploadResult.get("public_id").toString())
+                .fileName(file.getOriginalFilename())
+                .type(type.name())
+                .url(uploadResult.get("url").toString())
                 .build();
+
+        return fileRepository.save(fileEntity);
     }
 
-
-    @PreAuthorize("hasRole('ADMIN') or hasRole('PRO')")
-    public Object downloadFile(String fileName) throws FileException {
-        if (bucketIsEmpty()) {
-            throw new FileException("Bucket yêu cầu không tồn tại hoặc trống.");
-        }
-        try {
-            S3Object object = s3Client.getObject(bucketName, fileName);
-
-            try (S3ObjectInputStream s3is = object.getObjectContent()) {
-                try (FileOutputStream fileOutputStream = new FileOutputStream(fileName)) {
-                    byte[] read_buf = new byte[1024];
-                    int read_len;
-                    while ((read_len = s3is.read(read_buf)) > 0) {
-                        fileOutputStream.write(read_buf, 0, read_len);
-                    }
+    private String determineUploadFolder(MultipartFile file, FileType type) throws FileException {
+        switch (type){
+            case IMAGE->{
+                if (isValidFile(file) || !IMAGE_TYPES.contains(file.getContentType())) {
+                    throw new FileException("File " +  file.getOriginalFilename() + " không hợp lệ. Định dạng file hoặc tên file không được hỗ trợ.");
                 }
-
-                Path pathObject = Paths.get(fileName);
-                Resource resource = new UrlResource(pathObject.toUri());
-
-                if (resource.exists() && resource.isReadable()) {
-                    return resource;
-                } else {
-                    throw new FileException("Không thể tìm thấy file!");
+                if (file.getSize() > parseSize(maxSizeImage)) {
+                    throw new FileException("File quá lớn! Ảnh chỉ được tối đa " + maxSizeImage + ".");
                 }
+                return folderImage;
             }
-        } catch (AmazonS3Exception e) {
-            if (e.getErrorCode().equals("NoSuchKey")) {
-                throw new FileException("File yêu cầu không tồn tại trong kho lưu trữ.");
-            } else {
-                throw new FileException("Lỗi khi truy cập file trong S3: " + e.getMessage());
+            case VIDEO->{
+                if (isValidFile(file) || !VIDEO_TYPES.contains(file.getContentType())) {
+                    throw new FileException("File " +  file.getOriginalFilename() + " không hợp lệ. Định dạng file hoặc tên file không được hỗ trợ.");
+                }
+                if (file.getSize() > parseSize(maxSizeVideo)) {
+                    throw new FileException("File quá lớn! Ảnh chỉ được tối đa " + maxSizeVideo + ".");
+                }
+                return folderVideo;
             }
-        } catch (IOException e) {
-            throw new FileException("Lỗi khi xử lý file: " + e.getMessage());
+            default -> throw new FileException("Loại file không hỗ trợ");
         }
     }
 
-
-    public boolean delete(String fileName) {
-        try {
-            s3Client.deleteObject(bucketName, fileName);
-            return true;
-        } catch (AmazonS3Exception e) {
-            System.out.println("Lỗi khi xóa file khỏi S3: " + e.getMessage());
-            return false;
-        }
+    public List<FileEntity> getAllFiles() {
+        return fileRepository.findAll();
     }
 
-    private boolean bucketIsEmpty() {
-        ListObjectsV2Result result = s3Client.listObjectsV2(this.bucketName);
-        if (result == null){
-            return false;
-        }
-        List<S3ObjectSummary> objects = result.getObjectSummaries();
-        return objects.isEmpty();
+    public boolean deleteFile(String publicId) throws Exception {
+        FileEntity fileEntity = fileRepository.findById(publicId)
+                .orElseThrow(()-> new FileException("File không tồn tại trong hệ thống"));
+
+        cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        fileRepository.delete(fileEntity);
+        return true;
     }
 
-    private String generateFileName(MultipartFile multiPart) {
-        return new Date().getTime() + "-" + multiPart.getOriginalFilename().trim().replaceAll(" ", "_");
-    }
     public boolean isValidFile(MultipartFile multipartFile){
-        log.info("Empty Status ==> {}", multipartFile.isEmpty());
         if (Objects.isNull(multipartFile.getOriginalFilename())){
             return false;
         }

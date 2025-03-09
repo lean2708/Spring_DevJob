@@ -3,15 +3,8 @@ package spring_devjob.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import spring_devjob.dto.basic.JobBasic;
-import spring_devjob.dto.basic.UserBasic;
 import spring_devjob.dto.request.ResumeRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ResumeResponse;
@@ -40,8 +33,6 @@ public class ResumeService {
     private final ResumeMapper resumeMapper;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
-    private final UserMapper userMapper;
-    private final JobMapper jobMapper;
     private final PageableService pageableService;
     private final AuthService authService;
 
@@ -56,19 +47,18 @@ public class ResumeService {
         resume.setUser(user);
 
         if(request.getJobId() != null) {
-            Job job = jobRepository.findById(request.getJobId()).orElseThrow(
-                    () -> new AppException(ErrorCode.JOB_NOT_EXISTED));
-            resume.setJob(job);
+            jobRepository.findById(request.getJobId())
+                    .ifPresent(resume::setJob);
         }
 
-        return convertResumeResponse(resumeRepository.save(resume));
+        return resumeMapper.toResumeResponse(resumeRepository.save(resume));
     }
 
     public ResumeResponse fetchResumeById(long id){
         Resume resumeDB = resumeRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.RESUME_NOT_EXISTED));
 
-        return convertResumeResponse(resumeDB);
+        return resumeMapper.toResumeResponse(resumeDB);
     }
 
     public PageResponse<ResumeResponse> getAllResumes(int pageNo, int pageSize, String sortBy){
@@ -104,8 +94,7 @@ public class ResumeService {
                     () -> new AppException(ErrorCode.JOB_NOT_EXISTED));
             resumeDB.setJob(job);
         }
-
-        return convertResumeResponse(resumeRepository.save(resumeDB));
+        return resumeMapper.toResumeResponse(resumeRepository.save(resumeDB));
     }
 
     public void delete(long id){
@@ -166,25 +155,10 @@ public class ResumeService {
     public List<ResumeResponse> convertListResumeResponse(List<Resume> resumeList){
         List<ResumeResponse> resumeResponseList = new ArrayList<>();
         for(Resume resume : resumeList){
-            ResumeResponse response = convertResumeResponse(resume);
+            ResumeResponse response = resumeMapper.toResumeResponse(resume);
             resumeResponseList.add(response);
         }
         return resumeResponseList;
     }
 
-    public ResumeResponse convertResumeResponse(Resume resume){
-        ResumeResponse response = resumeMapper.toResumeResponse(resume);
-
-        UserBasic userBasic = (resume.getUser() != null) ?
-                userMapper.toUserBasic(resume.getUser()) : null;
-
-        response.setUser(userBasic);
-
-        JobBasic jobBasic = (resume.getJob() != null) ?
-                jobMapper.toJobBasic(resume.getJob()) : null;
-
-        response.setJob(jobBasic);
-
-        return response;
-    }
 }

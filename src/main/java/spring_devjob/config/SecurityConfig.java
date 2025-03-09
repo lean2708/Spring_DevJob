@@ -43,34 +43,23 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(csrf->csrf.disable())
+        httpSecurity.csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
 
-                .authorizeHttpRequests(request-> request.requestMatchers(PUBLIC_URLS).permitAll()
+                .authorizeHttpRequests(request -> request.requestMatchers(PUBLIC_URLS).permitAll()
                         .anyRequest().authenticated())
 
                 .oauth2ResourceServer(oauth2 ->
                         oauth2.jwt(
-                                jwtConfigurer -> jwtConfigurer
-                                        .decoder(customJwtDecoder)
-                                        .jwtAuthenticationConverter(customJwtAuthenticationConverter)
+                                        jwtConfigurer -> jwtConfigurer
+                                                .decoder(customJwtDecoder)
+                                                .jwtAuthenticationConverter(customJwtAuthenticationConverter)
                                 )
-                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+                                .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
                 );
 
         return httpSecurity.build();
     }
-
-//    @Bean
-//    JwtAuthenticationConverter jwtAuthenticationConverter(){
-//        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-//        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
-//
-//        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-//        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
-//
-//        return jwtAuthenticationConverter;
-//    }
 
     @Bean
     public CorsFilter corsFilter(){

@@ -11,8 +11,8 @@ public interface ResumeMapper {
     @Mapping(target = "job", ignore = true)
     Resume toResume(ResumeRequest request);
 
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "job", ignore = true)
+    @Mapping(source = "user", target = "user")
+    @Mapping(source = "job", target = "job")
     ResumeResponse toResumeResponse(Resume resume);
 
     @Mapping(target = "user", ignore = true)

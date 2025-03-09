@@ -103,7 +103,6 @@ public class SkillService {
         skillRepository.delete(skillDB);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public void deleteSkills(List<Long> ids){
         List<Skill> skillList = skillRepository.findAllByIdIn(ids);
         if(skillList.isEmpty()){

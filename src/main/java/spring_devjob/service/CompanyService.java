@@ -100,7 +100,6 @@ public class CompanyService {
         companyRepository.delete(companyDB);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public void deleteCompanies(List<Long> ids) {
         List<Company> companyList = companyRepository.findAllByIdIn(ids);
         if(companyList.isEmpty()){

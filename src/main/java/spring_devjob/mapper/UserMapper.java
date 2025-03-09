@@ -15,8 +15,8 @@ public interface UserMapper {
 
     User toUser(RegisterRequest request);
 
-    @Mapping(target = "company", ignore = true)
-    @Mapping(target = "roles", ignore = true)
+    @Mapping(source = "company", target = "company")
+    @Mapping(source = "roles", target = "roles")
     UserResponse toUserResponse(User user);
 
     UserBasic toUserBasic(User user);

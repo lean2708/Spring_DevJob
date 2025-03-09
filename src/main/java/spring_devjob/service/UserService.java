@@ -38,8 +38,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final CompanyMapper companyMapper;
-    private final RoleMapper roleMapper;
     private final CompanyRepository companyRepository;
     private final RoleRepository roleRepository;
     private final ResumeRepository resumeRepository;
@@ -68,14 +66,14 @@ public class UserService {
             user.setRoles(List.of(userRole));
         }
 
-       return convertUserResponse(userRepository.save(user));
+       return userMapper.toUserResponse(userRepository.save(user));
     }
 
     public UserResponse fetchUserById(long id){
         User userDB = userRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        return convertUserResponse(userDB);
+        return userMapper.toUserResponse(userDB);
     }
 
     public PageResponse<UserResponse> fetchAllUsers(int pageNo, int pageSize, String sortBy){
@@ -113,7 +111,7 @@ public class UserService {
             userDB.setRoles(roles);
         }
 
-        return convertUserResponse(userRepository.save(userDB));
+        return userMapper.toUserResponse(userRepository.save(userDB));
     }
 
 
@@ -150,23 +148,10 @@ public class UserService {
     public List<UserResponse> convertListUserResponse(List<User> userList){
         List<UserResponse> userResponseList = new ArrayList<>();
         for(User user : userList){
-            UserResponse response = convertUserResponse(user);
+            UserResponse response = userMapper.toUserResponse(user);
             userResponseList.add(response);
         }
         return userResponseList;
     }
 
-    public UserResponse convertUserResponse(User user){
-        UserResponse response = userMapper.toUserResponse(user);
-
-        CompanyBasic companyBasic = (user.getCompany() != null) ?
-                companyMapper.toCompanyBasic(user.getCompany()) : null;
-        response.setCompany(companyBasic);
-
-        List<RoleBasic> roleBasics = (user.getRoles() != null) ?
-                roleMapper.toRoleBasics(user.getRoles()) : null;
-        response.setRoles(roleBasics);
-
-        return response;
-    }
 }

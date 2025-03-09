@@ -9,8 +9,6 @@ import lombok.experimental.FieldDefaults;
 import spring_devjob.constants.GenderEnum;
 import spring_devjob.dto.validator.EnumPattern;
 
-import java.util.List;
-
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)

@@ -42,14 +42,12 @@ import java.util.regex.Pattern;
 public class JobService {
     private final JobRepository jobRepository;
     private final JobMapper jobMapper;
-    private final CompanyMapper companyMapper;
     private final CompanyRepository companyRepository;
     private final SkillRepository skillRepository;
     private final ResumeRepository resumeRepository;
     private final UserRepository userRepository;
     private final PageableService pageableService;
     private final AuthService authService;
-    private final SkillMapper skillMapper;
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -69,14 +67,14 @@ public class JobService {
             job.setSkills(skills);
         }
 
-        return convertJobResponse(jobRepository.save(job));
+        return jobMapper.toJobResponse(jobRepository.save(job));
     }
 
     public JobResponse fetchJob(long id){
         Job jobDB = jobRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
 
-        return convertJobResponse(jobDB);
+        return jobMapper.toJobResponse(jobDB);
     }
 
     public PageResponse<JobResponse> fetchAllJobs(int pageNo, int pageSize, String sortBy){
@@ -113,7 +111,7 @@ public class JobService {
             jobDB.setSkills(skills);
         }
 
-        return convertJobResponse(jobRepository.save(jobDB));
+        return jobMapper.toJobResponse(jobRepository.save(jobDB));
     }
 
     public void delete(long id){
@@ -128,7 +126,6 @@ public class JobService {
         jobRepository.delete(jobDB);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public void deleteJobs(List<Long> ids){
         List<Job> jobList = jobRepository.findAllByIdIn(ids);
         if(jobList.isEmpty()){
@@ -273,7 +270,7 @@ public class JobService {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('HR')")
+
     public PageResponse<JobResponse> getAllJobsByCompany(int pageNo, int pageSize, String sortBy){
         pageNo = pageNo - 1;
 
@@ -300,23 +297,11 @@ public class JobService {
     public List<JobResponse> convertListJobResponse(List<Job> jobList){
         List<JobResponse> jobResponseList = new ArrayList<>();
         for(Job job : jobList){
-            JobResponse response = convertJobResponse(job);
+            JobResponse response = jobMapper.toJobResponse(job);
             jobResponseList.add(response);
         }
         return jobResponseList;
     }
 
-    public JobResponse convertJobResponse(Job job){
-        JobResponse response = jobMapper.toJobResponse(job);
 
-        CompanyBasic companyBasic = (job.getCompany() != null) ?
-                companyMapper.toCompanyBasic(job.getCompany()) : null;
-        response.setCompany(companyBasic);
-
-        List<SkillBasic> skillBasics = (job.getSkills() != null) ?
-                skillMapper.toSkillBasics(job.getSkills()) : null;
-        response.setSkills(skillBasics);
-
-        return response;
-    }
 }

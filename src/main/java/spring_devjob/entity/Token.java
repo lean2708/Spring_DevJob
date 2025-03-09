@@ -1,10 +1,7 @@
 package spring_devjob.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,7 +13,8 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Entity
-@SuperBuilder
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "tbl_token")
 public class Token {
