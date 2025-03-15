@@ -1,6 +1,7 @@
 package spring_devjob.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
@@ -14,6 +15,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import spring_devjob.config.VNPAYConfig;
 import spring_devjob.constants.RoleEnum;
@@ -106,7 +108,7 @@ public class SubscriberService {
         }
 
         if(request.getSkillIds() != null && !request.getSkillIds().isEmpty()){
-            List<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
+            Set<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
             subscriber.setSkills(skills);
         }
 
@@ -137,7 +139,7 @@ public class SubscriberService {
 
         Role proRole = roleRepository.findByName(RoleEnum.PRO.name()).orElseThrow(
                 () -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
-        List<Role> roles = user.getRoles();
+        Set<Role> roles = user.getRoles();
         roles.add(proRole);
         user.setRoles(roles);
 
@@ -145,7 +147,7 @@ public class SubscriberService {
 
         emailService.sendUserEmailWithPayment(subscriber);
 
-        List<String> nameSkillsList = new ArrayList<>();
+        Set<String> nameSkillsList = new HashSet<>();
         for(Skill skill : subscriber.getSkills()){
             nameSkillsList.add(skill.getName());
         }
@@ -165,7 +167,7 @@ public class SubscriberService {
             throw new AppException(ErrorCode.USER_NOT_REGISTERED);
         }
 
-        List<String> nameSkillsList = new ArrayList<>();
+        Set<String> nameSkillsList = new HashSet<>();
         for(Skill skill : subscriber.getSkills()){
             nameSkillsList.add(skill.getName());
         }
@@ -180,7 +182,7 @@ public class SubscriberService {
         Subscriber subscriberDB = subscriberRepository.findById(id)
                 .orElseThrow(()->new AppException(ErrorCode.USER_NOT_REGISTERED));
 
-        List<String> nameSkillsList = new ArrayList<>();
+        Set<String> nameSkillsList = new HashSet<>();
         for(Skill skill : subscriberDB.getSkills()){
             nameSkillsList.add(skill.getName());
         }
@@ -200,7 +202,7 @@ public class SubscriberService {
 
         List<SubscriberResponse> responses =  new ArrayList<>();
         for(Subscriber subscriber : subscriberPage.getContent()){
-            List<String> nameSkillsList = new ArrayList<>();
+            Set<String> nameSkillsList = new HashSet<>();
             for(Skill skill : subscriber.getSkills()){
                 nameSkillsList.add(skill.getName());
             }
@@ -219,21 +221,33 @@ public class SubscriberService {
                 .build();
     }
 
+    @Transactional
     public void delete(long id){
         Subscriber subscriberDB = subscriberRepository.findById(id)
                 .orElseThrow(()->new AppException(ErrorCode.USER_NOT_REGISTERED));
 
+        processSubDeletion(subscriberDB);
+
         subscriberRepository.delete(subscriberDB);
     }
 
-    public void deleteSubscribers(List<Long> ids) {
-        List<Subscriber> subscriberList = subscriberRepository.findAllByIdIn(ids);
+    private void processSubDeletion(Subscriber subscriber){
+        if(!CollectionUtils.isEmpty(subscriber.getSkills())){
+            subscriber.getSkills().clear();
+            subscriberRepository.save(subscriber);
+        }
+    }
 
-        if(subscriberList.isEmpty()){
+    @Transactional
+    public void deleteSubscribers(Set<Long> ids) {
+        Set<Subscriber> subscriberSet = subscriberRepository.findAllByIdIn(ids);
+
+        if(subscriberSet.isEmpty()){
             throw new AppException(ErrorCode.SUBSCRIBER_NOT_FOUND);
         }
+        subscriberSet.forEach(this::processSubDeletion);
 
-        subscriberRepository.deleteAllInBatch(subscriberList);
+        subscriberRepository.deleteAllInBatch(subscriberSet);
     }
 
 

@@ -5,11 +5,12 @@ import org.springframework.stereotype.Repository;
 import spring_devjob.entity.Skill;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface SkillRepository extends JpaRepository<Skill,Long> {
 
     boolean existsByName(String name);
 
-    List<Skill> findAllByIdIn(List<Long> ids);
+    Set<Skill> findAllByIdIn(Set<Long> ids);
 }

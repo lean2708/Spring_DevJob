@@ -63,3 +63,11 @@ cloud:
   max-size-image: 10MB
   folder-video: devjob/video
   max-size-video: 100MB
+
+# Oauth2
+oauth2:
+  google:
+    client-id: ${OAUTH2_CLIENT_ID}
+    client-secret: ${OAUTH2_CLIENT_SECRET}
+    redirect-uri: ${OAUTH2_REDIRECT_URI}
+    grant-type: authorization_code

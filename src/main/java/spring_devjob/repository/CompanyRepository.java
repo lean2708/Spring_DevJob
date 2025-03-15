@@ -5,10 +5,11 @@ import org.springframework.stereotype.Repository;
 import spring_devjob.entity.Company;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface CompanyRepository  extends JpaRepository<Company,Long> {
     boolean existsByName(String name);
 
-    List<Company> findAllByIdIn(List<Long> ids);
+    Set<Company> findAllByIdIn(Set<Long> ids);
 }

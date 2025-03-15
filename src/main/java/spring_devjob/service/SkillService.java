@@ -1,5 +1,6 @@
 package spring_devjob.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -8,11 +9,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import spring_devjob.dto.request.SkillRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.SkillResponse;
 import spring_devjob.entity.Skill;
+import spring_devjob.entity.Subscriber;
 import spring_devjob.entity.User;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
@@ -23,6 +26,7 @@ import spring_devjob.repository.SubscriberRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -86,39 +90,36 @@ public class SkillService {
         return skillMapper.toSkillResponse(skillRepository.save(skillDB));
     }
 
+    @Transactional
     public void delete(long id){
         Skill skillDB = skillRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.SKILL_NOT_EXISTED));
 
-        skillDB.getJobs().forEach(job -> {
-            job.getSkills().remove(skillDB);
-            jobRepository.save(job);
-        });
-
-        skillDB.getSubscribers().forEach(subscriber -> {
-            subscriber.getSkills().remove(skillDB);
-            subscriberRepository.save(subscriber);
-        });
+        processSkillDeletion(skillDB);
 
         skillRepository.delete(skillDB);
     }
 
-    public void deleteSkills(List<Long> ids){
-        List<Skill> skillList = skillRepository.findAllByIdIn(ids);
-        if(skillList.isEmpty()){
+    private void processSkillDeletion(Skill skill){
+        if(!CollectionUtils.isEmpty(skill.getJobs())){
+            skill.getJobs().clear();
+        }
+
+        if(!CollectionUtils.isEmpty(skill.getSubscribers())){
+           skill.getSubscribers().clear();
+        }
+        skillRepository.save(skill);
+    }
+
+    @Transactional
+    public void deleteSkills(Set<Long> ids){
+        Set<Skill> skillSet = skillRepository.findAllByIdIn(ids);
+        if(skillSet.isEmpty()){
             throw new AppException(ErrorCode.SKILL_NOT_FOUND);
         }
-        for(Skill skill : skillList){
-            skill.getJobs().forEach(job -> {
-                job.getSkills().remove(skill);
-                jobRepository.save(job);
-            });
 
-            skill.getSubscribers().forEach(subscriber -> {
-                subscriber.getSkills().remove(skill);
-                subscriberRepository.save(subscriber);
-            });
-        }
-        skillRepository.deleteAllInBatch(skillList);
+        skillSet.forEach(this::processSkillDeletion);
+
+        skillRepository.deleteAllInBatch(skillSet);
     }
 }

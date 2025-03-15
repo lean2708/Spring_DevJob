@@ -1,5 +1,6 @@
 package spring_devjob.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ import spring_devjob.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -97,6 +99,7 @@ public class ResumeService {
         return resumeMapper.toResumeResponse(resumeRepository.save(resumeDB));
     }
 
+    @Transactional
     public void delete(long id){
         Resume resumeDB = resumeRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.RESUME_NOT_EXISTED));
@@ -104,12 +107,13 @@ public class ResumeService {
         resumeRepository.delete(resumeDB);
     }
 
-    public void deleteResumes(List<Long> ids){
-        List<Resume> resumeList = resumeRepository.findAllByIdIn(ids);
-        if(resumeList.isEmpty()){
+    @Transactional
+    public void deleteResumes(Set<Long> ids){
+        Set<Resume> resumeSet = resumeRepository.findAllByIdIn(ids);
+        if(resumeSet.isEmpty()){
             throw new AppException(ErrorCode.RESUME_NOT_FOUND);
         }
-        resumeRepository.deleteAllInBatch(resumeList);
+        resumeRepository.deleteAllInBatch(resumeSet);
     }
 
     public PageResponse<ResumeResponse> getAllResumesByUser(int pageNo, int pageSize, String sortBy){

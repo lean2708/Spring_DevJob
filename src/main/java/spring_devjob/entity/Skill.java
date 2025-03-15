@@ -9,6 +9,7 @@ import spring_devjob.service.AuthService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
@@ -21,9 +22,9 @@ public class Skill extends BaseEntity {
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "skills")
     @JsonIgnore
-    List<Job> jobs;
+    Set<Job> jobs;
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "skills")
     @JsonIgnore
-    List<Subscriber> subscribers;
+    Set<Subscriber> subscribers;
 }

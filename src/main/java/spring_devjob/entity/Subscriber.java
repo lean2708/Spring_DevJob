@@ -8,6 +8,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -27,5 +28,5 @@ public class Subscriber extends BaseEntity {
     @JsonIgnoreProperties(value = { "subscribers" })
     @JoinTable(name = "subscriber_skill", joinColumns = @JoinColumn(name =
             "subscriber_id"), inverseJoinColumns = @JoinColumn(name = "skill_id"))
-    List<Skill> skills;
+    Set<Skill> skills;
 }

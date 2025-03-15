@@ -25,10 +25,10 @@ public class Resume extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    User user;
 
     @ManyToOne
     @JoinColumn(name = "job_id")
-    private Job job;
+    Job job;
 
 }

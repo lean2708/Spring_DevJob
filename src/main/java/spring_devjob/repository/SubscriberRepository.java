@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 import spring_devjob.entity.Subscriber;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface SubscriberRepository extends JpaRepository<Subscriber,Long>  {
@@ -13,5 +14,5 @@ public interface SubscriberRepository extends JpaRepository<Subscriber,Long>  {
 
     Subscriber findByEmail(String email);
 
-    List<Subscriber> findAllByIdIn(List<Long> ids);
+    Set<Subscriber> findAllByIdIn(Set<Long> ids);
 }

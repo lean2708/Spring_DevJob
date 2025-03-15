@@ -10,18 +10,19 @@ import spring_devjob.entity.Resume;
 import spring_devjob.entity.Skill;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job,Long> {
     boolean existsByName(String name);
 
-    List<Job> findAllByIdIn(List<Long> ids);
+    Set<Job> findAllByIdIn(Set<Long> ids);
 
-    List<Job> findBySkillsIn(List<Skill> skills);
+    Set<Job> findBySkillsIn(Set<Skill> skills);
 
     Page<Job> findAllByResumesIn(List<Resume> resumes, Pageable pageable);
 
     Page<Job> findAllByCompanyId(Long companyId, Pageable pageable);
 
-    void deleteAllByCompanyIn(List<Company> companies);
+    void deleteAllByCompanyIn(Set<Company> companies);
 }

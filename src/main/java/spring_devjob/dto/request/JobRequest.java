@@ -12,6 +12,7 @@ import spring_devjob.dto.validator.EnumPattern;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -39,5 +40,5 @@ public class JobRequest {
 
     Long companyId;
 
-    List<Long> skillIds;
+    Set<Long> skillIds;
 }

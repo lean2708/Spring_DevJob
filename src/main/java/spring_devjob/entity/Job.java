@@ -40,13 +40,13 @@ public class Job extends BaseEntity {
 
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
     @JsonIgnore
-    List<Resume> resumes;
+    Set<Resume> resumes;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = {"jobs"})
     @JoinTable(name = "job_skill", joinColumns = @JoinColumn(name = "job_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id"))
-    List<Skill> skills;
+    Set<Skill> skills;
 
 
 }

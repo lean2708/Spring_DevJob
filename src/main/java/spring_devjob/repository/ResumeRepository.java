@@ -9,13 +9,14 @@ import spring_devjob.entity.Resume;
 import spring_devjob.entity.User;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface ResumeRepository extends JpaRepository<Resume,Long> {
 
     boolean existsByName(String name);
 
-    List<Resume> findAllByIdIn(List<Long> ids);
+    Set<Resume> findAllByIdIn(Set<Long> ids);
 
     Page<Resume> findAllByUser(User user, Pageable pageable);
 

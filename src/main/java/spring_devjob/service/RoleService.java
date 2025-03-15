@@ -1,5 +1,6 @@
 package spring_devjob.service;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import spring_devjob.dto.request.RoleRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.RoleResponse;
@@ -24,6 +26,7 @@ import spring_devjob.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -44,7 +47,7 @@ public class RoleService {
         Role role = roleMapper.toRole(request);
 
         if(request.getPermissions() != null && !request.getPermissions().isEmpty()){
-            List<Permission> permissions = permissionRepository.findAllByNameIn(request.getPermissions());
+            Set<Permission> permissions = permissionRepository.findAllByNameIn(request.getPermissions());
             role.setPermissions(permissions);
         }
 
@@ -87,40 +90,45 @@ public class RoleService {
         roleMapper.updateRole(roleDB, request);
 
         if(request.getPermissions() != null && !request.getPermissions().isEmpty()){
-            List<Permission> permissions = permissionRepository.findAllByNameIn(request.getPermissions());
+            Set<Permission> permissions = permissionRepository.findAllByNameIn(request.getPermissions());
             roleDB.setPermissions(permissions);
         }
 
         return roleMapper.toRoleResponse(roleRepository.save(roleDB));
     }
 
+    @Transactional
     public void delete(long id){
         Role roleDB = roleRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
 
-        roleDB.getUsers().forEach(user -> {
-            user.getRoles().remove(roleDB);
-            userRepository.save(user);
-        });
+        processRoleDeletion(roleDB);
 
         roleRepository.delete(roleDB);
     }
 
-    public void deleteRoles(List<Long> ids) {
-        List<Role> roleList = roleRepository.findAllByIdIn(ids);
+    private void processRoleDeletion(Role role){
+        if(!CollectionUtils.isEmpty(role.getUsers())){
+            role.getUsers().clear();
+        }
 
-        if(roleList.isEmpty()){
+        if(!CollectionUtils.isEmpty(role.getPermissions())){
+            role.getPermissions().clear();
+        }
+        roleRepository.save(role);
+    }
+
+    @Transactional
+    public void deleteRoles(Set<Long> ids) {
+        Set<Role> roleSet = roleRepository.findAllByIdIn(ids);
+
+        if(roleSet.isEmpty()){
             throw new AppException(ErrorCode.ROLE_NOT_FOUND);
         }
 
-        for(Role role : roleList){
-            role.getUsers().forEach(user -> {
-                user.getRoles().remove(role);
-                userRepository.save(user);
-            });
-        }
+        roleSet.forEach(this::processRoleDeletion);
 
-        roleRepository.deleteAllInBatch(roleList);
+        roleRepository.deleteAllInBatch(roleSet);
     }
 }
 

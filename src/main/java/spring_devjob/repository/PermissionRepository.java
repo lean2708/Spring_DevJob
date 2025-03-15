@@ -7,15 +7,16 @@ import spring_devjob.entity.Role;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission,Long> {
 
     boolean existsByName(String name);
 
-    List<Permission> findAllByNameIn(List<String> names);
+    Set<Permission> findAllByNameIn(Set<String> names);
 
     List<Permission> findAllByIdIn(List<Long> ids);
 
-    List<Permission> findAllByRolesIn(List<Role> roleList);
+    List<Permission> findAllByRolesIn(Set<Role> roleList);
 }

@@ -26,6 +26,16 @@ public class AuthController {
     private final AuthService authService;
     private final ForgotPasswordService forgotPasswordService;
 
+    @PostMapping("/google")
+    ApiResponse<TokenResponse> authenticateWithGoogle(@RequestParam("code") String code) throws JOSEException {
+        var result = authService.authenticateWithGoogle(code);
+        return ApiResponse.<TokenResponse>builder()
+                .code(HttpStatus.OK.value())
+                .result(result)
+                .message("Login with Google")
+                .build();
+    }
+
     @PostMapping("/login")
     public ApiResponse<TokenResponse> authenticate(@Valid @RequestBody LoginRequest request) throws JOSEException {
         return ApiResponse.<TokenResponse>builder()

@@ -11,6 +11,7 @@ import spring_devjob.service.AuthService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
@@ -35,11 +36,11 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
-    List<Resume> resumes;
+    Set<Resume> resumes;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JsonIgnoreProperties(value = {"users"})
-    @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"),
+    @JoinTable(name = "tbl_user_role", joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
-    List<Role> roles;
+    Set<Role> roles;
 }

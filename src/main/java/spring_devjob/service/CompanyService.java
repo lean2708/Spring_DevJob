@@ -3,6 +3,7 @@ package spring_devjob.service;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import spring_devjob.dto.request.CompanyRequest;
 import spring_devjob.dto.response.CompanyResponse;
@@ -32,6 +34,7 @@ import spring_devjob.repository.criteria.SearchCriteria;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -90,25 +93,35 @@ public class CompanyService {
         return companyMapper.toCompanyResponse(companyRepository.save(companyDB));
     }
 
+    @Transactional
     public void delete(long id){
         Company companyDB = companyRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
 
-        userRepository.deleteAll(companyDB.getUsers());
-        jobRepository.deleteAll(companyDB.getJobs());
+        processCompanyDeletion(companyDB);
 
         companyRepository.delete(companyDB);
     }
 
-    public void deleteCompanies(List<Long> ids) {
-        List<Company> companyList = companyRepository.findAllByIdIn(ids);
-        if(companyList.isEmpty()){
+    private void processCompanyDeletion(Company company){
+        if(!CollectionUtils.isEmpty(company.getUsers())){
+            company.getUsers().forEach(user -> user.setCompany(null));
+            userRepository.saveAll(company.getUsers());
+        }
+        if(!CollectionUtils.isEmpty(company.getJobs())){
+            jobRepository.deleteAll(company.getJobs());
+        }
+    }
+
+    @Transactional
+    public void deleteCompanies(Set<Long> ids) {
+        Set<Company> companySet = companyRepository.findAllByIdIn(ids);
+        if(companySet.isEmpty()){
             throw new AppException(ErrorCode.COMPANY_NOT_FOUND);
         }
-        userRepository.deleteAllByCompanyIn(companyList);
-        jobRepository.deleteAllByCompanyIn(companyList);
+        companySet.forEach(this::processCompanyDeletion);
 
-        companyRepository.deleteAllInBatch(companyList);
+        companyRepository.deleteAllInBatch(companySet);
     }
 
     public PageResponse<CompanyResponse> searchCompany(int pageNo, int pageSize, String sortBy, List<String> search){

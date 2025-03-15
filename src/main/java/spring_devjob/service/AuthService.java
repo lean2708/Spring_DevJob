@@ -4,8 +4,8 @@ import com.nimbusds.jose.*;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring_devjob.constants.RoleEnum;
@@ -13,6 +13,8 @@ import spring_devjob.constants.TokenType;
 import spring_devjob.dto.basic.CompanyBasic;
 import spring_devjob.dto.basic.RoleBasic;
 import spring_devjob.dto.request.*;
+import spring_devjob.dto.response.GoogleTokenResponse;
+import spring_devjob.dto.response.GoogleUserResponse;
 import spring_devjob.dto.response.TokenResponse;
 import spring_devjob.dto.response.UserResponse;
 import spring_devjob.entity.Role;
@@ -26,6 +28,8 @@ import spring_devjob.mapper.UserMapper;
 import spring_devjob.repository.RoleRepository;
 import spring_devjob.repository.TokenRepository;
 import spring_devjob.repository.UserRepository;
+import spring_devjob.client.GoogleAuthClient;
+import spring_devjob.client.GoogleUserInfoClient;
 
 import java.text.ParseException;
 import java.util.*;
@@ -44,7 +48,63 @@ public class AuthService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final TokenRepository tokenRepository;
+    private final GoogleAuthClient googleAuthClient;
+    private final GoogleUserInfoClient googleUserInfoClient;
 
+    @Value("${oauth2.google.client-id}")
+    private String CLIENT_ID;
+    @Value("${oauth2.google.client-secret}")
+    private String CLIENT_SECRET;
+    @Value("${oauth2.google.redirect-uri}")
+    private String REDIRECT_URI;
+    @Value("${oauth2.google.grant-type}")
+    private String GRANT_TYPE;
+
+    public TokenResponse authenticateWithGoogle(String code) throws JOSEException {
+        GoogleTokenResponse response = googleAuthClient.exchangeToken(GoogleTokenRequest.builder()
+                .code(code)
+                .clientId(CLIENT_ID)
+                .clientSecret(CLIENT_SECRET)
+                .redirectUri(REDIRECT_URI)
+                .grantType(GRANT_TYPE)
+                .build());
+
+        // get user info with google
+        GoogleUserResponse userInfo = googleUserInfoClient.getUserInfo("json", response.getAccessToken());
+        Role userRole = roleRepository.findByName(RoleEnum.USER.name()).orElseThrow(
+                () -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+
+        // Onboard user
+        User user = userRepository.findByEmail(userInfo.getEmail()).orElseGet(
+                ()-> userRepository.save(User.builder()
+                        .email(userInfo.getEmail())
+                        .name(userInfo.getName())
+                        .roles(Set.of(userRole))
+                        .avatarUrl(userInfo.getPicture())
+                        .build())
+        );
+
+        String accessToken = tokenService.generateToken(user, TokenType.ACCESS_TOKEN);
+
+        String refreshToken = tokenService.generateToken(user, TokenType.REFRESH_TOKEN);
+
+        List<String> roleNames = user.getRoles()
+                .stream().map(Role::getName).collect(Collectors.toList());
+
+        tokenService.saveToken(Token.builder()
+                .email(user.getEmail())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build());
+
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .authenticated(true)
+                .email(user.getEmail())
+                .role(roleNames)
+                .build();
+    }
 
     public TokenResponse login(LoginRequest request) throws JOSEException {
         User userDB = userRepository.findByEmail(request.getEmail())
@@ -89,12 +149,7 @@ public class AuthService {
 
         Role userRole = roleRepository.findByName(RoleEnum.USER.name()).orElseThrow(
                 () -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
-        List<Role> roles = new ArrayList<>();
-        if(user.getRoles() != null){
-            roles.addAll(user.getRoles());
-        }
-        roles.add(userRole);
-        user.setRoles(roles);
+        user.setRoles(Set.of(userRole));
 
         emailService.sendUserEmailWithRegister(user);
         userRepository.save(user);
@@ -125,7 +180,7 @@ public class AuthService {
         User user = userRepository.findByEmail(getCurrentUsername()).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        return convertUserResponse(user);
+        return userMapper.toUserResponse(user);
     }
 
     public TokenResponse refreshToken(TokenRequest request) throws ParseException, JOSEException {
@@ -184,19 +239,5 @@ public class AuthService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         return authentication.getName(); // email
-    }
-
-    public UserResponse convertUserResponse(User user){
-        UserResponse response = userMapper.toUserResponse(user);
-
-        CompanyBasic companyBasic = (user.getCompany() != null) ?
-                companyMapper.toCompanyBasic(user.getCompany()) : null;
-        response.setCompany(companyBasic);
-
-        List<RoleBasic> roleBasics = (user.getRoles() != null) ?
-                roleMapper.toRoleBasics(user.getRoles()) : null;
-        response.setRoles(roleBasics);
-
-        return response;
     }
 }

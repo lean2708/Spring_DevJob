@@ -1,5 +1,6 @@
 package spring_devjob.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import spring_devjob.constants.RoleEnum;
 import spring_devjob.dto.basic.CompanyBasic;
@@ -24,9 +26,7 @@ import spring_devjob.mapper.RoleMapper;
 import spring_devjob.mapper.UserMapper;
 import spring_devjob.repository.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,13 +57,12 @@ public class UserService {
             companyRepository.findById(request.getCompanyId()).ifPresent(user::setCompany);
         }
 
-        if(request.getRoleId() != null && !request.getRoleId().isEmpty()){
-            List<Role> roles = roleRepository.findAllByIdIn(request.getRoleId());
-            user.setRoles(roles);
+        if(!CollectionUtils.isEmpty(request.getRoleIds())){
+            user.setRoles(roleRepository.findAllByIdIn(request.getRoleIds()));
         }else{
             Role userRole = roleRepository.findByName(RoleEnum.USER.name()).orElseThrow(
                     () -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
-            user.setRoles(List.of(userRole));
+            user.setRoles(Set.of(userRole));
         }
 
        return userMapper.toUserResponse(userRepository.save(user));
@@ -106,43 +105,44 @@ public class UserService {
             companyRepository.findById(request.getCompanyId()).ifPresent(userDB::setCompany);
         }
 
-        if(request.getRoleId() != null && !request.getRoleId().isEmpty()){
-            List<Role> roles = roleRepository.findAllByIdIn(request.getRoleId());
-            userDB.setRoles(roles);
+        if(!CollectionUtils.isEmpty(request.getRoleIds())){
+            userDB.setRoles(roleRepository.findAllByIdIn(request.getRoleIds()));
         }
 
         return userMapper.toUserResponse(userRepository.save(userDB));
     }
 
-
+    @Transactional
     public void delete(long id){
         User userDB = userRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        if(userDB.getCompany() != null){
-            userDB.getCompany().getUsers().remove(userDB);
-            companyRepository.save(userDB.getCompany());
-        }
-
-        resumeRepository.deleteAll(userDB.getResumes());
+        processUserDeletion(userDB);
 
         userRepository.delete(userDB);
     }
 
-
-    public void deleteUsers(List<Long> ids){
-        List<User> userList = userRepository.findAllByIdIn(ids);
-        if(userList.isEmpty()){
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
-        }
-        for(User user : userList){
-            if(user.getCompany() != null){
-                user.getCompany().getUsers().remove(user);
-                companyRepository.save(user.getCompany());
-            }
+    private void processUserDeletion(User user) {
+        if(!CollectionUtils.isEmpty(user.getResumes())){
             resumeRepository.deleteAll(user.getResumes());
         }
-        userRepository.deleteAllInBatch(userList);
+
+        if(!CollectionUtils.isEmpty(user.getRoles())){
+            user.getRoles().removeAll(user.getRoles());
+            userRepository.save(user);
+        }
+    }
+
+    @Transactional
+    public void deleteUsers(Set<Long> ids){
+        Set<User> userSet = userRepository.findAllByIdIn(ids);
+        if(userSet.isEmpty()){
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        userSet.forEach(this::processUserDeletion);
+
+        userRepository.deleteAllInBatch(userSet);
     }
 
     public List<UserResponse> convertListUserResponse(List<User> userList){

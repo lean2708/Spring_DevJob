@@ -105,11 +105,11 @@ public class EmailService {
         List<Subscriber> listSubs = this.subscriberRepository.findAll();
         if (listSubs != null && listSubs.size() > 0) {
             for (Subscriber sub : listSubs) {
-                List<Skill> listSkills = sub.getSkills();
-                if (listSkills != null && listSkills.size() > 0) {
-                    List<Job> listJobs = this.jobRepository.findBySkillsIn(listSkills);
-                    if (listJobs != null && !listJobs.isEmpty()) {
-                        List<ResponseEmailJob> list = listJobs.stream().map(
+                Set<Skill> skillSet = sub.getSkills();
+                if (skillSet != null && skillSet.size() > 0) {
+                    Set<Job> jobSet = this.jobRepository.findBySkillsIn(skillSet);
+                    if (jobSet != null && !jobSet.isEmpty()) {
+                        List<ResponseEmailJob> list = jobSet.stream().map(
                                 job -> this.convertJobToSendEmail(job)).collect(Collectors.toList());
                         Map<String, Object> model = new HashMap<>();
                         model.put("name", sub.getName());
@@ -126,7 +126,7 @@ public class EmailService {
         }
     }
     public ResponseEmailJob convertJobToSendEmail(Job job) {
-        List<Skill> skills = job.getSkills();
+        Set<Skill> skills = job.getSkills();
         List<ResponseEmailJob.SkillEmail> s = skills.stream().
                 map(skill -> new ResponseEmailJob.SkillEmail(skill.getName())).
                 collect(Collectors.toList());

@@ -12,8 +12,6 @@ public interface JobMapper {
     @Mapping(target = "skills", ignore = true)
     Job toJob(JobRequest request);
 
-    @Mapping(source = "skills", target = "skills")
-   @Mapping(source = "company", target = "company")
     JobResponse toJobResponse(Job job);
 
     JobBasic toJobBasic(Job job);

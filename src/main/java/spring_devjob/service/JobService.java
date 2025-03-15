@@ -3,6 +3,7 @@ package spring_devjob.service;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import spring_devjob.dto.basic.CompanyBasic;
 import spring_devjob.dto.basic.RoleBasic;
@@ -29,10 +31,7 @@ import spring_devjob.repository.*;
 import spring_devjob.repository.criteria.JobSearchCriteriaQueryConsumer;
 import spring_devjob.repository.criteria.SearchCriteria;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,8 +61,8 @@ public class JobService {
             .ifPresent(job::setCompany);
         }
 
-        if(request.getSkillIds() != null && !request.getSkillIds().isEmpty()){
-            List<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
+        if(!CollectionUtils.isEmpty(request.getSkillIds())){
+            Set<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
             job.setSkills(skills);
         }
 
@@ -106,38 +105,42 @@ public class JobService {
                     .ifPresent(jobDB::setCompany);
         }
 
-        if(request.getSkillIds() != null && !request.getSkillIds().isEmpty()){
-            List<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
+        if(!CollectionUtils.isEmpty(request.getSkillIds())){
+            Set<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
             jobDB.setSkills(skills);
         }
 
         return jobMapper.toJobResponse(jobRepository.save(jobDB));
     }
 
+    @Transactional
     public void delete(long id){
         Job jobDB = jobRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
 
-        jobDB.getResumes().forEach(resume -> {
-            resume.setJob(null);
-            resumeRepository.save(resume);
-        });
+        processJobDeletion(jobDB);
 
         jobRepository.delete(jobDB);
     }
+    private void processJobDeletion(Job job){
+        if(!CollectionUtils.isEmpty(job.getResumes())){
+            job.getResumes().clear();
+        }
+        if(!CollectionUtils.isEmpty(job.getSkills())){
+            job.getSkills().clear();
+        }
+        jobRepository.save(job);
+    }
 
-    public void deleteJobs(List<Long> ids){
-        List<Job> jobList = jobRepository.findAllByIdIn(ids);
-        if(jobList.isEmpty()){
+    @Transactional
+    public void deleteJobs(Set<Long> ids){
+        Set<Job> jobSet = jobRepository.findAllByIdIn(ids);
+        if(jobSet.isEmpty()){
             throw new AppException(ErrorCode.JOB_NOT_FOUND);
         }
-        for(Job job : jobList){
-            job.getResumes().forEach(resume -> {
-                resume.setJob(null);
-                resumeRepository.save(resume);
-            });
-        }
-        jobRepository.deleteAllInBatch(jobList);
+        jobSet.forEach(this::processJobDeletion);
+
+        jobRepository.deleteAllInBatch(jobSet);
     }
 
     public PageResponse<JobResponse> fetchAllJobsBySkills(int pageNo, int pageSize, String sortBy, List<String> search, List<String> skills){

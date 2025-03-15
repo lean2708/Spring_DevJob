@@ -9,6 +9,7 @@ import spring_devjob.service.AuthService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -30,6 +31,6 @@ public class Company extends BaseEntity {
 
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
     @JsonIgnore
-    List<Job> jobs;
+    Set<Job> jobs;
 
 }

@@ -8,6 +8,7 @@ import spring_devjob.entity.Skill;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -19,5 +20,5 @@ public class SubscriberResponse extends BaseResponse {
     LocalDate startDate;
     LocalDate expiryDate;
 
-    List<String> skills;
+    Set<String> skills;
 }

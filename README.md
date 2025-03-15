@@ -1,7 +1,7 @@
 # Spring Dev Job
 Spring Dev Job is a Restful API service developed with Spring Boot, providing IT recruitment management functionalities.
 ## Tech Stack
-- **Build Tool:**: Maven >= 3.4.1
+- **Build Tool:**: Maven >= 3.2.3
 - **Java**: 17
 - **Framework**: Spring Boot 3.2.x
 - **Database**: MySQL

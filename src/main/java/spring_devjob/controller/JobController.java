@@ -20,6 +20,7 @@ import spring_devjob.service.JobService;
 import spring_devjob.service.ResumeService;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -84,7 +85,7 @@ public class JobController {
 
     @DeleteMapping("/jobs")
     public ApiResponse<Void> deleteJobs(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
-                                            List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
+                                        Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         jobService.deleteJobs(ids);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.NO_CONTENT.value())

@@ -6,6 +6,7 @@ import lombok.experimental.SuperBuilder;
 import spring_devjob.dto.basic.PermissionBasic;
 
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -14,5 +15,5 @@ import java.util.List;
 public class RoleResponse extends BaseResponse {
     String description;
 
-    List<PermissionBasic> permissions;
+    Set<PermissionBasic> permissions;
 }

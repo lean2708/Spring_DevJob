@@ -16,6 +16,7 @@ import spring_devjob.dto.response.*;
 import spring_devjob.service.SubscriberService;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/v1")
@@ -90,7 +91,7 @@ public class SubscriberController {
 
     @DeleteMapping("/subscribers")
     public ApiResponse<Void> deleteSubscribers(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
-                                         List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
+                                               Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         subscriberService.deleteSubscribers(ids);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.NO_CONTENT.value())

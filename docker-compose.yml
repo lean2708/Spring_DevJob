@@ -1,20 +1,20 @@
 version: '3.5'
 
 services:
-  mysql:
+  mysql-devjob:
     image: mysql:8.0.41-debian
-    container_name: mysql
+    container_name: mysql-devjob
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: 123456
       MYSQL_DATABASE: devjob
     volumes:
-      - mysql_data:/var/lib/mysql
+      - devjob_data:/var/lib/mysql
       - ./initdb.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - '3306:3306'
+      - '3309:3306'
     networks:
-      - backend
+      - devjob_backend
 
   spring-devjob:
     container_name: spring-devjob
@@ -27,13 +27,13 @@ services:
     ports:
       - '8080:8080'
     networks:
-      - backend
+      - devjob_backend
     depends_on:
-      - mysql
+      - mysql-devjob
 
 networks:
-  backend:
+  devjob_backend:
     driver: bridge
 
 volumes:
-  mysql_data:
+  devjob_data:

@@ -19,7 +19,9 @@ import spring_devjob.repository.PermissionRepository;
 import spring_devjob.repository.RoleRepository;
 import spring_devjob.repository.UserRepository;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static spring_devjob.constants.PermissionEnum.*;
@@ -74,7 +76,7 @@ public class ApplicationInitConfig {
                 Role adminRole = roleRepository.save(Role.builder()
                         .name(RoleEnum.ADMIN.name())
                         .description("ROLE_ADMIN")
-                        .permissions(adminPermissions)
+                        .permissions(new HashSet<>(adminPermissions))
                         .build());
 
                 List<Role> roleList = List.of(userRole, proRole, hrRole, adminRole);
@@ -89,7 +91,7 @@ public class ApplicationInitConfig {
                         .name("Admin")
                         .email(ADMIN_EMAIL)
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
-                        .roles(List.of(adminRole))
+                        .roles(Set.of(adminRole))
                         .gender(GenderEnum.MALE)
                         .build();
 
@@ -98,15 +100,15 @@ public class ApplicationInitConfig {
         };
     }
 
-    private List<Permission> getProPermissions() {
+    private Set<Permission> getProPermissions() {
         return permissionRepository.findAllByNameIn(
-                List.of(SEND_JOB_NOTIFICATIONS.name(), DOWNLOAD_FILE.name())
+                Set.of(SEND_JOB_NOTIFICATIONS.name(), DOWNLOAD_FILE.name())
         );
     }
 
-    private List<Permission> getHRPermissions() {
+    private Set<Permission> getHRPermissions() {
         return permissionRepository.findAllByNameIn(
-                List.of(
+                Set.of(
                         CREATE_JOB.name(), FETCH_JOB_BY_ID.name(),
                         UPDATE_JOB.name(), DELETE_JOB.name(),
                         FETCH_JOBS_BY_COMPANY.name(), FETCH_RESUMES_BY_JOB.name()

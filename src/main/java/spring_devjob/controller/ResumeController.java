@@ -16,6 +16,7 @@ import spring_devjob.dto.response.ResumeResponse;
 import spring_devjob.service.ResumeService;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -79,7 +80,7 @@ public class ResumeController {
     }
     @DeleteMapping("/resumes")
     public ApiResponse<Void> deleteResumes(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
-                                               List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
+                                           Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         resumeService.deleteResumes(ids);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.NO_CONTENT.value())

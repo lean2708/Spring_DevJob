@@ -16,6 +16,7 @@ import spring_devjob.dto.response.RoleResponse;
 import spring_devjob.service.RoleService;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -81,7 +82,7 @@ public class RoleController {
 
     @DeleteMapping("/roles")
     public ApiResponse<Void> deleteRoles(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
-                                             List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
+                                         Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         roleService.deleteRoles(ids);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.OK.value())

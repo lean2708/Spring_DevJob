@@ -13,6 +13,7 @@ import spring_devjob.dto.basic.RoleBasic;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -27,5 +28,5 @@ public class UserResponse extends BaseResponse{
     String address;
 
     CompanyBasic company;
-    List<RoleBasic> roles;
+    Set<RoleBasic> roles;
 }

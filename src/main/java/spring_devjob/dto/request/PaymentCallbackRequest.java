@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import spring_devjob.entity.Skill;
 
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -15,5 +16,5 @@ public class PaymentCallbackRequest {
     String responseCode;
     @Positive(message = "Amount phải lớn hơn 0")
     long amount;
-    List<Long> skillIds;
+    Set<Long> skillIds;
 }

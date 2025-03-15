@@ -10,6 +10,7 @@ import spring_devjob.constants.GenderEnum;
 import spring_devjob.dto.validator.EnumPattern;
 
 import java.util.List;
+import java.util.Set;
 
 
 @Getter
@@ -30,5 +31,5 @@ public class UserRequest {
     String address;
 
     Long companyId;
-    List<Long> roleId;
+    Set<Long> roleIds;
 }

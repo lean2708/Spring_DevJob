@@ -19,6 +19,7 @@ import spring_devjob.dto.response.PageResponse;
 import spring_devjob.service.CompanyService;
 import spring_devjob.service.JobService;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -85,7 +86,7 @@ public class CompanyController {
 
     @DeleteMapping("/companies")
     public ApiResponse<Void> deleteCompanies(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
-                                                 List<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
+                                             Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         companyService.deleteCompanies(ids);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.NO_CONTENT.value())

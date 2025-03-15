@@ -33,5 +33,5 @@ public class JobResponse extends BaseResponse {
 
     CompanyBasic company;
 
-    List<SkillBasic> skills;
+    Set<SkillBasic> skills;
 }
