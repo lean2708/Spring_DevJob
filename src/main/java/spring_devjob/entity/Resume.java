@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.constants.ResumeStateEnum;
 
 
@@ -13,13 +14,14 @@ import spring_devjob.constants.ResumeStateEnum;
 @Entity
 @SuperBuilder
 @NoArgsConstructor
+@SQLRestriction("state = 'ACTIVE'")
 @Table(name = "tbl_resume")
 public class Resume extends BaseEntity {
 
     String cvUrl;
 
     @Enumerated(EnumType.STRING)
-    ResumeStateEnum status;
+    ResumeStateEnum resumeStatus;
 
     boolean primaryCv;
 

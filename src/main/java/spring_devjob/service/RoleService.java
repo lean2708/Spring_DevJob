@@ -11,22 +11,25 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.RoleRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.RoleResponse;
-import spring_devjob.entity.Permission;
-import spring_devjob.entity.Role;
-import spring_devjob.entity.Subscriber;
+import spring_devjob.entity.*;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.RoleMapper;
 import spring_devjob.repository.PermissionRepository;
+import spring_devjob.repository.RoleHasPermissionRepository;
 import spring_devjob.repository.RoleRepository;
 import spring_devjob.repository.UserRepository;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,26 +40,33 @@ public class RoleService {
     private final RoleMapper roleMapper;
     private final PageableService pageableService;
     private final PermissionRepository permissionRepository;
-    private final UserRepository userRepository;
+    private final RoleHasPermissionRepository roleHasPermissionRepository;
 
     public RoleResponse create(RoleRequest request){
         if(roleRepository.existsByName(request.getName())){
             throw new AppException(ErrorCode.ROLE_EXISTED);
         }
+        if(roleRepository.existsInactiveRoleByName(request.getName())){
+            throw new AppException(ErrorCode.ROLE_ALREADY_DELETED);
+        }
 
         Role role = roleMapper.toRole(request);
 
-        if(request.getPermissions() != null && !request.getPermissions().isEmpty()){
-            Set<Permission> permissions = permissionRepository.findAllByNameIn(request.getPermissions());
-            role.setPermissions(permissions);
+        if(!CollectionUtils.isEmpty(request.getPermissions())){
+            Set<Permission> permissionSet = permissionRepository.findAllByNameIn(request.getPermissions());
+
+            Set<RoleHasPermission> roleHasPermissions = permissionSet.stream()
+                    .map(permission -> new RoleHasPermission(role,permission))
+                    .collect(Collectors.toSet());
+
+            role.setPermissions(new HashSet<>(roleHasPermissionRepository.saveAll(roleHasPermissions)));
         }
 
         return roleMapper.toRoleResponse(roleRepository.save(role));
     }
 
     public RoleResponse fetchRoleById(long id){
-        Role roleDB = roleRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+        Role roleDB = findActiveRoleById(id);
 
         return roleMapper.toRoleResponse(roleDB);
     }
@@ -84,14 +94,20 @@ public class RoleService {
     }
 
     public RoleResponse update(long id, RoleRequest request){
-        Role roleDB = roleRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+        Role roleDB = findActiveRoleById(id);
 
         roleMapper.updateRole(roleDB, request);
 
-        if(request.getPermissions() != null && !request.getPermissions().isEmpty()){
-            Set<Permission> permissions = permissionRepository.findAllByNameIn(request.getPermissions());
-            roleDB.setPermissions(permissions);
+        if(!CollectionUtils.isEmpty(request.getPermissions())){
+            Set<Permission> permissionSet = permissionRepository.findAllByNameIn(request.getPermissions());
+
+            roleHasPermissionRepository.deleteByRole(roleDB);
+
+            Set<RoleHasPermission> roleHasPermissions = permissionSet.stream()
+                    .map(permission -> new RoleHasPermission(roleDB,permission))
+                    .collect(Collectors.toSet());
+
+            roleDB.setPermissions(new HashSet<>(roleHasPermissionRepository.saveAll(roleHasPermissions)));
         }
 
         return roleMapper.toRoleResponse(roleRepository.save(roleDB));
@@ -99,23 +115,16 @@ public class RoleService {
 
     @Transactional
     public void delete(long id){
-        Role roleDB = roleRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+        Role roleDB = findActiveRoleById(id);
 
-        processRoleDeletion(roleDB);
+        deactivateRole(roleDB);
 
-        roleRepository.delete(roleDB);
+        roleRepository.save(roleDB);
     }
 
-    private void processRoleDeletion(Role role){
-        if(!CollectionUtils.isEmpty(role.getUsers())){
-            role.getUsers().clear();
-        }
-
-        if(!CollectionUtils.isEmpty(role.getPermissions())){
-            role.getPermissions().clear();
-        }
-        roleRepository.save(role);
+    private void deactivateRole(Role role){
+        role.setState(EntityStatus.INACTIVE);
+        role.setDeactivatedAt(LocalDate.now());
     }
 
     @Transactional
@@ -125,10 +134,15 @@ public class RoleService {
         if(roleSet.isEmpty()){
             throw new AppException(ErrorCode.ROLE_NOT_FOUND);
         }
+        roleSet.forEach(this::deactivateRole);
 
-        roleSet.forEach(this::processRoleDeletion);
-
-        roleRepository.deleteAllInBatch(roleSet);
+        roleRepository.saveAll(roleSet);
     }
+
+    private Role findActiveRoleById(long id) {
+        return roleRepository.findById(id).
+                orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+    }
+
 }
 

@@ -7,33 +7,27 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import spring_devjob.dto.basic.CompanyBasic;
-import spring_devjob.dto.basic.RoleBasic;
-import spring_devjob.dto.basic.SkillBasic;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.JobRequest;
 import spring_devjob.dto.response.JobResponse;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.entity.*;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
-import spring_devjob.mapper.CompanyMapper;
 import spring_devjob.mapper.JobMapper;
-import spring_devjob.mapper.SkillMapper;
 import spring_devjob.repository.*;
 import spring_devjob.repository.criteria.JobSearchCriteriaQueryConsumer;
 import spring_devjob.repository.criteria.SearchCriteria;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -47,6 +41,7 @@ public class JobService {
     private final UserRepository userRepository;
     private final PageableService pageableService;
     private final AuthService authService;
+    private final JobHasSkillRepository jobHasSkillRepository;
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -54,24 +49,33 @@ public class JobService {
         if(jobRepository.existsByName(request.getName())){
             throw new AppException(ErrorCode.JOB_EXISTED);
         }
+
+        if(jobRepository.existsInactiveJobByName(request.getName())){
+            throw new AppException(ErrorCode.JOB_ALREADY_DELETED);
+        }
+
         Job job = jobMapper.toJob(request);
 
         if(request.getCompanyId() != null){
-            companyRepository.findById(request.getCompanyId())
-            .ifPresent(job::setCompany);
+            companyRepository.findById(request.getCompanyId()).ifPresent(job::setCompany);
         }
+        jobRepository.save(job);
 
         if(!CollectionUtils.isEmpty(request.getSkillIds())){
-            Set<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
-            job.setSkills(skills);
+            Set<Skill> skillSet = skillRepository.findAllByIdIn(request.getSkillIds());
+
+            Set<JobHasSkill> jobHasSkills = skillSet.stream()
+                            .map(skill -> new JobHasSkill(job,skill))
+                            .collect(Collectors.toSet());
+
+            job.setSkills(new HashSet<>(jobHasSkillRepository.saveAll(jobHasSkills)));
         }
 
-        return jobMapper.toJobResponse(jobRepository.save(job));
+        return jobMapper.toJobResponse(job);
     }
 
     public JobResponse fetchJob(long id){
-        Job jobDB = jobRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
+        Job jobDB = findActiveJobById(id);
 
         return jobMapper.toJobResponse(jobDB);
     }
@@ -95,19 +99,24 @@ public class JobService {
     }
 
     public JobResponse update(long id, JobRequest request){
-        Job jobDB = jobRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
+        Job jobDB = findActiveJobById(id);
 
         jobMapper.updateJob(jobDB, request);
 
         if(request.getCompanyId() != null){
-            companyRepository.findById(request.getCompanyId())
-                    .ifPresent(jobDB::setCompany);
+            companyRepository.findById(request.getCompanyId()).ifPresent(jobDB::setCompany);
         }
 
         if(!CollectionUtils.isEmpty(request.getSkillIds())){
-            Set<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
-            jobDB.setSkills(skills);
+            Set<Skill> skillSet = skillRepository.findAllByIdIn(request.getSkillIds());
+
+            jobHasSkillRepository.deleteByJob(jobDB);
+
+            Set<JobHasSkill> jobHasSkills = skillSet.stream()
+                    .map(skill -> new JobHasSkill(jobDB,skill))
+                    .collect(Collectors.toSet());
+
+            jobDB.setSkills(new HashSet<>(jobHasSkillRepository.saveAll(jobHasSkills)));
         }
 
         return jobMapper.toJobResponse(jobRepository.save(jobDB));
@@ -115,21 +124,18 @@ public class JobService {
 
     @Transactional
     public void delete(long id){
-        Job jobDB = jobRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
+        Job jobDB = findActiveJobById(id);
 
-        processJobDeletion(jobDB);
+        deactivateJob(jobDB);
 
-        jobRepository.delete(jobDB);
+        jobRepository.save(jobDB);
     }
-    private void processJobDeletion(Job job){
+    private void deactivateJob(Job job){
         if(!CollectionUtils.isEmpty(job.getResumes())){
             job.getResumes().clear();
         }
-        if(!CollectionUtils.isEmpty(job.getSkills())){
-            job.getSkills().clear();
-        }
-        jobRepository.save(job);
+        job.setState(EntityStatus.INACTIVE);
+        job.setDeactivatedAt(LocalDate.now());
     }
 
     @Transactional
@@ -138,9 +144,9 @@ public class JobService {
         if(jobSet.isEmpty()){
             throw new AppException(ErrorCode.JOB_NOT_FOUND);
         }
-        jobSet.forEach(this::processJobDeletion);
+        jobSet.forEach(this::deactivateJob);
 
-        jobRepository.deleteAllInBatch(jobSet);
+        jobRepository.saveAll(jobSet);
     }
 
     public PageResponse<JobResponse> fetchAllJobsBySkills(int pageNo, int pageSize, String sortBy, List<String> search, List<String> skills){
@@ -189,10 +195,11 @@ public class JobService {
         }
 
         if(skills != null && !skills.isEmpty()){ // search name skill
-            Join<Job, Skill> skillJobJoin = root.join("skills", JoinType.LEFT);
+            Join<Job, JobHasSkill> jobSkillJoin = root.join("skills", JoinType.INNER);
+            Join<JobHasSkill, Skill> skillJoin = jobSkillJoin.join("skill", JoinType.INNER);
             List<Predicate> skillPredicateList = new ArrayList<>();
             for(String nameSkill : skills){
-                skillPredicateList.add(builder.like(skillJobJoin.get("name"), "%" + nameSkill + "%"));
+                skillPredicateList.add(builder.like(skillJoin.get("name"), "%" + nameSkill + "%"));
             }
             Predicate skillPredicate = builder.or(skillPredicateList.toArray(new Predicate[0]));
             predicate = builder.and(predicate, skillPredicate);
@@ -235,10 +242,11 @@ public class JobService {
         }
 
         if(skills != null && !skills.isEmpty()){ // search name skill
-            Join<Job, Skill> skillJobJoin = root.join("skills", JoinType.LEFT);
+            Join<Job, JobHasSkill> jobSkillJoin = root.join("skills", JoinType.INNER);
+            Join<JobHasSkill, Skill> skillJoin = jobSkillJoin.join("skill", JoinType.INNER);
             List<Predicate> skillPredicateList = new ArrayList<>();
             for(String nameSkill : skills){
-                skillPredicateList.add(builder.like(skillJobJoin.get("name"), "%" + nameSkill + "%"));
+                skillPredicateList.add(builder.like(skillJoin.get("name"), "%" + nameSkill + "%"));
             }
             Predicate skillPredicate = builder.or(skillPredicateList.toArray(new Predicate[0]));
             predicate = builder.and(predicate, skillPredicate);
@@ -250,15 +258,15 @@ public class JobService {
         return entityManager.createQuery(countQuery).getSingleResult();
     }
 
-    public PageResponse<JobResponse> getAllAppliedJobsByUser(int pageNo, int pageSize, String sortBy){
+    public PageResponse<JobResponse> getAllAppliedJobsByUser(int pageNo, int pageSize, String sortBy, long userId){
         pageNo = pageNo - 1;
 
         Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
 
-        User user = userRepository.findByEmail(authService.getCurrentUsername()).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        List<Resume> resumes = resumeRepository.findAllByUserId(user.getId());
+        Set<Resume> resumes = resumeRepository.findAllByUserId(user.getId());
 
         Page<Job> jobPage = jobRepository.findAllByResumesIn(resumes, pageable);
 
@@ -295,6 +303,11 @@ public class JobService {
                 .totalItems(jobPage.getTotalElements())
                 .items(convertListJobResponse(jobPage.getContent()))
                 .build();
+    }
+
+    private Job findActiveJobById(long id) {
+        return jobRepository.findById(id).
+                orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
     }
 
     public List<JobResponse> convertListJobResponse(List<Job> jobList){

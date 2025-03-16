@@ -3,32 +3,26 @@ package spring_devjob.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.RoleEnum;
-import spring_devjob.dto.basic.CompanyBasic;
-import spring_devjob.dto.basic.RoleBasic;
 import spring_devjob.dto.request.UserRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.UserResponse;
 import spring_devjob.entity.*;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
-import spring_devjob.mapper.CompanyMapper;
-import spring_devjob.mapper.RoleMapper;
 import spring_devjob.mapper.UserMapper;
 import spring_devjob.repository.*;
 
+import java.time.LocalDate;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -42,6 +36,8 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final ResumeRepository resumeRepository;
     private final PageableService pageableService;
+    private final UserHasRoleRepository userHasRoleRepository;
+    private final UserHasRoleService userHasRoleService;
 
 
     public UserResponse create(UserRequest request){
@@ -49,6 +45,9 @@ public class UserService {
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
 
+        if(userRepository.existsInactiveUserByEmail(request.getEmail())){
+            throw new AppException(ErrorCode.USER_ALREADY_DELETED);
+        }
         User user = userMapper.toUser(request);
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -56,21 +55,25 @@ public class UserService {
         if(request.getCompanyId() != null){
             companyRepository.findById(request.getCompanyId()).ifPresent(user::setCompany);
         }
+        userRepository.save(user);
 
         if(!CollectionUtils.isEmpty(request.getRoleIds())){
-            user.setRoles(roleRepository.findAllByIdIn(request.getRoleIds()));
-        }else{
-            Role userRole = roleRepository.findByName(RoleEnum.USER.name()).orElseThrow(
-                    () -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
-            user.setRoles(Set.of(userRole));
+            Set<Role> roleSet = roleRepository.findAllByIdIn(request.getRoleIds());
+
+            Set<UserHasRole> userRoles = roleSet.stream()
+                    .map(role -> new UserHasRole(user, role))
+                    .collect(Collectors.toSet());
+
+            user.setRoles(new HashSet<>(userHasRoleRepository.saveAll(userRoles)));
+        } else{
+            userHasRoleService.saveUserHasRole(user, RoleEnum.USER);
         }
 
-       return userMapper.toUserResponse(userRepository.save(user));
+       return userMapper.toUserResponse(user);
     }
 
     public UserResponse fetchUserById(long id){
-        User userDB = userRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User userDB = findActiveUserById(id);
 
         return userMapper.toUserResponse(userDB);
     }
@@ -94,43 +97,51 @@ public class UserService {
     }
 
     public UserResponse update(long id, UserRequest request){
-        User userDB = userRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User userDB = findActiveUserById(id);
 
         userMapper.updateUser(userDB, request);
 
-        userDB.setPassword(passwordEncoder.encode(userDB.getPassword()));
+        if (!StringUtils.isBlank(request.getPassword())) {
+            userDB.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
 
         if(request.getCompanyId() != null){
             companyRepository.findById(request.getCompanyId()).ifPresent(userDB::setCompany);
         }
 
         if(!CollectionUtils.isEmpty(request.getRoleIds())){
-            userDB.setRoles(roleRepository.findAllByIdIn(request.getRoleIds()));
-        }
+            Set<Role> roleSet = roleRepository.findAllByIdIn(request.getRoleIds());
 
+            userHasRoleRepository.deleteByUser(userDB);
+
+            Set<UserHasRole> userRoles = roleSet.stream()
+                    .map(role -> new UserHasRole(userDB, role))
+                    .collect(Collectors.toSet());
+
+            userDB.setRoles(new HashSet<>(userHasRoleRepository.saveAll(userRoles)));
+        }
         return userMapper.toUserResponse(userRepository.save(userDB));
     }
 
     @Transactional
     public void delete(long id){
-        User userDB = userRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User userDB = findActiveUserById(id);
 
-        processUserDeletion(userDB);
+        deactivateUser(userDB);
 
-        userRepository.delete(userDB);
+        userRepository.save(userDB);
     }
 
-    private void processUserDeletion(User user) {
-        if(!CollectionUtils.isEmpty(user.getResumes())){
-            resumeRepository.deleteAll(user.getResumes());
+    private void deactivateUser(User user) {
+        if (!CollectionUtils.isEmpty(user.getResumes())) {
+            user.getResumes().forEach(resume -> {
+                resume.setState(EntityStatus.INACTIVE);
+                resume.setDeactivatedAt(LocalDate.now());
+                resumeRepository.save(resume);
+            });
         }
-
-        if(!CollectionUtils.isEmpty(user.getRoles())){
-            user.getRoles().removeAll(user.getRoles());
-            userRepository.save(user);
-        }
+        user.setState(EntityStatus.INACTIVE);
+        user.setDeactivatedAt(LocalDate.now());
     }
 
     @Transactional
@@ -139,11 +150,16 @@ public class UserService {
         if(userSet.isEmpty()){
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
+        userSet.forEach(this::deactivateUser);
 
-        userSet.forEach(this::processUserDeletion);
-
-        userRepository.deleteAllInBatch(userSet);
+        userRepository.saveAll(userSet);
     }
+
+    private User findActiveUserById(long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    }
+
 
     public List<UserResponse> convertListUserResponse(List<User> userList){
         List<UserResponse> userResponseList = new ArrayList<>();

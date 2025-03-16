@@ -1,16 +1,18 @@
 package spring_devjob.dto.basic;
 
-import lombok.AccessLevel;
+import jakarta.persistence.MappedSuperclass;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @SuperBuilder
 @NoArgsConstructor
-public class SkillBasic extends BaseBasic{
+@AllArgsConstructor
+public class EntityBasic {
+    long id;
+    String name;
 }

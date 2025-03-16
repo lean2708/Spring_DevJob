@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.SkillRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.SkillResponse;
@@ -24,6 +25,7 @@ import spring_devjob.repository.JobRepository;
 import spring_devjob.repository.SkillRepository;
 import spring_devjob.repository.SubscriberRepository;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -37,8 +39,6 @@ public class SkillService {
 
     private final SkillRepository skillRepository;
     private final SkillMapper skillMapper;
-    private final JobRepository jobRepository;
-    private final SubscriberRepository subscriberRepository;
     private final PageableService pageableService;
 
     public SkillResponse create(SkillRequest request){
@@ -53,8 +53,7 @@ public class SkillService {
 
 
     public SkillResponse fetchSkillById(long id){
-        Skill skillDB = skillRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.SKILL_NOT_EXISTED));
+        Skill skillDB = findActiveSkillById(id);
 
         return skillMapper.toSkillResponse(skillDB);
     }
@@ -82,8 +81,7 @@ public class SkillService {
     }
 
     public SkillResponse update(long id, SkillRequest request){
-        Skill skillDB = skillRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.SKILL_NOT_EXISTED));
+        Skill skillDB = findActiveSkillById(id);
 
         skillMapper.updateSkill(skillDB, request);
 
@@ -92,23 +90,16 @@ public class SkillService {
 
     @Transactional
     public void delete(long id){
-        Skill skillDB = skillRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.SKILL_NOT_EXISTED));
+        Skill skillDB = findActiveSkillById(id);
 
-        processSkillDeletion(skillDB);
+        deactivateSkill(skillDB);
 
         skillRepository.delete(skillDB);
     }
 
-    private void processSkillDeletion(Skill skill){
-        if(!CollectionUtils.isEmpty(skill.getJobs())){
-            skill.getJobs().clear();
-        }
-
-        if(!CollectionUtils.isEmpty(skill.getSubscribers())){
-           skill.getSubscribers().clear();
-        }
-        skillRepository.save(skill);
+    private void deactivateSkill(Skill skill){
+        skill.setState(EntityStatus.INACTIVE);
+        skill.setDeactivatedAt(LocalDate.now());
     }
 
     @Transactional
@@ -118,8 +109,18 @@ public class SkillService {
             throw new AppException(ErrorCode.SKILL_NOT_FOUND);
         }
 
-        skillSet.forEach(this::processSkillDeletion);
+        skillSet.forEach(this::deactivateSkill);
 
-        skillRepository.deleteAllInBatch(skillSet);
+        skillRepository.saveAll(skillSet);
+    }
+
+    private Skill findActiveSkillById(long id) {
+        Skill skillDB = skillRepository.findById(id).
+                orElseThrow(() -> new AppException(ErrorCode.SKILL_NOT_EXISTED));
+
+        if (skillDB.getState() == EntityStatus.INACTIVE) {
+            throw new AppException(ErrorCode.SKILL_ALREADY_DELETED);
+        }
+        return skillDB;
     }
 }

@@ -1,0 +1,29 @@
+package spring_devjob.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import spring_devjob.constants.RoleEnum;
+import spring_devjob.entity.Role;
+import spring_devjob.entity.User;
+import spring_devjob.entity.UserHasRole;
+import spring_devjob.exception.AppException;
+import spring_devjob.exception.ErrorCode;
+import spring_devjob.repository.RoleRepository;
+import spring_devjob.repository.UserHasRoleRepository;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class UserHasRoleService {
+    private final UserHasRoleRepository userHasRoleRepository;
+    private final RoleRepository roleRepository;
+
+    public void saveUserHasRole(User user, RoleEnum roleEnum){
+        Role role = roleRepository.findByName(roleEnum.name())
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+
+        userHasRoleRepository.save(new UserHasRole(user, role));
+    }
+
+}

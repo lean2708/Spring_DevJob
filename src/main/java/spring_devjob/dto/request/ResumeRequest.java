@@ -15,7 +15,7 @@ public class ResumeRequest {
     String cvUrl;
 
     @EnumPattern(name = "status", regexp = "PENDING|REVIEWING|APPROVED|REJECTED")
-    ResumeStateEnum status;
+    ResumeStateEnum resumeStatus;
 
     boolean primaryCv;
 

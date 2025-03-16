@@ -10,8 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import spring_devjob.constants.RoleEnum;
 import spring_devjob.constants.TokenType;
-import spring_devjob.dto.basic.CompanyBasic;
-import spring_devjob.dto.basic.RoleBasic;
+import spring_devjob.dto.basic.EntityBasic;
 import spring_devjob.dto.request.*;
 import spring_devjob.dto.response.GoogleTokenResponse;
 import spring_devjob.dto.response.GoogleUserResponse;
@@ -22,7 +21,6 @@ import spring_devjob.entity.Token;
 import spring_devjob.entity.User;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
-import spring_devjob.mapper.CompanyMapper;
 import spring_devjob.mapper.RoleMapper;
 import spring_devjob.mapper.UserMapper;
 import spring_devjob.repository.RoleRepository;
@@ -42,12 +40,11 @@ public class AuthService {
     private final UserRepository userRepository;
     private final TokenService tokenService;
     private final UserMapper userMapper;
-    private final CompanyMapper companyMapper;
     private final RoleMapper roleMapper;
-    private final RoleRepository roleRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final TokenRepository tokenRepository;
+    private final UserHasRoleService userHasRoleService;
     private final GoogleAuthClient googleAuthClient;
     private final GoogleUserInfoClient googleUserInfoClient;
 
@@ -71,39 +68,20 @@ public class AuthService {
 
         // get user info with google
         GoogleUserResponse userInfo = googleUserInfoClient.getUserInfo("json", response.getAccessToken());
-        Role userRole = roleRepository.findByName(RoleEnum.USER.name()).orElseThrow(
-                () -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
 
         // Onboard user
-        User user = userRepository.findByEmail(userInfo.getEmail()).orElseGet(
-                ()-> userRepository.save(User.builder()
-                        .email(userInfo.getEmail())
-                        .name(userInfo.getName())
-                        .roles(Set.of(userRole))
-                        .avatarUrl(userInfo.getPicture())
-                        .build())
-        );
+        User user = userRepository.findByEmail(userInfo.getEmail()).orElseGet(() -> {
+                    User newUser = userRepository.save(User.builder()
+                            .email(userInfo.getEmail())
+                            .name(userInfo.getName())
+                            .avatarUrl(userInfo.getPicture())
+                            .build());
 
-        String accessToken = tokenService.generateToken(user, TokenType.ACCESS_TOKEN);
+                    userHasRoleService.saveUserHasRole(newUser, RoleEnum.USER);
+                    return newUser;
+        });
 
-        String refreshToken = tokenService.generateToken(user, TokenType.REFRESH_TOKEN);
-
-        List<String> roleNames = user.getRoles()
-                .stream().map(Role::getName).collect(Collectors.toList());
-
-        tokenService.saveToken(Token.builder()
-                .email(user.getEmail())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build());
-
-        return TokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .authenticated(true)
-                .email(user.getEmail())
-                .role(roleNames)
-                .build();
+        return generateAndSaveTokenResponse(user);
     }
 
     public TokenResponse login(LoginRequest request) throws JOSEException {
@@ -116,26 +94,7 @@ public class AuthService {
             throw new AppException(ErrorCode.INVALID_PASSWORD);
         }
 
-        List<String> roleNames = userDB.getRoles()
-                .stream().map(Role::getName).collect(Collectors.toList());
-
-        String accessToken = tokenService.generateToken(userDB, TokenType.ACCESS_TOKEN);
-
-        String refreshToken = tokenService.generateToken(userDB, TokenType.REFRESH_TOKEN);
-
-        tokenService.saveToken(Token.builder()
-                        .email(userDB.getEmail())
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
-                .build());
-
-        return TokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .authenticated(true)
-                .email(userDB.getEmail())
-                .role(roleNames)
-                .build();
+        return generateAndSaveTokenResponse(userDB);
     }
 
     public TokenResponse register(RegisterRequest request) throws JOSEException {
@@ -147,33 +106,11 @@ public class AuthService {
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        Role userRole = roleRepository.findByName(RoleEnum.USER.name()).orElseThrow(
-                () -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
-        user.setRoles(Set.of(userRole));
+        userHasRoleService.saveUserHasRole(user, RoleEnum.USER);
 
-        emailService.sendUserEmailWithRegister(user);
-        userRepository.save(user);
+        emailService.sendUserEmailWithRegister(userRepository.save(user));
 
-        List<String> roleNames = user.getRoles()
-                .stream().map(Role::getName).collect(Collectors.toList());
-
-        String accessToken = tokenService.generateToken(user, TokenType.ACCESS_TOKEN);
-
-        String refreshToken = tokenService.generateToken(user, TokenType.REFRESH_TOKEN);
-
-        tokenService.saveToken(Token.builder()
-                .email(user.getEmail())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build());
-
-        return TokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .authenticated(true)
-                .email(user.getEmail())
-                .role(roleNames)
-                .build();
+        return generateAndSaveTokenResponse(user);
     }
 
     public UserResponse getMyInfo() {
@@ -201,14 +138,14 @@ public class AuthService {
 
         tokenService.saveToken(token);
 
-        List<String> roleNames = user.getRoles()
-                .stream().map(Role::getName).collect(Collectors.toList());
+        List<EntityBasic> entityBasics = user.getRoles().stream()
+                .map(roleMapper::userHasRoleToEntityBasic).toList();
 
         return TokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(request.getRefreshToken())
                 .email(email)
-                .role(roleNames)
+                .roles(entityBasics)
                 .build();
     }
 
@@ -229,6 +166,29 @@ public class AuthService {
                 .orElseThrow(() -> new AppException(ErrorCode.INVALID_REFRESH_TOKEN));
 
         tokenRepository.delete(token);
+    }
+
+    private TokenResponse generateAndSaveTokenResponse(User user) throws JOSEException {
+        String accessToken = tokenService.generateToken(user, TokenType.ACCESS_TOKEN);
+
+        String refreshToken = tokenService.generateToken(user, TokenType.REFRESH_TOKEN);
+
+        List<EntityBasic> entityBasics = user.getRoles().stream()
+                .map(roleMapper::userHasRoleToEntityBasic).toList();
+
+        tokenService.saveToken(Token.builder()
+                .email(user.getEmail())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build());
+
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .authenticated(true)
+                .email(user.getEmail())
+                .roles(entityBasics)
+                .build();
     }
 
     // info tu access token

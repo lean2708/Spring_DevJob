@@ -89,15 +89,4 @@ public class ResumeController {
                 .build();
     }
 
-    @GetMapping("/resumes/by-user")
-    public ApiResponse<PageResponse<ResumeResponse>> fetchAllByUser(@RequestParam(defaultValue = "1") int pageNo,
-                                                              @RequestParam(defaultValue = "10") int pageSize,
-                                                                    @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
-                                                                        @RequestParam(required = false) String sortBy){
-        return ApiResponse.<PageResponse<ResumeResponse>>builder()
-                .code(HttpStatus.OK.value())
-                .result(resumeService.getAllResumesByUser(pageNo, pageSize, sortBy))
-                .message("Fetch All Resumes By User With Pagination")
-                .build();
-    }
 }

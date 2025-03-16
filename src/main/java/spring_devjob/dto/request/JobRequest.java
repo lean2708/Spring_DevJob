@@ -1,6 +1,7 @@
 package spring_devjob.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -19,7 +20,7 @@ import java.util.Set;
 public class JobRequest {
     @NotBlank(message = "Name không được để trống")
     String name;
-    boolean status;
+    boolean jobStatus;
     @NotBlank(message = "Location không được để trống")
     String location;
     @Positive(message = "Salary phải lớn hơn 0")
@@ -33,9 +34,11 @@ public class JobRequest {
 
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     @JsonFormat(pattern = "dd/MM/yyyy")
+    @Schema(type = "string", pattern = "dd/MM/yyyy", example = "25/03/2025")
     LocalDate startDate;
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     @JsonFormat(pattern = "dd/MM/yyyy")
+    @Schema(type = "string", pattern = "dd/MM/yyyy", example = "25/03/2025")
     LocalDate endDate;
 
     Long companyId;

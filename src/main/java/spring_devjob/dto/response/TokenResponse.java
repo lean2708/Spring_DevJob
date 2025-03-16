@@ -3,6 +3,7 @@ package spring_devjob.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import spring_devjob.dto.basic.EntityBasic;
 
 import java.util.List;
 
@@ -16,5 +17,5 @@ public class TokenResponse {
     String refreshToken;
     boolean authenticated;
     String email; 
-    List<String> role;
+    List<EntityBasic> roles;
 }

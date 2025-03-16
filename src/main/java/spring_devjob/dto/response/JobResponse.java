@@ -1,16 +1,13 @@
 package spring_devjob.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import spring_devjob.constants.LevelEnum;
-import spring_devjob.dto.basic.CompanyBasic;
-import spring_devjob.dto.basic.SkillBasic;
+import spring_devjob.dto.basic.EntityBasic;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -29,9 +26,9 @@ public class JobResponse extends BaseResponse {
     LocalDate startDate;
     @JsonFormat(pattern = "dd/MM/yyyy")
     LocalDate endDate;
-    boolean status;
+    boolean jobStatus;
 
-    CompanyBasic company;
+    EntityBasic company;
 
-    Set<SkillBasic> skills;
+    Set<EntityBasic> skills;
 }

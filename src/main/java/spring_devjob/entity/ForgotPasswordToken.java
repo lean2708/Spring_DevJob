@@ -19,6 +19,7 @@ public class ForgotPasswordToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @Column(nullable = false)
     String email;
     @Column(nullable = false, length = 1024)
     String forgotPasswordToken;

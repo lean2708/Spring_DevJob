@@ -6,6 +6,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLRestriction;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -14,17 +17,15 @@ import java.util.Set;
 @Entity
 @SuperBuilder
 @NoArgsConstructor
+@SQLRestriction("state = 'ACTIVE'")
 @Table(name = "tbl_role")
 public class Role extends BaseEntity {
     String description;
 
-    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "role")
     @JsonIgnore
-    Set<User> users;
+    Set<UserHasRole> users = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = {"roles"})
-    @JoinTable(name = "permission_role", joinColumns = @JoinColumn(name = "role_id"),
-            inverseJoinColumns = @JoinColumn(name = "permission_id"))
-    Set<Permission> permissions;
+    @OneToMany(mappedBy = "role")
+    Set<RoleHasPermission> permissions = new HashSet<>();
 }

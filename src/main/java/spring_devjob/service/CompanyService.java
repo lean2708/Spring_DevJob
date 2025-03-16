@@ -6,6 +6,7 @@ import jakarta.persistence.criteria.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.CompanyRequest;
 import spring_devjob.dto.response.CompanyResponse;
 import spring_devjob.dto.response.JobResponse;
@@ -32,6 +34,7 @@ import spring_devjob.repository.UserRepository;
 import spring_devjob.repository.criteria.JobSearchCriteriaQueryConsumer;
 import spring_devjob.repository.criteria.SearchCriteria;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -54,14 +57,17 @@ public class CompanyService {
         if(companyRepository.existsByName(request.getName())){
             throw new AppException(ErrorCode.COMPANY_EXISTED);
         }
+
+        if(companyRepository.existsInactiveCompanyByName(request.getName())){
+            throw new AppException(ErrorCode.COMPANY_ALREADY_DELETED);
+        }
         Company company = companyMapper.toCompany(request);
 
         return companyMapper.toCompanyResponse(companyRepository.save(company));
     }
 
     public CompanyResponse fetchCompany(long id){
-        Company companyDB = companyRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+        Company companyDB = findActiveCompanyById(id);
 
         return companyMapper.toCompanyResponse(companyDB);
     }
@@ -85,8 +91,7 @@ public class CompanyService {
     }
 
     public CompanyResponse update(long id, CompanyRequest request){
-        Company companyDB = companyRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+        Company companyDB = findActiveCompanyById(id);
 
         companyMapper.updateCompany(companyDB, request);
 
@@ -95,22 +100,27 @@ public class CompanyService {
 
     @Transactional
     public void delete(long id){
-        Company companyDB = companyRepository.findById(id).
-                orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+        Company companyDB = findActiveCompanyById(id);
 
-        processCompanyDeletion(companyDB);
+        deactivateCompany(companyDB);
 
-        companyRepository.delete(companyDB);
+        companyRepository.save(companyDB);
     }
 
-    private void processCompanyDeletion(Company company){
+    private void deactivateCompany(Company company){
         if(!CollectionUtils.isEmpty(company.getUsers())){
             company.getUsers().forEach(user -> user.setCompany(null));
             userRepository.saveAll(company.getUsers());
         }
         if(!CollectionUtils.isEmpty(company.getJobs())){
-            jobRepository.deleteAll(company.getJobs());
+            company.getJobs().forEach(job -> {
+                job.setState(EntityStatus.INACTIVE);
+                job.setDeactivatedAt(LocalDate.now());
+                jobRepository.save(job);
+            });
         }
+        company.setState(EntityStatus.INACTIVE);
+        company.setDeactivatedAt(LocalDate.now());
     }
 
     @Transactional
@@ -119,9 +129,9 @@ public class CompanyService {
         if(companySet.isEmpty()){
             throw new AppException(ErrorCode.COMPANY_NOT_FOUND);
         }
-        companySet.forEach(this::processCompanyDeletion);
+        companySet.forEach(this::deactivateCompany);
 
-        companyRepository.deleteAllInBatch(companySet);
+        companyRepository.saveAll(companySet);
     }
 
     public PageResponse<CompanyResponse> searchCompany(int pageNo, int pageSize, String sortBy, List<String> search){
@@ -210,6 +220,11 @@ public class CompanyService {
         return entityManager.createQuery(countQuery).getSingleResult();
     }
 
+
+    private Company findActiveCompanyById(long id) {
+        return companyRepository.findById(id).
+                orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+    }
 
     public List<CompanyResponse> convertListCompanyResponse(List<Company> companyList){
         List<CompanyResponse> companyResponseList = new ArrayList<>();

@@ -10,14 +10,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import spring_devjob.constants.GenderEnum;
 import spring_devjob.constants.PermissionEnum;
 import spring_devjob.constants.RoleEnum;
-import spring_devjob.entity.Permission;
-import spring_devjob.entity.Role;
-import spring_devjob.entity.User;
+import spring_devjob.entity.*;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.repository.PermissionRepository;
+import spring_devjob.repository.RoleHasPermissionRepository;
 import spring_devjob.repository.RoleRepository;
 import spring_devjob.repository.UserRepository;
+import spring_devjob.service.UserHasRoleService;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +35,8 @@ public class ApplicationInitConfig {
     private final PermissionRepository permissionRepository;
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
+    private final RoleHasPermissionRepository roleHasPermissionRepository;
+    private final UserHasRoleService userHasRoleService;
 
     @NonFinal
     static final String ADMIN_EMAIL = "admin@gmail.com";
@@ -50,12 +53,11 @@ public class ApplicationInitConfig {
                 List<Permission> permissionList = Arrays.stream(PermissionEnum.values())
                         .map(PermissionEnum::toPermission)
                         .collect(Collectors.toList());
+
                 permissionRepository.saveAll(permissionList);
             }
 
             if(roleRepository.count() == 0){
-                List<Permission> adminPermissions = permissionRepository.findAll();
-
                 Role userRole = roleRepository.save(Role.builder()
                         .name(RoleEnum.USER.name())
                         .description("ROLE_USER")
@@ -64,55 +66,69 @@ public class ApplicationInitConfig {
                 Role proRole = roleRepository.save(Role.builder()
                         .name(RoleEnum.PRO.name())
                         .description("ROLE_PRO")
-                        .permissions(getProPermissions())
                         .build());
+                updateRolePro(proRole);
 
                 Role hrRole = roleRepository.save(Role.builder()
                         .name(RoleEnum.HR.name())
                         .description("ROLE_HR")
-                        .permissions(getHRPermissions())
                         .build());
+                updateRoleHR(hrRole);
 
                 Role adminRole = roleRepository.save(Role.builder()
                         .name(RoleEnum.ADMIN.name())
                         .description("ROLE_ADMIN")
-                        .permissions(new HashSet<>(adminPermissions))
                         .build());
+                updateRoleAdmin(adminRole);
 
                 List<Role> roleList = List.of(userRole, proRole, hrRole, adminRole);
                 roleRepository.saveAll(roleList);
             }
 
             if (!userRepository.existsByEmail(ADMIN_EMAIL)) {
-                Role adminRole = roleRepository.findByName(RoleEnum.ADMIN.name()).orElseThrow(
-                        () -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
-
-                User admin = User.builder()
+                User admin = userRepository.save(User.builder()
                         .name("Admin")
                         .email(ADMIN_EMAIL)
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
-                        .roles(Set.of(adminRole))
                         .gender(GenderEnum.MALE)
-                        .build();
+                        .build());
 
-                userRepository.save(admin);
+                userHasRoleService.saveUserHasRole(admin, RoleEnum.ADMIN);
             }
         };
     }
 
-    private Set<Permission> getProPermissions() {
-        return permissionRepository.findAllByNameIn(
-                Set.of(SEND_JOB_NOTIFICATIONS.name(), DOWNLOAD_FILE.name())
-        );
+    private void updateRolePro(Role role) {
+        Set<Permission> permissionSet = permissionRepository.findAllByNameIn(
+                Set.of(SEND_JOB_NOTIFICATIONS.name(), DOWNLOAD_FILE.name()));
+
+        Set<RoleHasPermission> roleHasPermissions = permissionSet.stream()
+                .map(permission -> new RoleHasPermission(role, permission))
+                .collect(Collectors.toSet());
+
+        roleHasPermissionRepository.saveAll(roleHasPermissions);
     }
 
-    private Set<Permission> getHRPermissions() {
-        return permissionRepository.findAllByNameIn(
-                Set.of(
-                        CREATE_JOB.name(), FETCH_JOB_BY_ID.name(),
+    private void updateRoleHR(Role role) {
+        Set<Permission> permissionSet = permissionRepository.findAllByNameIn(
+                Set.of(CREATE_JOB.name(), FETCH_JOB_BY_ID.name(),
                         UPDATE_JOB.name(), DELETE_JOB.name(),
-                        FETCH_JOBS_BY_COMPANY.name(), FETCH_RESUMES_BY_JOB.name()
-                )
-        );
+                        FETCH_JOBS_BY_COMPANY.name(), FETCH_RESUMES_BY_JOB.name()));
+
+        Set<RoleHasPermission> roleHasPermissions = permissionSet.stream()
+                .map(permission -> new RoleHasPermission(role, permission))
+                .collect(Collectors.toSet());
+
+        roleHasPermissionRepository.saveAll(roleHasPermissions);
+    }
+
+    private void updateRoleAdmin(Role role) {
+        List<Permission> adminPermissions = permissionRepository.findAll();
+
+        Set<RoleHasPermission> roleHasPermissions = adminPermissions.stream()
+                .map(permission -> new RoleHasPermission(role, permission))
+                .collect(Collectors.toSet());
+
+        roleHasPermissionRepository.saveAll(roleHasPermissions);
     }
 }

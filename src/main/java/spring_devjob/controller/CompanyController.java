@@ -31,7 +31,7 @@ public class CompanyController {
     private final CompanyService companyService;
     private final JobService jobService;
 
-    @PostAuthorize("hasAuthority('CREATE_COMPANY')")
+//    @PostAuthorize("hasAuthority('CREATE_COMPANY')")
     @PostMapping("/companies")
     public ApiResponse<CompanyResponse> create(@Valid @RequestBody CompanyRequest request){
         return ApiResponse.<CompanyResponse>builder()
@@ -95,7 +95,8 @@ public class CompanyController {
                 .build();
     }
 
-    @Operation(summary = "Search companies based on attributes with pagination")
+    @Operation(summary = "Search companies based on attributes with pagination",
+    description = "Giá trị của search: field~value hoặc field>value hoặc field<value")
     @GetMapping("/companies/search")
     public ApiResponse<PageResponse<CompanyResponse>> searchCompany(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                         @RequestParam(defaultValue = "1") int pageNo,
@@ -109,6 +110,7 @@ public class CompanyController {
                 .message("Search companies based on attributes with pagination")
                 .build();
     }
+
     @Operation(summary = "Get a paginated list of jobs for a company",
             description = "API này để lấy danh sách công việc của một công ty")
     @GetMapping("/companies/all-jobs")

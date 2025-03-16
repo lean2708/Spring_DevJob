@@ -5,9 +5,11 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.service.AuthService;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -17,14 +19,15 @@ import java.util.Set;
 @Entity
 @SuperBuilder
 @NoArgsConstructor
+@SQLRestriction("state = 'ACTIVE'")
 @Table(name = "tbl_skill")
 public class Skill extends BaseEntity {
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "skills")
+    @OneToMany(mappedBy = "skill")
     @JsonIgnore
-    Set<Job> jobs;
+    Set<JobHasSkill> jobs = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "skills")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "skill")
     @JsonIgnore
-    Set<Subscriber> subscribers;
+    Set<SubHasSkill> subscribers = new HashSet<>();
 }

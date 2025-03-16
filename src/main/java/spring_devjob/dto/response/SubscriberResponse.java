@@ -3,6 +3,7 @@ package spring_devjob.dto.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import spring_devjob.dto.basic.EntityBasic;
 import spring_devjob.entity.Skill;
 
 
@@ -20,5 +21,5 @@ public class SubscriberResponse extends BaseResponse {
     LocalDate startDate;
     LocalDate expiryDate;
 
-    Set<String> skills;
+    Set<EntityBasic> skills;
 }

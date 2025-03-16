@@ -95,7 +95,7 @@ public class JobController {
     }
 
     @Operation(summary = "Fetch Jobs By Skills",
-    description = "API này để lấy danh sách job theo field và skill name")
+    description = "API này để lấy danh sách job theo field và skill name (với giá trị của search: field~value hoặc field>value hoặc field<value)")
     @GetMapping("/jobs/search-by-skills")
     public ApiResponse<PageResponse<JobResponse>> fetchAllBySkills(@RequestParam(defaultValue = "1") int pageNo,
                                                            @RequestParam(defaultValue = "10") int pageSize,
@@ -107,21 +107,6 @@ public class JobController {
                 .code(HttpStatus.OK.value())
                 .result(jobService.fetchAllJobsBySkills(pageNo, pageSize, sortBy, search, skills))
                 .message("Fetch All Jobs by Skills")
-                .build();
-    }
-
-
-    @Operation(summary = "Get list of applied jobs",
-               description = "API này để láy danh sách job mà người dùng đã ứng tuyển")
-    @GetMapping("/applied-jobs-by-user")
-    public ApiResponse<PageResponse<JobResponse>> getAllAppliedJobsByUser(@RequestParam(defaultValue = "1") int pageNo,
-                                                                   @RequestParam(defaultValue = "10") int pageSize,
-                                                                     @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
-                                                                         @RequestParam(required = false) String sortBy){
-        return ApiResponse.<PageResponse<JobResponse>>builder()
-                .code(HttpStatus.OK.value())
-                .result(jobService.getAllAppliedJobsByUser(pageNo, pageSize, sortBy))
-                .message("Fetch All Jobs By User")
                 .build();
     }
 

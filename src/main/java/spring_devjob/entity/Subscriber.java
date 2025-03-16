@@ -5,8 +5,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -16,17 +18,16 @@ import java.util.Set;
 @Setter
 @Entity
 @SuperBuilder
+@SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor
 @Table(name = "tbl_subscriber")
 public class Subscriber extends BaseEntity {
+    @Column(nullable = false)
     String email;
 
     LocalDate startDate;
     LocalDate expiryDate;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "subscribers" })
-    @JoinTable(name = "subscriber_skill", joinColumns = @JoinColumn(name =
-            "subscriber_id"), inverseJoinColumns = @JoinColumn(name = "skill_id"))
-    Set<Skill> skills;
+    @OneToMany(mappedBy = "subscriber")
+    Set<SubHasSkill> skills = new HashSet<>();
 }

@@ -6,10 +6,12 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.constants.LevelEnum;
 import spring_devjob.service.AuthService;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +20,7 @@ import java.util.Set;
 @Setter
 @Entity
 @SuperBuilder
+@SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor
 @Table(name = "tbl_job")
 public class Job extends BaseEntity {
@@ -32,7 +35,7 @@ public class Job extends BaseEntity {
 
     LocalDate startDate;
     LocalDate endDate;
-    boolean status;
+    boolean jobStatus;
 
     @ManyToOne
     @JoinColumn(name = "company_id")
@@ -40,13 +43,8 @@ public class Job extends BaseEntity {
 
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
     @JsonIgnore
-    Set<Resume> resumes;
+    Set<Resume> resumes = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = {"jobs"})
-    @JoinTable(name = "job_skill", joinColumns = @JoinColumn(name = "job_id"),
-            inverseJoinColumns = @JoinColumn(name = "skill_id"))
-    Set<Skill> skills;
-
-
+    @OneToMany(mappedBy = "job")
+    Set<JobHasSkill> skills = new HashSet<>();
 }

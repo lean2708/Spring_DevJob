@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import spring_devjob.config.VNPAYConfig;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.RoleEnum;
 import spring_devjob.dto.request.PaymentCallbackRequest;
 import spring_devjob.dto.response.*;
@@ -30,6 +31,7 @@ import spring_devjob.util.VNPayUtil;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -45,6 +47,8 @@ public class SubscriberService {
     private final SubscriberMapper subscriberMapper;
     private final PageableService pageableService;
     private final AuthService authService;
+    private final UserHasRoleRepository userHasRoleRepository;
+    private final SubHasSkillRepository subHasSkillRepository;
 
 
     public VNPayResponse createVnPayPayment(String premiumType, HttpServletRequest request) {
@@ -92,31 +96,32 @@ public class SubscriberService {
                 .paymentUrl(paymentUrl).build();
     }
 
+    @Transactional
     public SubscriberResponse updatePro(PaymentCallbackRequest request){
         User user = userRepository.findByEmail(authService.getCurrentUsername()).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        Subscriber subscriber = Subscriber.builder()
-                .name(user.getName())
-                .email(user.getEmail())
-                .startDate(LocalDate.now())
-                .expiryDate(LocalDate.now())
-                .build();
+        Subscriber subscriber = subscriberRepository.findByEmail(user.getEmail())
+                .orElseGet(() -> Subscriber.builder()
+                        .name(user.getName())
+                        .email(user.getEmail())
+                        .startDate(LocalDate.now())
+                        .expiryDate(LocalDate.now())
+                        .build());
 
-        if(subscriberRepository.existsByEmail(user.getEmail())){
-            subscriber = subscriberRepository.findByEmail(user.getEmail());
-        }
+        if(!CollectionUtils.isEmpty(request.getSkillIds())){
+            Set<Skill> skillSet = skillRepository.findAllByIdIn(request.getSkillIds());
 
-        if(request.getSkillIds() != null && !request.getSkillIds().isEmpty()){
-            Set<Skill> skills = skillRepository.findAllByIdIn(request.getSkillIds());
-            subscriber.setSkills(skills);
+            Set<SubHasSkill> subHasSkills = skillSet.stream()
+                    .map(skill -> new SubHasSkill(subscriber,skill))
+                    .collect(Collectors.toSet());
+
+            subscriber.setSkills(new HashSet<>(subHasSkillRepository.saveAll(subHasSkills)));
         }
 
         LocalDate expiryDate = subscriber.getExpiryDate();
 
-        long amount = request.getAmount();
-
-        switch ((int) amount) {
+        switch ((int)  request.getAmount()) {
             case 30000:
                 expiryDate = expiryDate.plusMonths(1);
                 break;
@@ -137,60 +142,30 @@ public class SubscriberService {
 
         subscriberRepository.save(subscriber);
 
-        Role proRole = roleRepository.findByName(RoleEnum.PRO.name()).orElseThrow(
-                () -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
-        Set<Role> roles = user.getRoles();
-        roles.add(proRole);
-        user.setRoles(roles);
+        Role proRole = roleRepository.findByName(RoleEnum.PRO.name())
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
 
-        userRepository.save(user);
+        userHasRoleRepository.save(new UserHasRole(user, proRole));
 
         emailService.sendUserEmailWithPayment(subscriber);
 
-        Set<String> nameSkillsList = new HashSet<>();
-        for(Skill skill : subscriber.getSkills()){
-            nameSkillsList.add(skill.getName());
-        }
-
-        SubscriberResponse response = subscriberMapper.toSubscriberResponse(subscriber);
-        response.setSkills(nameSkillsList);
-
         emailService.sendSubscribersEmailJobs();
 
-        return response;
+        return subscriberMapper.toSubscriberResponse(subscriber);
     }
 
     public SubscriberResponse checkProStatus(HttpServletRequest request){
 
-        Subscriber subscriber = subscriberRepository.findByEmail(authService.getCurrentUsername());
-        if(subscriber == null){
-            throw new AppException(ErrorCode.USER_NOT_REGISTERED);
-        }
+        Subscriber subscriber = subscriberRepository.findByEmail(authService.getCurrentUsername())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_REGISTERED));
 
-        Set<String> nameSkillsList = new HashSet<>();
-        for(Skill skill : subscriber.getSkills()){
-            nameSkillsList.add(skill.getName());
-        }
-
-        SubscriberResponse response = subscriberMapper.toSubscriberResponse(subscriber);
-        response.setSkills(nameSkillsList);
-
-        return response;
+        return subscriberMapper.toSubscriberResponse(subscriber);
     }
 
     public SubscriberResponse fetchById(long id){
-        Subscriber subscriberDB = subscriberRepository.findById(id)
-                .orElseThrow(()->new AppException(ErrorCode.USER_NOT_REGISTERED));
+        Subscriber subscriberDB = findActiveSubById(id);
 
-        Set<String> nameSkillsList = new HashSet<>();
-        for(Skill skill : subscriberDB.getSkills()){
-            nameSkillsList.add(skill.getName());
-        }
-
-        SubscriberResponse response = subscriberMapper.toSubscriberResponse(subscriberDB);
-        response.setSkills(nameSkillsList);
-
-        return response;
+        return subscriberMapper.toSubscriberResponse(subscriberDB);
     }
 
     public PageResponse<SubscriberResponse> fetchAllSubscribers(int pageNo, int pageSize, String sortBy){
@@ -201,16 +176,10 @@ public class SubscriberService {
         Page<Subscriber> subscriberPage = subscriberRepository.findAll(pageable);
 
         List<SubscriberResponse> responses =  new ArrayList<>();
-        for(Subscriber subscriber : subscriberPage.getContent()){
-            Set<String> nameSkillsList = new HashSet<>();
-            for(Skill skill : subscriber.getSkills()){
-                nameSkillsList.add(skill.getName());
-            }
-            SubscriberResponse subscriberResponse = subscriberMapper.toSubscriberResponse(subscriber);
-            subscriberResponse.setSkills(nameSkillsList);
 
-            responses.add(subscriberResponse);
-        }
+        subscriberPage.getContent().forEach(subscriber ->
+            responses.add(subscriberMapper.toSubscriberResponse(subscriber))
+        );
 
         return PageResponse.<SubscriberResponse>builder()
                 .page(subscriberPage.getNumber() + 1)
@@ -223,19 +192,19 @@ public class SubscriberService {
 
     @Transactional
     public void delete(long id){
-        Subscriber subscriberDB = subscriberRepository.findById(id)
-                .orElseThrow(()->new AppException(ErrorCode.USER_NOT_REGISTERED));
+        Subscriber subscriberDB = findActiveSubById(id);
 
-        processSubDeletion(subscriberDB);
+        deactivateSub(subscriberDB);
 
         subscriberRepository.delete(subscriberDB);
     }
 
-    private void processSubDeletion(Subscriber subscriber){
+    private void deactivateSub(Subscriber subscriber){
         if(!CollectionUtils.isEmpty(subscriber.getSkills())){
             subscriber.getSkills().clear();
-            subscriberRepository.save(subscriber);
         }
+        subscriber.setState(EntityStatus.INACTIVE);
+        subscriber.setDeactivatedAt(LocalDate.now());
     }
 
     @Transactional
@@ -245,11 +214,20 @@ public class SubscriberService {
         if(subscriberSet.isEmpty()){
             throw new AppException(ErrorCode.SUBSCRIBER_NOT_FOUND);
         }
-        subscriberSet.forEach(this::processSubDeletion);
+        subscriberSet.forEach(this::deactivateSub);
 
         subscriberRepository.deleteAllInBatch(subscriberSet);
     }
 
+    private Subscriber findActiveSubById(long id) {
+        Subscriber subscriberDB = subscriberRepository.findById(id)
+                .orElseThrow(()->new AppException(ErrorCode.USER_NOT_REGISTERED));
+
+        if (subscriberDB.getState() == EntityStatus.INACTIVE) {
+            throw new AppException(ErrorCode.SUBSCRIBER_ALREADY_DELETED);
+        }
+        return subscriberDB;
+    }
 
     @Scheduled(cron = "0 0 */3 * * *")
     @Async
@@ -264,9 +242,8 @@ public class SubscriberService {
                 User userDB = userRepository.findByEmail(subscriber.getEmail()).
                         orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-                userDB.getRoles().removeIf(role -> role.getName().equals("PRO"));
-
-                userRepository.save(userDB);
+                roleRepository.findByName(RoleEnum.PRO.name()).ifPresent(role ->
+                        userHasRoleRepository.deleteByUserAndRole(userDB, role));
             }
         }
     }

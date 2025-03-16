@@ -12,10 +12,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import spring_devjob.dto.response.ResponseEmailJob;
-import spring_devjob.entity.Job;
-import spring_devjob.entity.Skill;
-import spring_devjob.entity.Subscriber;
-import spring_devjob.entity.User;
+import spring_devjob.entity.*;
 import spring_devjob.repository.JobRepository;
 import spring_devjob.repository.SubscriberRepository;
 
@@ -105,7 +102,8 @@ public class EmailService {
         List<Subscriber> listSubs = this.subscriberRepository.findAll();
         if (listSubs != null && listSubs.size() > 0) {
             for (Subscriber sub : listSubs) {
-                Set<Skill> skillSet = sub.getSkills();
+                Set<Skill> skillSet = sub.getSkills().stream()
+                        .map(SubHasSkill::getSkill).collect(Collectors.toSet());
                 if (skillSet != null && skillSet.size() > 0) {
                     Set<Job> jobSet = this.jobRepository.findBySkillsIn(skillSet);
                     if (jobSet != null && !jobSet.isEmpty()) {
@@ -126,8 +124,9 @@ public class EmailService {
         }
     }
     public ResponseEmailJob convertJobToSendEmail(Job job) {
-        Set<Skill> skills = job.getSkills();
-        List<ResponseEmailJob.SkillEmail> s = skills.stream().
+        Set<Skill> skillSet = job.getSkills().stream()
+                .map(JobHasSkill::getSkill).collect(Collectors.toSet());
+        List<ResponseEmailJob.SkillEmail> s = skillSet.stream().
                 map(skill -> new ResponseEmailJob.SkillEmail(skill.getName())).
                 collect(Collectors.toList());
 

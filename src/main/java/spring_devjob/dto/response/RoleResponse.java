@@ -3,9 +3,8 @@ package spring_devjob.dto.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
-import spring_devjob.dto.basic.PermissionBasic;
+import spring_devjob.dto.basic.EntityBasic;
 
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -15,5 +14,5 @@ import java.util.Set;
 public class RoleResponse extends BaseResponse {
     String description;
 
-    Set<PermissionBasic> permissions;
+    Set<EntityBasic> permissions;
 }

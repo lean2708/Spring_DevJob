@@ -6,9 +6,9 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @SuperBuilder
-@NoArgsConstructor(force = true)
-public class UserBasic extends BaseBasic{
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class UserBasic extends EntityBasic {
     String email;
 }

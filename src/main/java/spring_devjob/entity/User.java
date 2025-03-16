@@ -6,10 +6,13 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLRestriction;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.GenderEnum;
 import spring_devjob.service.AuthService;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -19,6 +22,7 @@ import java.util.Set;
 @Entity
 @SuperBuilder
 @NoArgsConstructor
+@SQLRestriction("state = 'ACTIVE'")
 @Table(name = "tbl_user")
 public class User extends BaseEntity {
     @Column(unique = true)
@@ -34,13 +38,11 @@ public class User extends BaseEntity {
     @JoinColumn(name = "company_id")
     Company company;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user")
     @JsonIgnore
-    Set<Resume> resumes;
+    Set<Resume> resumes = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JsonIgnoreProperties(value = {"users"})
-    @JoinTable(name = "tbl_user_role", joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    Set<Role> roles;
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
+    Set<UserHasRole> roles = new HashSet<>();
+
 }
