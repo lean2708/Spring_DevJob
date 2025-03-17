@@ -15,4 +15,5 @@ import java.time.LocalDate;
 @SuperBuilder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SkillResponse extends BaseResponse {
+    String name;
 }

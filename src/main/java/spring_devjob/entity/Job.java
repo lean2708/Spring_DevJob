@@ -1,18 +1,17 @@
 package spring_devjob.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.constants.LevelEnum;
-import spring_devjob.service.AuthService;
+import spring_devjob.entity.relationship.JobHasSkill;
+import spring_devjob.entity.relationship.UserSavedJob;
 
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -24,6 +23,8 @@ import java.util.Set;
 @NoArgsConstructor
 @Table(name = "tbl_job")
 public class Job extends BaseEntity {
+    @Column(nullable = false)
+    String name;
     String location;
     double salary;
     int quantity;
@@ -47,4 +48,7 @@ public class Job extends BaseEntity {
 
     @OneToMany(mappedBy = "job")
     Set<JobHasSkill> skills = new HashSet<>();
+
+    @OneToMany(mappedBy = "job")
+    Set<UserSavedJob> users = new HashSet<>();
 }

@@ -39,18 +39,12 @@ public class PermissionService {
 
         Page<Permission> permissionPage = permissionRepository.findAll(pageable);
 
-        List<PermissionResponse> permissionResponses = new ArrayList<>();
-        for(Permission permission : permissionPage.getContent()){
-            PermissionResponse response = permissionMapper.toPermissionResponse(permission);
-            permissionResponses.add(response);
-        }
-
         return PageResponse.<PermissionResponse>builder()
                 .page(permissionPage.getNumber() + 1)
                 .size(permissionPage.getSize())
                 .totalPages(permissionPage.getTotalPages())
                 .totalItems(permissionPage.getTotalElements())
-                .items(permissionResponses)
+                .items(permissionMapper.toPermissionResponseList(permissionPage.getContent()))
                 .build();
     }
 

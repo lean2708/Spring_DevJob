@@ -77,7 +77,8 @@ public class AuthService {
                             .avatarUrl(userInfo.getPicture())
                             .build());
 
-                    userHasRoleService.saveUserHasRole(newUser, RoleEnum.USER);
+            newUser.setRoles(new HashSet<>(Set.of(userHasRoleService.saveUserHasRole(newUser, RoleEnum.USER))));
+
                     return newUser;
         });
 
@@ -101,12 +102,17 @@ public class AuthService {
         if(userRepository.existsByEmail(request.getEmail())){
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
+        if(userRepository.existsByPhone(request.getPhone())){
+            throw new AppException(ErrorCode.PHONE_EXISTED);
+        }
 
         User user = userMapper.toUser(request);
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        userHasRoleService.saveUserHasRole(user, RoleEnum.USER);
+        userRepository.save(user);
+
+        user.setRoles(new HashSet<>(Set.of(userHasRoleService.saveUserHasRole(user, RoleEnum.USER))));
 
         emailService.sendUserEmailWithRegister(userRepository.save(user));
 

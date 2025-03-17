@@ -84,7 +84,7 @@ public class UserController {
     }
 
     @DeleteMapping("/users")
-    public ApiResponse<Void> deleteUsers(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
+    public ApiResponse<Void> deleteUsers(@RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                          Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         userService.deleteUsers(ids);
         return ApiResponse.<Void>builder()
@@ -94,7 +94,7 @@ public class UserController {
                 .build();
     }
 
-    @GetMapping("/{userId}/resumes/by-user")
+    @GetMapping("/users/{userId}/resumes")
     public ApiResponse<PageResponse<ResumeResponse>> fetchAllByUser(@RequestParam(defaultValue = "1") int pageNo,
                                                                     @RequestParam(defaultValue = "10") int pageSize,
                                                                     @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
@@ -109,7 +109,7 @@ public class UserController {
 
     @Operation(summary = "Get list of applied jobs",
             description = "API này để láy danh sách job mà người dùng đã ứng tuyển")
-    @GetMapping("/{userId}/applied-jobs-by-user")
+    @GetMapping("/users/{userId}/applied-jobs")
     public ApiResponse<PageResponse<JobResponse>> getAllAppliedJobsByUser(@RequestParam(defaultValue = "1") int pageNo,
                                                                           @RequestParam(defaultValue = "10") int pageSize,
                                                                           @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")

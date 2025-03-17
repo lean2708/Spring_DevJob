@@ -2,27 +2,22 @@ package spring_devjob.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 import spring_devjob.config.VNPAYConfig;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.RoleEnum;
 import spring_devjob.dto.request.PaymentCallbackRequest;
 import spring_devjob.dto.response.*;
 import spring_devjob.entity.*;
+import spring_devjob.entity.relationship.SubHasSkill;
+import spring_devjob.entity.relationship.UserHasRole;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.SubscriberMapper;
@@ -49,6 +44,7 @@ public class SubscriberService {
     private final AuthService authService;
     private final UserHasRoleRepository userHasRoleRepository;
     private final SubHasSkillRepository subHasSkillRepository;
+    private final SubHasSkillService subHasSkillService;
 
 
     public VNPayResponse createVnPayPayment(String premiumType, HttpServletRequest request) {
@@ -200,9 +196,8 @@ public class SubscriberService {
     }
 
     private void deactivateSub(Subscriber subscriber){
-        if(!CollectionUtils.isEmpty(subscriber.getSkills())){
-            subscriber.getSkills().clear();
-        }
+        subscriber.getSkills().forEach(subHasSkillService::updateJobHasSkillToInactive);
+
         subscriber.setState(EntityStatus.INACTIVE);
         subscriber.setDeactivatedAt(LocalDate.now());
     }
@@ -223,9 +218,6 @@ public class SubscriberService {
         Subscriber subscriberDB = subscriberRepository.findById(id)
                 .orElseThrow(()->new AppException(ErrorCode.USER_NOT_REGISTERED));
 
-        if (subscriberDB.getState() == EntityStatus.INACTIVE) {
-            throw new AppException(ErrorCode.SUBSCRIBER_ALREADY_DELETED);
-        }
         return subscriberDB;
     }
 

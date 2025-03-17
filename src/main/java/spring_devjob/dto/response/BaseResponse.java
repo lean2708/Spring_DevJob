@@ -15,10 +15,8 @@ import java.time.LocalDate;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-@MappedSuperclass
 public abstract class BaseResponse {
     long id;
-    String name;
 
     @JsonFormat(pattern = "dd/MM/yyyy")
     LocalDate createdAt;

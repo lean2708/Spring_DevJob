@@ -2,9 +2,7 @@ package spring_devjob.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,12 +10,11 @@ import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.CompanyRequest;
-import spring_devjob.dto.response.ApiResponse;
-import spring_devjob.dto.response.CompanyResponse;
-import spring_devjob.dto.response.JobResponse;
-import spring_devjob.dto.response.PageResponse;
+import spring_devjob.dto.response.*;
 import spring_devjob.service.CompanyService;
 import spring_devjob.service.JobService;
+import spring_devjob.service.ReviewService;
+
 import java.util.List;
 import java.util.Set;
 
@@ -30,6 +27,7 @@ public class CompanyController {
 
     private final CompanyService companyService;
     private final JobService jobService;
+    private final ReviewService reviewService;
 
 //    @PostAuthorize("hasAuthority('CREATE_COMPANY')")
     @PostMapping("/companies")
@@ -42,7 +40,7 @@ public class CompanyController {
     }
 
     @GetMapping("/companies/{id}")
-    public ApiResponse<CompanyResponse> fetchCompany(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<CompanyResponse> fetchCompany(@Positive(message = "CompanyID phải lớn hơn 0")
                                                          @PathVariable("id") long id){
         return ApiResponse.<CompanyResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -65,7 +63,7 @@ public class CompanyController {
     }
 
     @PutMapping("/companies/{id}")
-    public ApiResponse<CompanyResponse> update(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<CompanyResponse> update(@Positive(message = "CompanyID phải lớn hơn 0")
                                                    @PathVariable long id, @RequestBody CompanyRequest request){
         return ApiResponse.<CompanyResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -75,7 +73,7 @@ public class CompanyController {
     }
 
     @DeleteMapping("/companies/{id}")
-    public ApiResponse<Void> delete(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1") @PathVariable long id){
+    public ApiResponse<Void> delete(@Positive(message = "CompanyID phải lớn hơn 0") @PathVariable long id){
         companyService.delete(id);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.NO_CONTENT.value())
@@ -123,6 +121,22 @@ public class CompanyController {
                 .code(HttpStatus.OK.value())
                 .result(jobService.getAllJobsByCompany(pageNo, pageSize, sortBy))
                 .message("Get a paginated list of jobs for a company")
+                .build();
+    }
+
+    @GetMapping("/companies/{companyId}/reviews")
+    public ApiResponse<PageResponse<ReviewResponse>> getReviewsByCompany(@Min(value = 1, message = "pageNo phải lớn hơn 0")
+                                                              @RequestParam(defaultValue = "1") int pageNo,
+                                                              @RequestParam(defaultValue = "10") int pageSize,
+                                                              @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
+                                                              @RequestParam(required = false) String sortBy,
+                                                                         @Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+                                                                             @NotNull(message = "ID không được null")
+                                                                         @PathVariable(value = "companyId") long companyId){
+        return ApiResponse.<PageResponse<ReviewResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .result(reviewService.getReviewsByCompany(pageNo, pageSize, sortBy, companyId))
+                .message("Retrieved company reviews with pagination")
                 .build();
     }
 }

@@ -1,14 +1,10 @@
 package spring_devjob.service;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import spring_devjob.constants.EntityStatus;
@@ -16,18 +12,16 @@ import spring_devjob.dto.request.RoleRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.RoleResponse;
 import spring_devjob.entity.*;
+import spring_devjob.entity.relationship.RoleHasPermission;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.RoleMapper;
 import spring_devjob.repository.PermissionRepository;
 import spring_devjob.repository.RoleHasPermissionRepository;
 import spring_devjob.repository.RoleRepository;
-import spring_devjob.repository.UserRepository;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,13 +35,11 @@ public class RoleService {
     private final PageableService pageableService;
     private final PermissionRepository permissionRepository;
     private final RoleHasPermissionRepository roleHasPermissionRepository;
+    private final UserHasRoleService userHasRoleService;
 
     public RoleResponse create(RoleRequest request){
         if(roleRepository.existsByName(request.getName())){
             throw new AppException(ErrorCode.ROLE_EXISTED);
-        }
-        if(roleRepository.existsInactiveRoleByName(request.getName())){
-            throw new AppException(ErrorCode.ROLE_ALREADY_DELETED);
         }
 
         Role role = roleMapper.toRole(request);
@@ -79,17 +71,12 @@ public class RoleService {
 
         Page<Role> rolePage = roleRepository.findAll(pageable);
 
-        List<RoleResponse> responses =  new ArrayList<>();
-        for(Role role : rolePage.getContent()){
-            responses.add(roleMapper.toRoleResponse(role));
-        }
-
         return PageResponse.<RoleResponse>builder()
                 .page(rolePage.getNumber() + 1)
                 .size(rolePage.getSize())
                 .totalPages(rolePage.getTotalPages())
                 .totalItems(rolePage.getTotalElements())
-                .items(responses)
+                .items(roleMapper.toRoleResponseList(rolePage.getContent()))
                 .build();
     }
 
@@ -123,8 +110,17 @@ public class RoleService {
     }
 
     private void deactivateRole(Role role){
+        role.getUsers().forEach(userHasRoleService::updateUserHasRoleToInactive);
+
+        role.getPermissions().forEach(this::updateRoleHasPermissionToInactive);
+
         role.setState(EntityStatus.INACTIVE);
         role.setDeactivatedAt(LocalDate.now());
+    }
+
+    private void updateRoleHasPermissionToInactive(RoleHasPermission roleHasPermission){
+        roleHasPermission.setState(EntityStatus.INACTIVE);
+        roleHasPermissionRepository.save(roleHasPermission);
     }
 
     @Transactional

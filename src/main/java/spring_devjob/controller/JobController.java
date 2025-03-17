@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -41,7 +42,7 @@ public class JobController {
     }
 
     @GetMapping("/jobs/{id}")
-    public ApiResponse<JobResponse> fetchJob(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1") @PathVariable long id){
+    public ApiResponse<JobResponse> fetchJob(@Positive(message = "ID phải lớn hơn 0") @PathVariable long id){
         return ApiResponse.<JobResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Fetch Job By Id")
@@ -63,7 +64,7 @@ public class JobController {
     }
 
     @PutMapping("/jobs/{id}")
-    public ApiResponse<JobResponse> update(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<JobResponse> update(@Positive(message = "ID phải lớn hơn 0")
                                                @PathVariable long id, @RequestBody JobRequest request){
         return ApiResponse.<JobResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -73,7 +74,7 @@ public class JobController {
     }
 
     @DeleteMapping("/jobs/{id}")
-    public ApiResponse<Void> delete(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                         @PathVariable long id){
         jobService.delete(id);
         return ApiResponse.<Void>builder()
@@ -84,7 +85,7 @@ public class JobController {
     }
 
     @DeleteMapping("/jobs")
-    public ApiResponse<Void> deleteJobs(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
+    public ApiResponse<Void> deleteJobs(@RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                         Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         jobService.deleteJobs(ids);
         return ApiResponse.<Void>builder()
@@ -112,7 +113,7 @@ public class JobController {
 
     @Operation(summary = "Get resumes for a specific job",
     description = "API này để lấy tất cả cv của một job")
-    @GetMapping("/{jobId}/resumes")
+    @GetMapping("/jobs/{jobId}/resumes")
     public ApiResponse<PageResponse<ResumeResponse>> getResumesByJob(@RequestParam(defaultValue = "1") int pageNo,
                                                                      @RequestParam(defaultValue = "10") int pageSize,
                                                                      @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")

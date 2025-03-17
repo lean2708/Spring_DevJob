@@ -12,6 +12,8 @@ import spring_devjob.dto.basic.UserBasic;
 @SuperBuilder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ResumeResponse extends BaseResponse {
+    String name;
+
     String cvUrl;
 
     ResumeStateEnum resumeStatus;

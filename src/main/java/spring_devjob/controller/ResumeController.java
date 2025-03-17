@@ -1,15 +1,18 @@
 package spring_devjob.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.ResumeRequest;
+import spring_devjob.dto.request.UpdateCVStatusRequest;
 import spring_devjob.dto.response.ApiResponse;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ResumeResponse;
@@ -36,7 +39,7 @@ public class ResumeController {
     }
 
     @GetMapping("/resumes/{id}")
-    public ApiResponse<ResumeResponse> fetchResume(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<ResumeResponse> fetchResume(@Positive(message = "ID phải lớn hơn 0")
                                                        @PathVariable long id){
         return ApiResponse.<ResumeResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -59,7 +62,7 @@ public class ResumeController {
     }
 
     @PutMapping("/resumes/{id}")
-    public ApiResponse<ResumeResponse> update(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<ResumeResponse> update(@Positive(message = "ID phải lớn hơn 0")
                                                   @PathVariable long id, @RequestBody ResumeRequest request){
         return ApiResponse.<ResumeResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -68,8 +71,22 @@ public class ResumeController {
                 .build();
     }
 
+    @Operation(summary = "Get list of applied jobs",
+            description = "API này để cập nhập trạng thái cho CV")
+    @PatchMapping("/resumes/{resumeId}/status")
+    public ApiResponse<Void> updateCVStatus(@PathVariable Long resumeId,
+                                            @Valid @RequestBody UpdateCVStatusRequest request) {
+        resumeService.updateCVStatus(resumeId, request.getResumeStatus());
+        return ApiResponse.<Void>builder()
+                .code(HttpStatus.OK.value())
+                .message("Update Resume By ResumeStatus")
+                .result(null)
+                .build();
+    }
+
+
     @DeleteMapping("/resumes/{id}")
-    public ApiResponse<Void> delete(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                         @PathVariable long id){
         resumeService.delete(id);
         return ApiResponse.<Void>builder()
@@ -79,7 +96,7 @@ public class ResumeController {
                 .build();
     }
     @DeleteMapping("/resumes")
-    public ApiResponse<Void> deleteResumes(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
+    public ApiResponse<Void> deleteResumes(@RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                            Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         resumeService.deleteResumes(ids);
         return ApiResponse.<Void>builder()

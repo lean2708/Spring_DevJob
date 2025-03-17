@@ -16,6 +16,7 @@ import spring_devjob.dto.request.JobRequest;
 import spring_devjob.dto.response.JobResponse;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.entity.*;
+import spring_devjob.entity.relationship.JobHasSkill;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.JobMapper;
@@ -42,23 +43,23 @@ public class JobService {
     private final PageableService pageableService;
     private final AuthService authService;
     private final JobHasSkillRepository jobHasSkillRepository;
+    private final SavedJobService savedJobService;
+    private final JobHasSkillService jobHasSkillService;
     @PersistenceContext
     private EntityManager entityManager;
 
     public JobResponse create(JobRequest request){
-        if(jobRepository.existsByName(request.getName())){
-            throw new AppException(ErrorCode.JOB_EXISTED);
-        }
+        Company company = companyRepository.findById(request.getCompanyId()).
+                orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
 
-        if(jobRepository.existsInactiveJobByName(request.getName())){
-            throw new AppException(ErrorCode.JOB_ALREADY_DELETED);
+        if(jobRepository.existsByNameAndCompanyId(request.getName(), company.getId())){
+            throw new AppException(ErrorCode.JOB_ALREADY_EXISTS_IN_COMPANY);
         }
 
         Job job = jobMapper.toJob(request);
 
-        if(request.getCompanyId() != null){
-            companyRepository.findById(request.getCompanyId()).ifPresent(job::setCompany);
-        }
+        job.setCompany(company);
+
         jobRepository.save(job);
 
         if(!CollectionUtils.isEmpty(request.getSkillIds())){
@@ -87,25 +88,25 @@ public class JobService {
 
         Page<Job> jobPage = jobRepository.findAll(pageable);
 
-        List<JobResponse> responses =  convertListJobResponse(jobPage.getContent());
-
         return PageResponse.<JobResponse>builder()
                 .page(jobPage.getNumber() + 1)
                 .size(jobPage.getSize())
                 .totalPages(jobPage.getTotalPages())
                 .totalItems(jobPage.getTotalElements())
-                .items(responses)
+                .items(jobMapper.toJobResponseList(jobPage.getContent()))
                 .build();
     }
 
     public JobResponse update(long id, JobRequest request){
         Job jobDB = findActiveJobById(id);
 
+        if(!request.getCompanyId().equals(jobDB.getCompany().getId())) {
+            throw new AppException(ErrorCode.COMPANY_MISMATCH);
+        }
+
         jobMapper.updateJob(jobDB, request);
 
-        if(request.getCompanyId() != null){
-            companyRepository.findById(request.getCompanyId()).ifPresent(jobDB::setCompany);
-        }
+        companyRepository.findById(request.getCompanyId()).ifPresent(jobDB::setCompany);
 
         if(!CollectionUtils.isEmpty(request.getSkillIds())){
             Set<Skill> skillSet = skillRepository.findAllByIdIn(request.getSkillIds());
@@ -131,9 +132,13 @@ public class JobService {
         jobRepository.save(jobDB);
     }
     private void deactivateJob(Job job){
-        if(!CollectionUtils.isEmpty(job.getResumes())){
-            job.getResumes().clear();
-        }
+        job.getResumes().forEach(resume -> resume.setJob(null));
+        resumeRepository.saveAll(job.getResumes());
+
+        job.getSkills().forEach(jobHasSkillService::updateJobHasSkillToInactive);
+
+        job.getUsers().forEach(savedJobService::updateUserSavedJobToInactive);
+
         job.setState(EntityStatus.INACTIVE);
         job.setDeactivatedAt(LocalDate.now());
     }
@@ -176,7 +181,7 @@ public class JobService {
                 .size(pageSize)
                 .totalPages(totalPages)
                 .totalItems(totalElements)
-                .items(convertListJobResponse(jobs))
+                .items(jobMapper.toJobResponseList(jobs))
                 .build();
     }
 
@@ -270,14 +275,12 @@ public class JobService {
 
         Page<Job> jobPage = jobRepository.findAllByResumesIn(resumes, pageable);
 
-        List<JobResponse> responses =  convertListJobResponse(jobPage.toList());
-
         return PageResponse.<JobResponse>builder()
                 .page(jobPage.getNumber() + 1)
                 .size(jobPage.getSize())
                 .totalPages(jobPage.getTotalPages())
                 .totalItems(jobPage.getTotalElements())
-                .items(responses)
+                .items(jobMapper.toJobResponseList(jobPage.getContent()))
                 .build();
     }
 
@@ -301,7 +304,7 @@ public class JobService {
                 .size(jobPage.getSize())
                 .totalPages(jobPage.getTotalPages())
                 .totalItems(jobPage.getTotalElements())
-                .items(convertListJobResponse(jobPage.getContent()))
+                .items(jobMapper.toJobResponseList(jobPage.getContent()))
                 .build();
     }
 
@@ -310,14 +313,6 @@ public class JobService {
                 orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
     }
 
-    public List<JobResponse> convertListJobResponse(List<Job> jobList){
-        List<JobResponse> jobResponseList = new ArrayList<>();
-        for(Job job : jobList){
-            JobResponse response = jobMapper.toJobResponse(job);
-            jobResponseList.add(response);
-        }
-        return jobResponseList;
-    }
 
 
 }

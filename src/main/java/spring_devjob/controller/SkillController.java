@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,7 @@ public class SkillController {
     }
 
     @GetMapping("/skills/{id}")
-    public ApiResponse<SkillResponse> fetchSkillById(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<SkillResponse> fetchSkillById(@Positive(message = "ID phải lớn hơn 0")
                                                          @PathVariable long id){
         return ApiResponse.<SkillResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -57,7 +58,7 @@ public class SkillController {
     }
 
     @PutMapping("/skills/{id}")
-    public ApiResponse<SkillResponse> update(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<SkillResponse> update(@Positive(message = "ID phải lớn hơn 0")
                                                  @PathVariable long id, @RequestBody SkillRequest request){
         return ApiResponse.<SkillResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -67,7 +68,7 @@ public class SkillController {
     }
 
     @DeleteMapping("/skills/{id}")
-    public ApiResponse<Void> delete(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                         @PathVariable long id){
         skillService.delete(id);
         return ApiResponse.<Void>builder()
@@ -78,7 +79,7 @@ public class SkillController {
     }
 
     @DeleteMapping("/skills")
-    public ApiResponse<Void> deleteSkills(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
+    public ApiResponse<Void> deleteSkills(@RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                           Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         skillService.deleteSkills(ids);
         return ApiResponse.<Void>builder()

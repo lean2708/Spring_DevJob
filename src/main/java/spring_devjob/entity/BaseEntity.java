@@ -20,8 +20,6 @@ public abstract class BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
-    @Column(nullable = false)
-    String name;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
@@ -38,10 +36,11 @@ public abstract class BaseEntity {
     @LastModifiedBy
     String updatedBy;
 
+
     @PrePersist
-    public void prePersist() {
-        if (this.state == null) {
-            this.state = EntityStatus.ACTIVE;
+    private void prePersist() {
+        if (state == null) {
+            state = EntityStatus.ACTIVE;
         }
     }
 }

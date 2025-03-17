@@ -1,21 +1,20 @@
-package spring_devjob.entity;
+package spring_devjob.entity.relationship;
 
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import spring_devjob.constants.EntityStatus;
+import spring_devjob.entity.Job;
+import spring_devjob.entity.Skill;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "tbl_job_has_skill")
-public class JobHasSkill {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class JobHasSkill extends RelationBaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "job_id", nullable = false)
@@ -29,4 +28,5 @@ public class JobHasSkill {
         this.job = job;
         this.skill = skill;
     }
+
 }

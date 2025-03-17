@@ -5,12 +5,9 @@ import spring_devjob.dto.basic.EntityBasic;
 import spring_devjob.dto.request.JobRequest;
 import spring_devjob.dto.response.JobResponse;
 import spring_devjob.entity.Job;
-import spring_devjob.entity.JobHasSkill;
-import spring_devjob.entity.UserHasRole;
+import spring_devjob.entity.history.JobHistory;
 
-import java.util.Collections;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Mapper(componentModel = "spring", uses = {SkillMapper.class})
 public interface JobMapper {
@@ -20,6 +17,12 @@ public interface JobMapper {
 
     @Mapping(target = "skills", source = "skills", qualifiedByName = "jobHasSkillToEntityBasic")
     JobResponse toJobResponse(Job job);
+
+    List<JobResponse> toJobResponseList(List<Job> jobs);
+
+    JobHistory toJobHistory(Job job);
+
+    List<JobHistory> toJobHistoryList(List<Job> jobs);
 
     @Mapping(target = "company", ignore = true)
     @Mapping(target = "skills", ignore = true)

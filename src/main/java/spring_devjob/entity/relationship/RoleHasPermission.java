@@ -1,21 +1,20 @@
-package spring_devjob.entity;
+package spring_devjob.entity.relationship;
 
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import spring_devjob.constants.EntityStatus;
+import spring_devjob.entity.Permission;
+import spring_devjob.entity.Role;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "tbl_role_has_permission")
-public class RoleHasPermission {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class RoleHasPermission extends RelationBaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)

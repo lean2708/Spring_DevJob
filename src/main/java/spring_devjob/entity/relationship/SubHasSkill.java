@@ -1,21 +1,20 @@
-package spring_devjob.entity;
+package spring_devjob.entity.relationship;
 
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import spring_devjob.constants.EntityStatus;
+import spring_devjob.entity.Skill;
+import spring_devjob.entity.Subscriber;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "tbl_subscriber_has_skill")
-public class SubHasSkill {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class SubHasSkill extends RelationBaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "subscriber_id", nullable = false)

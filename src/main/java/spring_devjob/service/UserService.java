@@ -15,6 +15,7 @@ import spring_devjob.dto.request.UserRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.UserResponse;
 import spring_devjob.entity.*;
+import spring_devjob.entity.relationship.UserHasRole;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.UserMapper;
@@ -35,9 +36,11 @@ public class UserService {
     private final CompanyRepository companyRepository;
     private final RoleRepository roleRepository;
     private final ResumeRepository resumeRepository;
+    private final ReviewRepository reviewRepository;
     private final PageableService pageableService;
     private final UserHasRoleRepository userHasRoleRepository;
     private final UserHasRoleService userHasRoleService;
+    private final SavedJobService savedJobService;
 
 
     public UserResponse create(UserRequest request){
@@ -45,9 +48,10 @@ public class UserService {
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
 
-        if(userRepository.existsInactiveUserByEmail(request.getEmail())){
-            throw new AppException(ErrorCode.USER_ALREADY_DELETED);
+        if(userRepository.existsByPhone(request.getPhone())){
+            throw new AppException(ErrorCode.PHONE_EXISTED);
         }
+
         User user = userMapper.toUser(request);
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -85,14 +89,12 @@ public class UserService {
 
         Page<User> userPage = userRepository.findAll(pageable);
 
-        List<UserResponse> responses =  convertListUserResponse(userPage.getContent());
-
         return PageResponse.<UserResponse>builder()
                 .page(userPage.getNumber() + 1)
                 .size(userPage.getSize())
                 .totalPages(userPage.getTotalPages())
                 .totalItems(userPage.getTotalElements())
-                .items(responses)
+                .items(userMapper.toUserResponseList(userPage.getContent()))
                 .build();
     }
 
@@ -133,13 +135,14 @@ public class UserService {
     }
 
     private void deactivateUser(User user) {
-        if (!CollectionUtils.isEmpty(user.getResumes())) {
-            user.getResumes().forEach(resume -> {
-                resume.setState(EntityStatus.INACTIVE);
-                resume.setDeactivatedAt(LocalDate.now());
-                resumeRepository.save(resume);
-            });
-        }
+        resumeRepository.updateAllResumesToInactiveByUserId(user.getId(), EntityStatus.INACTIVE, LocalDate.now());
+
+        reviewRepository.updateAllReviewsToInactiveByUserId(user.getId(), EntityStatus.INACTIVE, LocalDate.now());
+
+        user.getRoles().forEach(userHasRoleService::updateUserHasRoleToInactive);
+
+        user.getJobs().forEach(savedJobService::updateUserSavedJobToInactive);
+
         user.setState(EntityStatus.INACTIVE);
         user.setDeactivatedAt(LocalDate.now());
     }
@@ -158,16 +161,6 @@ public class UserService {
     private User findActiveUserById(long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-    }
-
-
-    public List<UserResponse> convertListUserResponse(List<User> userList){
-        List<UserResponse> userResponseList = new ArrayList<>();
-        for(User user : userList){
-            UserResponse response = userMapper.toUserResponse(user);
-            userResponseList.add(response);
-        }
-        return userResponseList;
     }
 
 }

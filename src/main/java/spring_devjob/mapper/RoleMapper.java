@@ -5,7 +5,9 @@ import spring_devjob.dto.basic.EntityBasic;
 import spring_devjob.dto.request.RoleRequest;
 import spring_devjob.dto.response.RoleResponse;
 import spring_devjob.entity.Role;
-import spring_devjob.entity.UserHasRole;
+import spring_devjob.entity.relationship.UserHasRole;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring", uses = {PermissionMapper.class})
 public interface RoleMapper {
@@ -15,6 +17,8 @@ public interface RoleMapper {
 
     @Mapping(source = "permissions", target = "permissions", qualifiedByName = "roleHasPermissionToEntityBasic")
     RoleResponse toRoleResponse(Role role);
+
+    List<RoleResponse> toRoleResponseList(List<Role> roles);
 
     @Mapping(target = "permissions", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

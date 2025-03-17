@@ -14,10 +14,9 @@ import org.springframework.util.StringUtils;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.SkillRequest;
 import spring_devjob.dto.response.PageResponse;
+import spring_devjob.dto.response.RoleResponse;
 import spring_devjob.dto.response.SkillResponse;
-import spring_devjob.entity.Skill;
-import spring_devjob.entity.Subscriber;
-import spring_devjob.entity.User;
+import spring_devjob.entity.*;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.SkillMapper;
@@ -40,12 +39,13 @@ public class SkillService {
     private final SkillRepository skillRepository;
     private final SkillMapper skillMapper;
     private final PageableService pageableService;
+    private final SubHasSkillService subHasSkillService;
+    private final JobHasSkillService jobHasSkillService;
 
     public SkillResponse create(SkillRequest request){
         if(skillRepository.existsByName(request.getName())){
             throw new AppException(ErrorCode.SKILL_EXISTED);
         }
-
         Skill skill = skillMapper.toSkill(request);
 
         return skillMapper.toSkillResponse(skillRepository.save(skill));
@@ -65,18 +65,12 @@ public class SkillService {
 
         Page<Skill> skillPage = skillRepository.findAll(pageable);
 
-        List<SkillResponse> skillResponseList = new ArrayList<>();
-        for(Skill skill : skillPage.getContent()){
-            SkillResponse response = skillMapper.toSkillResponse(skill);
-            skillResponseList.add(response);
-        }
-
         return PageResponse.<SkillResponse>builder()
                 .page(skillPage.getNumber() + 1)
                 .size(skillPage.getSize())
                 .totalPages(skillPage.getTotalPages())
                 .totalItems(skillPage.getTotalElements())
-                .items(skillResponseList)
+                .items(skillMapper.toSkillResponseList(skillPage.getContent()))
                 .build();
     }
 
@@ -98,6 +92,10 @@ public class SkillService {
     }
 
     private void deactivateSkill(Skill skill){
+        skill.getSubscribers().forEach(subHasSkillService::updateJobHasSkillToInactive);
+
+        skill.getJobs().forEach(jobHasSkillService::updateJobHasSkillToInactive);
+
         skill.setState(EntityStatus.INACTIVE);
         skill.setDeactivatedAt(LocalDate.now());
     }
@@ -115,12 +113,7 @@ public class SkillService {
     }
 
     private Skill findActiveSkillById(long id) {
-        Skill skillDB = skillRepository.findById(id).
+        return skillRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.SKILL_NOT_EXISTED));
-
-        if (skillDB.getState() == EntityStatus.INACTIVE) {
-            throw new AppException(ErrorCode.SKILL_ALREADY_DELETED);
-        }
-        return skillDB;
     }
 }

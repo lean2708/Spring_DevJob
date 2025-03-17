@@ -1,19 +1,16 @@
 package spring_devjob.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.GenderEnum;
-import spring_devjob.service.AuthService;
+import spring_devjob.entity.relationship.UserHasRole;
+import spring_devjob.entity.relationship.UserSavedJob;
 
-import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -25,8 +22,12 @@ import java.util.Set;
 @SQLRestriction("state = 'ACTIVE'")
 @Table(name = "tbl_user")
 public class User extends BaseEntity {
-    @Column(unique = true)
+    @Column(nullable = false)
+    String name;
+    @Column(unique = true, nullable = false)
     String email;
+    @Column(unique = true, nullable = false)
+    String phone;
     String password;
     String avatarUrl;
     int age;
@@ -40,9 +41,17 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore
+    Set<Review> reviews = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
     Set<Resume> resumes = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    Set<UserSavedJob> jobs = new HashSet<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     Set<UserHasRole> roles = new HashSet<>();
+
 
 }

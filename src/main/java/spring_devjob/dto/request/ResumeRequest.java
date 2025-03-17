@@ -2,6 +2,7 @@ package spring_devjob.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import spring_devjob.constants.ResumeStateEnum;
@@ -14,12 +15,9 @@ public class ResumeRequest {
     String name;
     String cvUrl;
 
-    @EnumPattern(name = "status", regexp = "PENDING|REVIEWING|APPROVED|REJECTED")
-    ResumeStateEnum resumeStatus;
-
     boolean primaryCv;
 
-    @NotNull(message = "Job không được để trống")
+    @Positive(message = "CompanyID phải lớn hơn 0")
     Long jobId;
 
 }

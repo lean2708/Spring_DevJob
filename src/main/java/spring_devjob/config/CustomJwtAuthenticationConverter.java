@@ -13,13 +13,12 @@ import org.springframework.util.CollectionUtils;
 import spring_devjob.entity.Permission;
 import spring_devjob.entity.Role;
 import spring_devjob.entity.User;
-import spring_devjob.entity.UserHasRole;
+import spring_devjob.entity.relationship.UserHasRole;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.repository.PermissionRepository;
 import spring_devjob.repository.UserRepository;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,6 +43,7 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Abstract
                     .map(UserHasRole::getRole)
                     .map(Role::getId)
                     .collect(Collectors.toSet());
+
             permissionSet = permissionRepository.findAllByRoleIds(roleIds);
         }
 

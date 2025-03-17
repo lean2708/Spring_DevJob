@@ -1,15 +1,19 @@
 package spring_devjob.service;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import spring_devjob.constants.EntityStatus;
+import spring_devjob.constants.ResumeStateEnum;
 import spring_devjob.dto.request.ResumeRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ResumeResponse;
+import spring_devjob.dto.validator.EnumPattern;
+import spring_devjob.entity.Company;
 import spring_devjob.entity.Job;
 import spring_devjob.entity.Resume;
 import spring_devjob.entity.User;
@@ -35,23 +39,16 @@ public class ResumeService {
     private final JobRepository jobRepository;
     private final PageableService pageableService;
     private final AuthService authService;
+    private final EmailService emailService;
 
     public ResumeResponse create(ResumeRequest request){
-        if(resumeRepository.existsByName(request.getName())){
-            throw new AppException(ErrorCode.RESUME_EXISTED);
-        }
-        if(resumeRepository.existsInactiveResumeByName(request.getName())){
-            throw new AppException(ErrorCode.RESUME_ALREADY_DELETED);
-        }
         Resume resume = resumeMapper.toResume(request);
 
         User user = userRepository.findByEmail(authService.getCurrentUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         resume.setUser(user);
 
-        if(request.getJobId() != null) {
-            jobRepository.findById(request.getJobId()).ifPresent(resume::setJob);
-        }
+        jobRepository.findById(request.getJobId()).ifPresent(resume::setJob);
 
         return resumeMapper.toResumeResponse(resumeRepository.save(resume));
     }
@@ -69,14 +66,12 @@ public class ResumeService {
 
         Page<Resume> resumePage = resumeRepository.findAll(pageable);
 
-        List<ResumeResponse> responses =  convertListResumeResponse(resumePage.getContent());
-
         return PageResponse.<ResumeResponse>builder()
                 .page(resumePage.getNumber() + 1)
                 .size(resumePage.getSize())
                 .totalPages(resumePage.getTotalPages())
                 .totalItems(resumePage.getTotalElements())
-                .items(responses)
+                .items(resumeMapper.toResumeResponseList(resumePage.getContent()))
                 .build();
     }
 
@@ -85,12 +80,10 @@ public class ResumeService {
 
         resumeMapper.updateResume(resumeDB, request);
 
-        User user = userRepository.findByEmail(authService.getCurrentUsername())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        resumeDB.setUser(user);
+        jobRepository.findById(request.getJobId()).ifPresent(resumeDB::setJob);
 
-        if(request.getJobId() != null) {
-            jobRepository.findById(request.getJobId()).ifPresent(resumeDB::setJob);
+        if(resumeDB.getJob() != null && resumeDB.getResumeStatus().equals(ResumeStateEnum.APPROVED)){
+
         }
 
         return resumeMapper.toResumeResponse(resumeRepository.save(resumeDB));
@@ -129,14 +122,12 @@ public class ResumeService {
 
         Page<Resume> resumePage = resumeRepository.findAllByUser(user, pageable);
 
-        List<ResumeResponse> responses =  convertListResumeResponse(resumePage.getContent());
-
         return PageResponse.<ResumeResponse>builder()
                 .page(resumePage.getNumber() + 1)  // Thêm 1 để bắt đầu từ trang 1
                 .size(resumePage.getSize())
                 .totalPages(resumePage.getTotalPages())
                 .totalItems(resumePage.getTotalElements())
-                .items(responses)
+                .items(resumeMapper.toResumeResponseList(resumePage.getContent()))
                 .build();
     }
 
@@ -155,7 +146,7 @@ public class ResumeService {
                 .size(resumePage.getSize())
                 .totalPages(resumePage.getTotalPages())
                 .totalItems(resumePage.getTotalElements())
-                .items(convertListResumeResponse(resumePage.getContent()))
+                .items(resumeMapper.toResumeResponseList(resumePage.getContent()))
                 .build();
     }
 
@@ -164,13 +155,27 @@ public class ResumeService {
                 orElseThrow(() -> new AppException(ErrorCode.RESUME_NOT_EXISTED));
     }
 
-    public List<ResumeResponse> convertListResumeResponse(List<Resume> resumeList){
-        List<ResumeResponse> resumeResponseList = new ArrayList<>();
-        for(Resume resume : resumeList){
-            ResumeResponse response = resumeMapper.toResumeResponse(resume);
-            resumeResponseList.add(response);
-        }
-        return resumeResponseList;
-    }
 
+    public void updateCVStatus(long resumeId, ResumeStateEnum resumeStatus) {
+        Resume resumeDB = findActiveResumeById(resumeId);
+
+        if (resumeDB.getJob() == null) {
+            throw new AppException(ErrorCode.RESUME_NOT_SUBMITTED);
+        }
+
+        resumeDB.setResumeStatus(resumeStatus);
+        resumeRepository.save(resumeDB);
+
+        User hrOrAdmin = userRepository.findByEmail(authService.getCurrentUsername())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Job job = resumeDB.getJob();
+        Company company = job.getCompany();
+
+        if (resumeStatus == ResumeStateEnum.APPROVED && company != null) {
+            emailService.sendResumeApprovedEmail(resumeDB, hrOrAdmin);
+        } else if (resumeStatus == ResumeStateEnum.REJECTED) {
+            emailService.sendResumeRejectedEmail(resumeDB);
+        }
+    }
 }

@@ -11,8 +11,7 @@ import spring_devjob.constants.GenderEnum;
 import spring_devjob.constants.PermissionEnum;
 import spring_devjob.constants.RoleEnum;
 import spring_devjob.entity.*;
-import spring_devjob.exception.AppException;
-import spring_devjob.exception.ErrorCode;
+import spring_devjob.entity.relationship.RoleHasPermission;
 import spring_devjob.repository.PermissionRepository;
 import spring_devjob.repository.RoleHasPermissionRepository;
 import spring_devjob.repository.RoleRepository;
@@ -20,7 +19,6 @@ import spring_devjob.repository.UserRepository;
 import spring_devjob.service.UserHasRoleService;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -55,6 +53,7 @@ public class ApplicationInitConfig {
                         .collect(Collectors.toList());
 
                 permissionRepository.saveAll(permissionList);
+                permissionRepository.flush();
             }
 
             if(roleRepository.count() == 0){
@@ -83,12 +82,14 @@ public class ApplicationInitConfig {
 
                 List<Role> roleList = List.of(userRole, proRole, hrRole, adminRole);
                 roleRepository.saveAll(roleList);
+                roleRepository.flush();
             }
 
             if (!userRepository.existsByEmail(ADMIN_EMAIL)) {
                 User admin = userRepository.save(User.builder()
                         .name("Admin")
                         .email(ADMIN_EMAIL)
+                        .phone("099999999")
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
                         .gender(GenderEnum.MALE)
                         .build());

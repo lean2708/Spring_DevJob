@@ -12,6 +12,7 @@ import java.util.Set;
 @SuperBuilder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RoleResponse extends BaseResponse {
+    String name;
     String description;
 
     Set<EntityBasic> permissions;

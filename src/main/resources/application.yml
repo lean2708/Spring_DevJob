@@ -8,3 +8,10 @@ spring:
     name: Spring_DevJob
   profiles:
     active: dev
+
+app:
+  resume:
+    interview:
+      days: 5
+  convert:
+    days: 30

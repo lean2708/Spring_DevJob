@@ -6,11 +6,9 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
-import spring_devjob.service.AuthService;
+import spring_devjob.entity.relationship.RoleHasPermission;
 
-import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -22,6 +20,9 @@ import java.util.Set;
 @NoArgsConstructor
 @Table(name = "tbl_permission")
 public class Permission extends BaseEntity {
+    @Column(nullable = false)
+    String name;
+
     String module;
     String apiPath;
     String method;

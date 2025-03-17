@@ -15,7 +15,9 @@ import java.util.Set;
 @SuperBuilder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse extends BaseResponse{
+    String name;
     String email;
+    String phone;
     String avatarUrl;
     int age;
     @Enumerated(EnumType.STRING)

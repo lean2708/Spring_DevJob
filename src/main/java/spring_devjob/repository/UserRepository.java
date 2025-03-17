@@ -12,6 +12,7 @@ import spring_devjob.constants.EntityStatus;
 import spring_devjob.entity.Company;
 import spring_devjob.entity.User;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,11 +22,13 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     boolean existsByEmail(String email);
 
-    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email AND u.state = 'INACTIVE'")
-    boolean existsInactiveUserByEmail(@Param("email") String email);
+    boolean existsByPhone(String phone);
 
     Optional<User> findByEmail(String email);
 
     Set<User> findAllByIdIn(Set<Long> ids);
 
+    @Modifying
+    @Query(value = "SELECT * FROM tbl_user u WHERE u.state = :state AND u.deactivated_at < :date", nativeQuery = true)
+    List<User> findInactiveUsersBeforeDate(@Param("state") EntityStatus state, @Param("date") LocalDate date);
 }

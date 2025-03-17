@@ -1,12 +1,13 @@
 package spring_devjob.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
+import spring_devjob.entity.relationship.RoleHasPermission;
+import spring_devjob.entity.relationship.UserHasRole;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,6 +21,8 @@ import java.util.Set;
 @SQLRestriction("state = 'ACTIVE'")
 @Table(name = "tbl_role")
 public class Role extends BaseEntity {
+    @Column(nullable = false, unique = true)
+    String name;
     String description;
 
     @OneToMany(mappedBy = "role")

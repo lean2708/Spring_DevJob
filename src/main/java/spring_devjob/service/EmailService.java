@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -13,6 +14,8 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import spring_devjob.dto.response.ResponseEmailJob;
 import spring_devjob.entity.*;
+import spring_devjob.entity.relationship.JobHasSkill;
+import spring_devjob.entity.relationship.SubHasSkill;
 import spring_devjob.repository.JobRepository;
 import spring_devjob.repository.SubscriberRepository;
 
@@ -30,6 +33,9 @@ public class EmailService {
     private final SpringTemplateEngine templateEngine;
     private final JobRepository jobRepository;
     private final SubscriberRepository subscriberRepository;
+
+    @Value("${app.resume.interview.days}")
+    private long interviewDays;
 
     @Async
     public void sendEmail(String to, String subject, Map<String, Object> model, String templateName){
@@ -123,9 +129,52 @@ public class EmailService {
             }
         }
     }
+
+    public void sendResumeApprovedEmail(Resume resume, User hr) {
+        User user = resume.getUser();
+        Job job = resume.getJob();
+        Company company = job.getCompany();
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("userName", user.getName());
+        model.put("jobName", job.getName());
+        model.put("companyName", company.getName());
+        model.put("companyAddress", company.getAddress());
+        model.put("hrPhone", hr.getPhone());
+        model.put("interviewDate", job.getEndDate().plusDays(interviewDays));
+
+        this.sendEmail(
+                user.getEmail(),
+                "Chúc mừng! Hồ sơ của bạn đã được duyệt",
+                model,
+                "resume-approved"
+        );
+    }
+
+    public void sendResumeRejectedEmail(Resume resume) {
+        User user = resume.getUser();
+        Job job = resume.getJob();
+        Company company = job.getCompany();
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("userName", user.getName());
+        model.put("jobName", job.getName());
+        model.put("companyName", company.getName());
+
+        this.sendEmail(
+                user.getEmail(),
+                "Kết quả ứng tuyển - Thông báo từ DevJob",
+                model,
+                "resume-rejected"
+        );
+    }
+
+
+
     public ResponseEmailJob convertJobToSendEmail(Job job) {
         Set<Skill> skillSet = job.getSkills().stream()
                 .map(JobHasSkill::getSkill).collect(Collectors.toSet());
+
         List<ResponseEmailJob.SkillEmail> s = skillSet.stream().
                 map(skill -> new ResponseEmailJob.SkillEmail(skill.getName())).
                 collect(Collectors.toList());

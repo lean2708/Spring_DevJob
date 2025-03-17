@@ -46,13 +46,13 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN(1035, "Refresh token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
     TOKEN_TYPE_INVALID(1036, "Loại token không hợp lệ", HttpStatus.UNAUTHORIZED),
     EMAIL_EXISTED(1037, "Email đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
-    USER_ALREADY_DELETED(1038, "Người dùng đã bị xóa trước đó", HttpStatus.BAD_REQUEST),
-    COMPANY_ALREADY_DELETED(1039, "Company đã bị xóa trước đó", HttpStatus.BAD_REQUEST),
-    JOB_ALREADY_DELETED(1040, "Job đã bị xóa trước đó", HttpStatus.BAD_REQUEST),
-    RESUME_ALREADY_DELETED(1038, "Resume đã bị xóa trước đó", HttpStatus.BAD_REQUEST),
-    ROLE_ALREADY_DELETED(1038, "Role đã bị xóa trước đó", HttpStatus.BAD_REQUEST),
-    SKILL_ALREADY_DELETED(1038, "Skill đã bị xóa trước đó", HttpStatus.BAD_REQUEST),
-    SUBSCRIBER_ALREADY_DELETED(1038, "Subscriber đã bị xóa trước đó", HttpStatus.BAD_REQUEST)
+    PHONE_EXISTED(1037, "Phone đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_EXISTED(1003, "Review không tồn tại trong hệ thống", HttpStatus.NOT_FOUND),
+    REVIEW_NOT_FOUND(1033, "Không tìm thấy review nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
+    JOB_ALREADY_EXISTS_IN_COMPANY(1007, "Job đã tồn tại trong công ty", HttpStatus.BAD_REQUEST),
+    COMPANY_MISMATCH(1008, "Company phải trùng với công ty của job hiện tại", HttpStatus.BAD_REQUEST),
+    JOB_NOT_SAVED(1009, "Job chưa được user lưu", HttpStatus.BAD_REQUEST),
+    RESUME_NOT_SUBMITTED(1009, "Resume chưa được nộp vào Job nào", HttpStatus.BAD_REQUEST)
     ;
 
 

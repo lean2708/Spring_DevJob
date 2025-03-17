@@ -2,6 +2,7 @@ package spring_devjob.controller;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,7 @@ public class PermissionController {
     private final PermissionService permissionService;
 
     @GetMapping("/permissions/{id}")
-    public ApiResponse<PermissionResponse> fetchRoleById(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<PermissionResponse> fetchRoleById(@Positive(message = "ID phải lớn hơn 0")
                                                              @PathVariable long id){
         return ApiResponse.<PermissionResponse>builder()
                 .code(HttpStatus.OK.value())

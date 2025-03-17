@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -37,7 +38,7 @@ public class RoleController {
     }
 
     @GetMapping("/roles/{id}")
-    public ApiResponse<RoleResponse> fetchRoleById(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<RoleResponse> fetchRoleById(@Positive(message = "ID phải lớn hơn 0")
                                                        @PathVariable long id){
         return ApiResponse.<RoleResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -60,7 +61,7 @@ public class RoleController {
     }
 
     @PutMapping("/roles/{id}")
-    public ApiResponse<RoleResponse> update(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<RoleResponse> update(@Positive(message = "ID phải lớn hơn 0")
                                             @PathVariable long id, @RequestBody RoleRequest request){
         return ApiResponse.<RoleResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -70,7 +71,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/roles/{id}")
-    public ApiResponse<Void> delete(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                     @PathVariable long id){
         roleService.delete(id);
         return ApiResponse.<Void>builder()

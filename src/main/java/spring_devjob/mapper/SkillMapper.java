@@ -4,9 +4,9 @@ import org.mapstruct.*;
 import spring_devjob.dto.basic.EntityBasic;
 import spring_devjob.dto.request.SkillRequest;
 import spring_devjob.dto.response.SkillResponse;
-import spring_devjob.entity.JobHasSkill;
+import spring_devjob.entity.relationship.JobHasSkill;
 import spring_devjob.entity.Skill;
-import spring_devjob.entity.SubHasSkill;
+import spring_devjob.entity.relationship.SubHasSkill;
 
 import java.util.List;
 
@@ -16,6 +16,8 @@ public interface SkillMapper {
     Skill toSkill(SkillRequest request);
 
     SkillResponse toSkillResponse(Skill skill);
+
+    List<SkillResponse> toSkillResponseList(List<Skill> skills);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateSkill(@MappingTarget Skill skill, SkillRequest request);

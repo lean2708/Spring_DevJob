@@ -16,6 +16,7 @@ import java.util.Set;
 @SuperBuilder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SubscriberResponse extends BaseResponse {
+    String name;
     String email;
 
     LocalDate startDate;

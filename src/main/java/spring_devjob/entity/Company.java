@@ -23,9 +23,18 @@ import java.util.Set;
 @NoArgsConstructor
 @Table(name = "tbl_company")
 public class Company extends BaseEntity {
+    @Column(nullable = false, unique = true)
+    String name;
     String description;
     String address;
     String logoUrl;
+
+    @Column(nullable = false)
+    double averageRating = 0.0;
+
+    @Column(nullable = false)
+    int totalReviews = 0;
+
 
     @OneToMany( mappedBy = "company", fetch = FetchType.LAZY)
     @JsonIgnore
@@ -34,5 +43,10 @@ public class Company extends BaseEntity {
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
     @JsonIgnore
     Set<Job> jobs = new HashSet<>();
+
+    @OneToMany(mappedBy = "company")
+    @JsonIgnore
+    Set<Review> reviews = new HashSet<>();
+
 
 }

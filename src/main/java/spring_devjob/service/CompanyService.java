@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.CompanyMapper;
 import spring_devjob.repository.CompanyRepository;
 import spring_devjob.repository.JobRepository;
+import spring_devjob.repository.ReviewRepository;
 import spring_devjob.repository.UserRepository;
 import spring_devjob.repository.criteria.JobSearchCriteriaQueryConsumer;
 import spring_devjob.repository.criteria.SearchCriteria;
@@ -50,16 +52,13 @@ public class CompanyService {
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
     private final PageableService pageableService;
+    private final ReviewRepository reviewRepository;
     @PersistenceContext
     private EntityManager entityManager;
 
     public CompanyResponse create(CompanyRequest request){
         if(companyRepository.existsByName(request.getName())){
             throw new AppException(ErrorCode.COMPANY_EXISTED);
-        }
-
-        if(companyRepository.existsInactiveCompanyByName(request.getName())){
-            throw new AppException(ErrorCode.COMPANY_ALREADY_DELETED);
         }
         Company company = companyMapper.toCompany(request);
 
@@ -79,14 +78,12 @@ public class CompanyService {
 
         Page<Company> companyPage = companyRepository.findAll(pageable);
 
-        List<CompanyResponse> responses =  convertListCompanyResponse(companyPage.getContent());
-
         return PageResponse.<CompanyResponse>builder()
                 .page(companyPage.getNumber() + 1)
                 .size(companyPage.getSize())
                 .totalPages(companyPage.getTotalPages())
                 .totalItems(companyPage.getTotalElements())
-                .items(responses)
+                .items(companyMapper.toCompanyResponseList(companyPage.getContent()))
                 .build();
     }
 
@@ -108,17 +105,21 @@ public class CompanyService {
     }
 
     private void deactivateCompany(Company company){
-        if(!CollectionUtils.isEmpty(company.getUsers())){
-            company.getUsers().forEach(user -> user.setCompany(null));
-            userRepository.saveAll(company.getUsers());
-        }
-        if(!CollectionUtils.isEmpty(company.getJobs())){
-            company.getJobs().forEach(job -> {
-                job.setState(EntityStatus.INACTIVE);
-                job.setDeactivatedAt(LocalDate.now());
-                jobRepository.save(job);
-            });
-        }
+        company.getUsers().forEach(user -> user.setCompany(null));
+        userRepository.saveAll(company.getUsers());
+
+        company.getJobs().forEach(job -> {
+            job.setState(EntityStatus.INACTIVE);
+            job.setDeactivatedAt(LocalDate.now());
+        });
+        jobRepository.saveAll(company.getJobs());
+
+        company.getReviews().forEach(review -> {
+            review.setState(EntityStatus.INACTIVE);
+            review.setDeactivatedAt(LocalDate.now());
+        });
+        reviewRepository.saveAll(company.getReviews());
+
         company.setState(EntityStatus.INACTIVE);
         company.setDeactivatedAt(LocalDate.now());
     }
@@ -161,7 +162,7 @@ public class CompanyService {
                 .size(pageSize)
                 .totalPages(totalPages)
                 .totalItems(totalElements)
-                .items(convertListCompanyResponse(companies))
+                .items(companyMapper.toCompanyResponseList(companies))
                 .build();
     }
     private List<Company> getCompanies(int pageNo, int pageSize, String sortBy, List<SearchCriteria> criteriaList){
@@ -220,18 +221,21 @@ public class CompanyService {
         return entityManager.createQuery(countQuery).getSingleResult();
     }
 
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void updateCompanyRatings() {
+        List<Company> companies = companyRepository.findAll();
+        for (Company company : companies) {
+            double avgRating = reviewRepository.getAverageRatingByCompanyId(company.getId());
+            int totalReviews = reviewRepository.getTotalReviewsByCompanyId(company.getId());
+            company.setAverageRating(avgRating);
+            company.setTotalReviews(totalReviews);
+            companyRepository.save(company);
+        }
+    }
 
     private Company findActiveCompanyById(long id) {
         return companyRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
     }
 
-    public List<CompanyResponse> convertListCompanyResponse(List<Company> companyList){
-        List<CompanyResponse> companyResponseList = new ArrayList<>();
-        for(Company company : companyList){
-            CompanyResponse response = companyMapper.toCompanyResponse(company);
-            companyResponseList.add(response);
-        }
-        return companyResponseList;
-    }
 }

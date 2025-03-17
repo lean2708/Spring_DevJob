@@ -6,11 +6,10 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
-import spring_devjob.service.AuthService;
+import spring_devjob.entity.relationship.JobHasSkill;
+import spring_devjob.entity.relationship.SubHasSkill;
 
-import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -22,6 +21,9 @@ import java.util.Set;
 @SQLRestriction("state = 'ACTIVE'")
 @Table(name = "tbl_skill")
 public class Skill extends BaseEntity {
+
+    @Column(nullable = false, unique = true)
+    String name;
 
     @OneToMany(mappedBy = "skill")
     @JsonIgnore

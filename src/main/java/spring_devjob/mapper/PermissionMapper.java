@@ -6,7 +6,7 @@ import org.mapstruct.Named;
 import spring_devjob.dto.basic.EntityBasic;
 import spring_devjob.dto.response.PermissionResponse;
 import spring_devjob.entity.Permission;
-import spring_devjob.entity.RoleHasPermission;
+import spring_devjob.entity.relationship.RoleHasPermission;
 
 import java.util.List;
 
@@ -14,6 +14,8 @@ import java.util.List;
 public interface PermissionMapper {
 
     PermissionResponse toPermissionResponse(Permission permission);
+
+    List<PermissionResponse> toPermissionResponseList(List<Permission> permissions);
 
     @Mapping(target = "id", source = "roleHasPermission.permission.id")
     @Mapping(target = "name", source = "roleHasPermission.permission.name")
