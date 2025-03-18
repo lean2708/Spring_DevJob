@@ -3,7 +3,8 @@ package spring_devjob.mapper;
 import org.mapstruct.*;
 import spring_devjob.dto.basic.UserBasic;
 import spring_devjob.dto.request.RegisterRequest;
-import spring_devjob.dto.request.UserRequest;
+import spring_devjob.dto.request.UserCreationRequest;
+import spring_devjob.dto.request.UserUpdateRequest;
 import spring_devjob.dto.response.UserResponse;
 import spring_devjob.entity.User;
 import spring_devjob.entity.history.UserHistory;
@@ -14,9 +15,14 @@ import java.util.List;
 public interface UserMapper {
     @Mapping(target = "company", ignore = true)
     @Mapping(target = "roles", ignore = true)
-    User toUser(UserRequest request);
+    User userCreationToUser(UserCreationRequest request);
 
-    User toUser(RegisterRequest request);
+    User registerToUser(RegisterRequest request);
+
+    @Mapping(target = "company", ignore = true)
+    @Mapping(target = "roles", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateUser(@MappingTarget User user, UserUpdateRequest request);
 
     @Mapping(target = "roles", source = "roles", qualifiedByName = "userHasRoleToEntityBasic")
     UserResponse toUserResponse(User user);
@@ -28,12 +34,5 @@ public interface UserMapper {
     List<UserHistory> toUserHistoryList(List<User> users);
 
     UserBasic toUserBasic(User user);
-
-    @Mapping(target = "company", ignore = true)
-    @Mapping(target = "roles", ignore = true)
-    @Mapping(target = "email", ignore = true)
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateUser(@MappingTarget User user, UserRequest request);
-
 
 }

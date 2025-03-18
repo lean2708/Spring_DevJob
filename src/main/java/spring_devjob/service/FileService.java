@@ -24,6 +24,7 @@ public class FileService {
 
     private static final List<String> IMAGE_TYPES = Arrays.asList("image/jpeg", "image/png", "image/gif", "image/webp");
     private static final List<String> VIDEO_TYPES = Arrays.asList("video/mp4", "video/avi", "video/mov", "video/mkv");
+    private static final List<String> CV_TYPES = Arrays.asList("application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain");
 
     @Value("${cloud.folder-image}")
     private String folderImage;
@@ -36,6 +37,12 @@ public class FileService {
 
     @Value("${cloud.max-size-video}")
     private String maxSizeVideo;
+
+    @Value("${cloud.folder-cv}")
+    private String folderCV;
+
+    @Value("${cloud.max-size-cv}")
+    private String maxSizeCV;
 
 
     private long parseSize(String size) {
@@ -64,25 +71,28 @@ public class FileService {
 
     private String determineUploadFolder(MultipartFile file, FileType type) throws FileException {
         switch (type){
-            case IMAGE->{
-                if (isValidFile(file) || !IMAGE_TYPES.contains(file.getContentType())) {
-                    throw new FileException("File " +  file.getOriginalFilename() + " không hợp lệ. Định dạng file hoặc tên file không được hỗ trợ.");
-                }
-                if (file.getSize() > parseSize(maxSizeImage)) {
-                    throw new FileException("File quá lớn! Ảnh chỉ được tối đa " + maxSizeImage + ".");
-                }
+            case IMAGE -> {
+                validateFile(file, IMAGE_TYPES, maxSizeImage, "Ảnh");
                 return folderImage;
             }
-            case VIDEO->{
-                if (isValidFile(file) || !VIDEO_TYPES.contains(file.getContentType())) {
-                    throw new FileException("File " +  file.getOriginalFilename() + " không hợp lệ. Định dạng file hoặc tên file không được hỗ trợ.");
-                }
-                if (file.getSize() > parseSize(maxSizeVideo)) {
-                    throw new FileException("File quá lớn! Ảnh chỉ được tối đa " + maxSizeVideo + ".");
-                }
+            case VIDEO -> {
+                validateFile(file, VIDEO_TYPES, maxSizeVideo, "Video");
                 return folderVideo;
             }
+            case CV -> {
+                validateFile(file, CV_TYPES, maxSizeCV, "CV");
+                return folderCV;
+            }
             default -> throw new FileException("Loại file không hỗ trợ");
+        }
+    }
+
+    private void validateFile(MultipartFile file, List<String> validTypes, String maxSize, String fileType) throws FileException {
+        if (!validTypes.contains(file.getContentType())) {
+            throw new FileException("File " + file.getOriginalFilename() + " không hợp lệ. Định dạng file không được hỗ trợ.");
+        }
+        if (file.getSize() > parseSize(maxSize)) {
+            throw new FileException(fileType + " quá lớn! Chỉ được tối đa " + maxSize + ".");
         }
     }
 

@@ -13,10 +13,10 @@ import spring_devjob.constants.RoleEnum;
 import spring_devjob.entity.*;
 import spring_devjob.entity.relationship.RoleHasPermission;
 import spring_devjob.repository.PermissionRepository;
-import spring_devjob.repository.RoleHasPermissionRepository;
+import spring_devjob.repository.relationship.RoleHasPermissionRepository;
 import spring_devjob.repository.RoleRepository;
 import spring_devjob.repository.UserRepository;
-import spring_devjob.service.UserHasRoleService;
+import spring_devjob.service.relationship.UserHasRoleService;
 
 import java.util.Arrays;
 import java.util.List;

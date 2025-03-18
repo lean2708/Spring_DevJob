@@ -1,11 +1,11 @@
-package spring_devjob.service;
+package spring_devjob.service.relationship;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.entity.relationship.JobHasSkill;
-import spring_devjob.repository.JobHasSkillRepository;
+import spring_devjob.repository.relationship.JobHasSkillRepository;
 
 @Slf4j
 @Service

@@ -1,11 +1,13 @@
 package spring_devjob.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
-import spring_devjob.constants.ResumeStateEnum;
-import spring_devjob.dto.basic.EntityBasic;
+import spring_devjob.dto.basic.JobBasic;
 import spring_devjob.dto.basic.UserBasic;
+
+import java.util.Set;
 
 @Getter
 @Setter
@@ -16,9 +18,9 @@ public class ResumeResponse extends BaseResponse {
 
     String cvUrl;
 
-    ResumeStateEnum resumeStatus;
     boolean primaryCv;
 
     UserBasic user;
-    EntityBasic job;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    Set<JobBasic> jobs;
 }

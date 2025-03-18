@@ -1,5 +1,6 @@
 package spring_devjob.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -30,6 +31,12 @@ public class FileController {
     @PostMapping(value = "/upload/video", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<FileEntity> uploadVideo(@RequestParam("fileVideo") MultipartFile file) throws IOException, FileException {
         return new ResponseEntity<>(fileService.uploadFile(file, FileType.VIDEO), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Upload CV", description = "API này để upload file CV (PDF, DOCX)")
+    @PostMapping(value = "/upload/cv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<FileEntity> uploadCV(@RequestParam("fileCV") MultipartFile file) throws IOException, FileException {
+        return new ResponseEntity<>(fileService.uploadFile(file, FileType.CV), HttpStatus.OK);
     }
 
     @GetMapping("/all")

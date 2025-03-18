@@ -24,6 +24,10 @@ public interface JobRepository extends JpaRepository<Job,Long> {
 
     Set<Job> findAllByIdIn(Set<Long> ids);
 
+    @Modifying
+    @Query("UPDATE Job j SET j.jobStatus = false WHERE j.endDate < :currentDate AND j.jobStatus = true")
+    int updateExpiredJobs(@Param("currentDate") LocalDate currentDate);
+
     Set<Job> findBySkillsIn(Set<Skill> skills);
 
     Page<Job> findAllByResumesIn(Set<Resume> resumes, Pageable pageable);

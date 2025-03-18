@@ -6,29 +6,23 @@ import jakarta.persistence.criteria.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.CompanyRequest;
 import spring_devjob.dto.response.CompanyResponse;
 import spring_devjob.dto.response.JobResponse;
 import spring_devjob.dto.response.PageResponse;
-import spring_devjob.entity.Company;
-import spring_devjob.entity.Job;
-import spring_devjob.entity.Skill;
-import spring_devjob.entity.User;
+import spring_devjob.dto.response.ReviewResponse;
+import spring_devjob.entity.*;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.CompanyMapper;
+import spring_devjob.mapper.JobMapper;
+import spring_devjob.mapper.ReviewMapper;
 import spring_devjob.repository.CompanyRepository;
 import spring_devjob.repository.JobRepository;
 import spring_devjob.repository.ReviewRepository;
@@ -53,6 +47,8 @@ public class CompanyService {
     private final JobRepository jobRepository;
     private final PageableService pageableService;
     private final ReviewRepository reviewRepository;
+    private final ReviewMapper reviewMapper;
+    private final JobMapper jobMapper;
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -221,7 +217,44 @@ public class CompanyService {
         return entityManager.createQuery(countQuery).getSingleResult();
     }
 
-    @Scheduled(cron = "0 0 0 * * ?")
+    public PageResponse<JobResponse> getAllJobsByCompany(int pageNo, int pageSize, String sortBy, long companyId){
+        pageNo = pageNo - 1;
+
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+
+        Company companyDB = findActiveCompanyById(companyId);
+
+        Page<Job> jobPage = jobRepository.findAllByCompanyId(companyDB.getId(), pageable);
+
+        return PageResponse.<JobResponse>builder()
+                .page(jobPage.getNumber() + 1)
+                .size(jobPage.getSize())
+                .totalPages(jobPage.getTotalPages())
+                .totalItems(jobPage.getTotalElements())
+                .items(jobMapper.toJobResponseList(jobPage.getContent()))
+                .build();
+    }
+
+    public PageResponse<ReviewResponse> getReviewsByCompany(int pageNo, int pageSize, String sortBy, long companyId) {
+        pageNo = pageNo - 1;
+
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+
+        Company company = companyRepository.findById(companyId).
+                orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+
+        Page<Review> reviewPage = reviewRepository.findAllByCompanyId(pageable, company.getId());
+
+        return PageResponse.<ReviewResponse>builder()
+                .page(reviewPage.getNumber() + 1)
+                .size(reviewPage.getSize())
+                .totalPages(reviewPage.getTotalPages())
+                .totalItems(reviewPage.getTotalElements())
+                .items(reviewMapper.toReviewResponseList(reviewPage.getContent()))
+                .build();
+    }
+
+    @Scheduled(cron = "0 0 0 */7 * ?") // Chạy mỗi 7 ngày vào lúc 00:00
     public void updateCompanyRatings() {
         List<Company> companies = companyRepository.findAll();
         for (Company company : companies) {

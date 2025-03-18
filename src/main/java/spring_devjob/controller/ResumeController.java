@@ -71,20 +71,6 @@ public class ResumeController {
                 .build();
     }
 
-    @Operation(summary = "Get list of applied jobs",
-            description = "API này để cập nhập trạng thái cho CV")
-    @PatchMapping("/resumes/{resumeId}/status")
-    public ApiResponse<Void> updateCVStatus(@PathVariable Long resumeId,
-                                            @Valid @RequestBody UpdateCVStatusRequest request) {
-        resumeService.updateCVStatus(resumeId, request.getResumeStatus());
-        return ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
-                .message("Update Resume By ResumeStatus")
-                .result(null)
-                .build();
-    }
-
-
     @DeleteMapping("/resumes/{id}")
     public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                         @PathVariable long id){

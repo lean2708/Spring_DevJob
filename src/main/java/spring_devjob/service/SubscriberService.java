@@ -22,6 +22,9 @@ import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.SubscriberMapper;
 import spring_devjob.repository.*;
+import spring_devjob.repository.relationship.SubHasSkillRepository;
+import spring_devjob.repository.relationship.UserHasRoleRepository;
+import spring_devjob.service.relationship.SubHasSkillService;
 import spring_devjob.util.VNPayUtil;
 
 import java.time.LocalDate;

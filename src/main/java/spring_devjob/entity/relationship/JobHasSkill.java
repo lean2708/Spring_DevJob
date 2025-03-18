@@ -3,6 +3,7 @@ package spring_devjob.entity.relationship;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.entity.Job;
 import spring_devjob.entity.Skill;
@@ -10,7 +11,7 @@ import spring_devjob.entity.Skill;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @Entity
 @Table(name = "tbl_job_has_skill")

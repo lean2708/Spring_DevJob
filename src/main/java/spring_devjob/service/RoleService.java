@@ -17,8 +17,9 @@ import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.RoleMapper;
 import spring_devjob.repository.PermissionRepository;
-import spring_devjob.repository.RoleHasPermissionRepository;
+import spring_devjob.repository.relationship.RoleHasPermissionRepository;
 import spring_devjob.repository.RoleRepository;
+import spring_devjob.service.relationship.UserHasRoleService;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -80,6 +81,7 @@ public class RoleService {
                 .build();
     }
 
+    @Transactional
     public RoleResponse update(long id, RoleRequest request){
         Role roleDB = findActiveRoleById(id);
 

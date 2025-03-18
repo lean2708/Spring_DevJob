@@ -5,8 +5,10 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
-import spring_devjob.constants.EntityStatus;
-import spring_devjob.constants.ResumeStateEnum;
+import spring_devjob.entity.relationship.JobHasResume;
+
+import java.util.HashSet;
+import java.util.Set;
 
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -23,18 +25,12 @@ public class Resume extends BaseEntity {
 
     String cvUrl;
 
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    ResumeStateEnum resumeStatus = ResumeStateEnum.PENDING;
-
-    boolean primaryCv;
+    boolean primaryCv = false;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     User user;
 
-    @ManyToOne
-    @JoinColumn(name = "job_id")
-    Job job;
-
+    @OneToMany(mappedBy = "resume")
+    Set<JobHasResume> jobs = new HashSet<>();
 }

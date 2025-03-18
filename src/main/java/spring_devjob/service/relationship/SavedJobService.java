@@ -1,4 +1,4 @@
-package spring_devjob.service;
+package spring_devjob.service.relationship;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +15,10 @@ import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.JobMapper;
 import spring_devjob.repository.JobRepository;
-import spring_devjob.repository.UserSavedJobRepository;
+import spring_devjob.repository.relationship.UserSavedJobRepository;
 import spring_devjob.repository.UserRepository;
+import spring_devjob.service.AuthService;
+import spring_devjob.service.PageableService;
 
 import java.time.LocalDate;
 import java.util.List;

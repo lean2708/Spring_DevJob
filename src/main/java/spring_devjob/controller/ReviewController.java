@@ -1,5 +1,6 @@
 package spring_devjob.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
@@ -29,6 +30,8 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
+    @Operation(summary = "Create a review",
+            description = "API này cho phép người dùng tạo đánh giá (review) cho một công ty")
     @PostMapping("/reviews")
     public ApiResponse<ReviewResponse> create(@Valid @RequestBody ReviewRequest request){
         return ApiResponse.<ReviewResponse>builder()
@@ -39,7 +42,7 @@ public class ReviewController {
     }
 
     @GetMapping("/reviews/{id}")
-    public ApiResponse<ReviewResponse> fetchRoleById(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<ReviewResponse> fetchReviewById(@Positive(message = "ID phải lớn hơn 0")
                                                    @PathVariable long id){
         return ApiResponse.<ReviewResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -83,7 +86,7 @@ public class ReviewController {
     }
 
     @DeleteMapping("/reviews")
-    public ApiResponse<Void> deleteRoles(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
+    public ApiResponse<Void> deleteReviews(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                          Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
         reviewService.deleteReviews(ids);
         return ApiResponse.<Void>builder()

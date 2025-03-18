@@ -1,6 +1,6 @@
 package spring_devjob.constants;
 
-public enum ResumeStateEnum {
+public enum ApplicationStatusEnum {
     PENDING,
     REVIEWING,
     APPROVED,

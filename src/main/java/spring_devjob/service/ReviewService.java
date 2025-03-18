@@ -1,23 +1,15 @@
 package spring_devjob.service;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.ReviewRequest;
-import spring_devjob.dto.request.RoleRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ReviewResponse;
-import spring_devjob.dto.response.RoleResponse;
-import spring_devjob.dto.response.UserResponse;
 import spring_devjob.entity.*;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
@@ -28,7 +20,6 @@ import spring_devjob.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -114,25 +105,6 @@ public class ReviewService {
         reviewSet.forEach(this::deactivateReview);
 
         reviewRepository.saveAll(reviewSet);
-    }
-
-    public PageResponse<ReviewResponse> getReviewsByCompany(int pageNo, int pageSize, String sortBy, long companyId) {
-        pageNo = pageNo - 1;
-
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
-
-        Company company = companyRepository.findById(companyId).
-                orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
-
-        Page<Review> reviewPage = reviewRepository.findAllByCompanyId(pageable, company.getId());
-
-        return PageResponse.<ReviewResponse>builder()
-                .page(reviewPage.getNumber() + 1)
-                .size(reviewPage.getSize())
-                .totalPages(reviewPage.getTotalPages())
-                .totalItems(reviewPage.getTotalElements())
-                .items(reviewMapper.toReviewResponseList(reviewPage.getContent()))
-                .build();
     }
 
     private Review findActiveResumeById(long id) {

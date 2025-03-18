@@ -16,22 +16,20 @@ import spring_devjob.dto.response.GoogleTokenResponse;
 import spring_devjob.dto.response.GoogleUserResponse;
 import spring_devjob.dto.response.TokenResponse;
 import spring_devjob.dto.response.UserResponse;
-import spring_devjob.entity.Role;
 import spring_devjob.entity.Token;
 import spring_devjob.entity.User;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.RoleMapper;
 import spring_devjob.mapper.UserMapper;
-import spring_devjob.repository.RoleRepository;
 import spring_devjob.repository.TokenRepository;
 import spring_devjob.repository.UserRepository;
 import spring_devjob.client.GoogleAuthClient;
 import spring_devjob.client.GoogleUserInfoClient;
+import spring_devjob.service.relationship.UserHasRoleService;
 
 import java.text.ParseException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -106,7 +104,7 @@ public class AuthService {
             throw new AppException(ErrorCode.PHONE_EXISTED);
         }
 
-        User user = userMapper.toUser(request);
+        User user = userMapper.registerToUser(request);
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 

@@ -26,8 +26,6 @@ import java.util.Set;
 public class CompanyController {
 
     private final CompanyService companyService;
-    private final JobService jobService;
-    private final ReviewService reviewService;
 
 //    @PostAuthorize("hasAuthority('CREATE_COMPANY')")
     @PostMapping("/companies")
@@ -111,31 +109,32 @@ public class CompanyController {
 
     @Operation(summary = "Get a paginated list of jobs for a company",
             description = "API này để lấy danh sách công việc của một công ty")
-    @GetMapping("/companies/all-jobs")
+    @GetMapping("/companies/{companyId}/all-jobs")
     public  ApiResponse<PageResponse<JobResponse>> getAllJobsByCompany(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                        @RequestParam(defaultValue = "1") int pageNo,
                                                                        @RequestParam(defaultValue = "10") int pageSize,
                                                                        @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
-                                                                       @RequestParam(required = false) String sortBy){
+                                                                       @RequestParam(required = false) String sortBy,
+                                                                       @Positive(message = "companyId phải lớn hơn 0") @PathVariable(value = "companyId") long companyId){
         return ApiResponse.<PageResponse<JobResponse>>builder()
                 .code(HttpStatus.OK.value())
-                .result(jobService.getAllJobsByCompany(pageNo, pageSize, sortBy))
+                .result(companyService.getAllJobsByCompany(pageNo, pageSize, sortBy, companyId))
                 .message("Get a paginated list of jobs for a company")
                 .build();
     }
 
+    @Operation(description = "API này để lấy các review của một công ty")
     @GetMapping("/companies/{companyId}/reviews")
     public ApiResponse<PageResponse<ReviewResponse>> getReviewsByCompany(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                               @RequestParam(defaultValue = "1") int pageNo,
                                                               @RequestParam(defaultValue = "10") int pageSize,
                                                               @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                               @RequestParam(required = false) String sortBy,
-                                                                         @Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
-                                                                             @NotNull(message = "ID không được null")
+                                                                         @Positive(message = "companyId phải lớn hơn 0")
                                                                          @PathVariable(value = "companyId") long companyId){
         return ApiResponse.<PageResponse<ReviewResponse>>builder()
                 .code(HttpStatus.OK.value())
-                .result(reviewService.getReviewsByCompany(pageNo, pageSize, sortBy, companyId))
+                .result(companyService.getReviewsByCompany(pageNo, pageSize, sortBy, companyId))
                 .message("Retrieved company reviews with pagination")
                 .build();
     }

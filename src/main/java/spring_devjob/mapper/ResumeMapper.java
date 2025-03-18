@@ -10,12 +10,12 @@ import spring_devjob.entity.history.ResumeHistory;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {JobMapper.class})
 public interface ResumeMapper {
     @Mapping(target = "user", ignore = true)
-    @Mapping(target = "job", ignore = true)
     Resume toResume(ResumeRequest request);
 
+    @Mapping(target = "jobs", source = "jobs", qualifiedByName = "jobHasResumeToJobBasicSet")
     ResumeResponse toResumeResponse(Resume resume);
 
     List<ResumeResponse> toResumeResponseList(List<Resume> resumes);
@@ -25,7 +25,6 @@ public interface ResumeMapper {
     List<ResumeHistory> toResumeHistoryList(List<Resume> resumes);
 
     @Mapping(target = "user", ignore = true)
-    @Mapping(target = "job", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateResume(@MappingTarget Resume resume, ResumeRequest request);
 }

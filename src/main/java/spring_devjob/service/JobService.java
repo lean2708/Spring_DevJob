@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -15,14 +16,20 @@ import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.JobRequest;
 import spring_devjob.dto.response.JobResponse;
 import spring_devjob.dto.response.PageResponse;
+import spring_devjob.dto.response.ResumeResponse;
 import spring_devjob.entity.*;
 import spring_devjob.entity.relationship.JobHasSkill;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.JobMapper;
+import spring_devjob.mapper.ResumeMapper;
 import spring_devjob.repository.*;
 import spring_devjob.repository.criteria.JobSearchCriteriaQueryConsumer;
 import spring_devjob.repository.criteria.SearchCriteria;
+import spring_devjob.repository.relationship.JobHasSkillRepository;
+import spring_devjob.service.relationship.JobHasResumeService;
+import spring_devjob.service.relationship.JobHasSkillService;
+import spring_devjob.service.relationship.SavedJobService;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -39,12 +46,12 @@ public class JobService {
     private final CompanyRepository companyRepository;
     private final SkillRepository skillRepository;
     private final ResumeRepository resumeRepository;
-    private final UserRepository userRepository;
     private final PageableService pageableService;
-    private final AuthService authService;
+    private final ResumeMapper resumeMapper;
     private final JobHasSkillRepository jobHasSkillRepository;
     private final SavedJobService savedJobService;
     private final JobHasSkillService jobHasSkillService;
+    private final JobHasResumeService jobHasResumeService;
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -97,6 +104,7 @@ public class JobService {
                 .build();
     }
 
+    @Transactional
     public JobResponse update(long id, JobRequest request){
         Job jobDB = findActiveJobById(id);
 
@@ -132,8 +140,7 @@ public class JobService {
         jobRepository.save(jobDB);
     }
     private void deactivateJob(Job job){
-        job.getResumes().forEach(resume -> resume.setJob(null));
-        resumeRepository.saveAll(job.getResumes());
+        job.getResumes().forEach(jobHasResumeService::updateJobHasResumeToInactive);
 
         job.getSkills().forEach(jobHasSkillService::updateJobHasSkillToInactive);
 
@@ -263,48 +270,22 @@ public class JobService {
         return entityManager.createQuery(countQuery).getSingleResult();
     }
 
-    public PageResponse<JobResponse> getAllAppliedJobsByUser(int pageNo, int pageSize, String sortBy, long userId){
+    public PageResponse<ResumeResponse> getResumesByJob(int pageNo, int pageSize, String sortBy, long jobId){
         pageNo = pageNo - 1;
 
         Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
 
-        Set<Resume> resumes = resumeRepository.findAllByUserId(user.getId());
+        Page<Resume> resumePage = resumeRepository.findAllByJobs(job, pageable);
 
-        Page<Job> jobPage = jobRepository.findAllByResumesIn(resumes, pageable);
-
-        return PageResponse.<JobResponse>builder()
-                .page(jobPage.getNumber() + 1)
-                .size(jobPage.getSize())
-                .totalPages(jobPage.getTotalPages())
-                .totalItems(jobPage.getTotalElements())
-                .items(jobMapper.toJobResponseList(jobPage.getContent()))
-                .build();
-    }
-
-
-    public PageResponse<JobResponse> getAllJobsByCompany(int pageNo, int pageSize, String sortBy){
-        pageNo = pageNo - 1;
-
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
-
-        User user = userRepository.findByEmail(authService.getCurrentUsername()).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
-        if(user.getCompany() == null){
-            throw new AppException(ErrorCode.COMPANY_NOT_ASSOCIATED);
-        }
-
-        Page<Job> jobPage = jobRepository.findAllByCompanyId(user.getCompany().getId(), pageable);
-
-        return PageResponse.<JobResponse>builder()
-                .page(jobPage.getNumber() + 1)
-                .size(jobPage.getSize())
-                .totalPages(jobPage.getTotalPages())
-                .totalItems(jobPage.getTotalElements())
-                .items(jobMapper.toJobResponseList(jobPage.getContent()))
+        return PageResponse.<ResumeResponse>builder()
+                .page(resumePage.getNumber() + 1)  // Thêm 1 để bắt đầu từ trang 1
+                .size(resumePage.getSize())
+                .totalPages(resumePage.getTotalPages())
+                .totalItems(resumePage.getTotalElements())
+                .items(resumeMapper.toResumeResponseList(resumePage.getContent()))
                 .build();
     }
 
@@ -313,6 +294,10 @@ public class JobService {
                 orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
     }
 
-
+    @Transactional
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void updateExpiredJobs() {
+        jobRepository.updateExpiredJobs(LocalDate.now());
+    }
 
 }

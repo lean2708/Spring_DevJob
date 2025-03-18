@@ -5,7 +5,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
-import spring_devjob.constants.ResumeStateEnum;
+import spring_devjob.constants.ApplicationStatusEnum;
 import spring_devjob.dto.validator.EnumPattern;
 
 @Getter
@@ -14,5 +14,5 @@ import spring_devjob.dto.validator.EnumPattern;
 public class UpdateCVStatusRequest {
     @NotNull(message = "ResumeStatus không được để trống")
     @EnumPattern(name = "ResumeStatus", regexp = "PENDING|REVIEWING|APPROVED|REJECTED")
-    ResumeStateEnum resumeStatus;
+    ApplicationStatusEnum resumeStatus;
 }

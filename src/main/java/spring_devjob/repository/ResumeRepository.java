@@ -35,7 +35,7 @@ public interface ResumeRepository extends JpaRepository<Resume,Long> {
 
     Set<Resume> findAllByUserId(long userId);
 
-    Page<Resume> findAllByJob(Job job, Pageable pageable);
+    Page<Resume> findAllByJobs(Job job, Pageable pageable);
 
     @Modifying
     @Query(value = "SELECT * FROM tbl_resume r WHERE r.state = :state AND r.deactivated_at < :date", nativeQuery = true)

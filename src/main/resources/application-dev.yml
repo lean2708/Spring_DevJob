@@ -59,10 +59,12 @@ cloud:
   name: ${CLOUDINARY_NAME}
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
-  folder-image: devjob/image
+  folder-image: devjob/images
   max-size-image: 10MB
-  folder-video: devjob/video
+  folder-video: devjob/videos
   max-size-video: 100MB
+  folder-cv: devjob/cvs
+  max-size-cv: 10MB
 
 # Oauth2
 oauth2:

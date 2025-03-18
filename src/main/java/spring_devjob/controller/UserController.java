@@ -9,13 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import spring_devjob.dto.request.UserRequest;
+import spring_devjob.dto.request.UserCreationRequest;
+import spring_devjob.dto.request.UserUpdateRequest;
 import spring_devjob.dto.response.*;
-import spring_devjob.service.JobService;
-import spring_devjob.service.ResumeService;
 import spring_devjob.service.UserService;
 
-import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -25,13 +23,11 @@ import java.util.Set;
 @RestController
 public class UserController {
     private final UserService userService;
-    private final JobService jobService;
-    private final ResumeService resumeService;
 
     @Operation(summary = "Create User with Role",
             description = "API này được sử dụng để tạo user và gán role vào user đó")
     @PostMapping("/users")
-    public ApiResponse<UserResponse> create(@Valid @RequestBody UserRequest request){
+    public ApiResponse<UserResponse> create(@Valid @RequestBody UserCreationRequest request){
          return ApiResponse.<UserResponse>builder()
                  .code(HttpStatus.CREATED.value())
                  .message("Create User With Role")
@@ -62,9 +58,11 @@ public class UserController {
                 .build();
     }
 
+    @Operation(summary = "Update User (No update Password)",
+              description = "API này được sử dụng để update user (không update password)")
     @PutMapping("/users/{id}")
     public ApiResponse<UserResponse> update(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
-                                                @PathVariable long id, @RequestBody UserRequest request){
+                                                @PathVariable long id, @RequestBody UserUpdateRequest request){
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Update User By Id")
@@ -94,6 +92,8 @@ public class UserController {
                 .build();
     }
 
+    @Operation(summary = "Fetch All Resumes By User With Pagination",
+            description = "API này được sử dụng để lấy tất cả CV của User")
     @GetMapping("/users/{userId}/resumes")
     public ApiResponse<PageResponse<ResumeResponse>> fetchAllByUser(@RequestParam(defaultValue = "1") int pageNo,
                                                                     @RequestParam(defaultValue = "10") int pageSize,
@@ -102,7 +102,7 @@ public class UserController {
                                                                     @Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1") @PathVariable Long userId){
         return ApiResponse.<PageResponse<ResumeResponse>>builder()
                 .code(HttpStatus.OK.value())
-                .result(resumeService.getAllResumesByUser(pageNo, pageSize, sortBy, userId))
+                .result(userService.getAllResumesByUser(pageNo, pageSize, sortBy, userId))
                 .message("Fetch All Resumes By User With Pagination")
                 .build();
     }
@@ -117,7 +117,7 @@ public class UserController {
                                                                           @Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1") @PathVariable Long userId){
         return ApiResponse.<PageResponse<JobResponse>>builder()
                 .code(HttpStatus.OK.value())
-                .result(jobService.getAllAppliedJobsByUser(pageNo, pageSize, sortBy, userId))
+                .result(userService.getAllAppliedJobsByUser(pageNo, pageSize, sortBy, userId))
                 .message("Fetch All Jobs By User")
                 .build();
     }

@@ -1,5 +1,6 @@
 package spring_devjob.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.response.ApiResponse;
 import spring_devjob.dto.response.JobResponse;
 import spring_devjob.dto.response.PageResponse;
-import spring_devjob.service.SavedJobService;
+import spring_devjob.service.relationship.SavedJobService;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -22,6 +23,8 @@ public class SavedJobController {
 
     private final SavedJobService savedJobService;
 
+    @Operation(summary = "Save a job",
+            description = "API này cho phép user lưu job")
     @PostMapping("/saved-jobs/{jobId}")
     public ApiResponse<Void> saveJob(@Positive(message = "JobID phải lớn hơn 0") @PathVariable Long jobId) {
         savedJobService.saveJob(jobId);

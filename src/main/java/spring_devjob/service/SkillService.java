@@ -4,32 +4,22 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.SkillRequest;
 import spring_devjob.dto.response.PageResponse;
-import spring_devjob.dto.response.RoleResponse;
 import spring_devjob.dto.response.SkillResponse;
 import spring_devjob.entity.*;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.SkillMapper;
-import spring_devjob.repository.JobRepository;
 import spring_devjob.repository.SkillRepository;
-import spring_devjob.repository.SubscriberRepository;
+import spring_devjob.service.relationship.JobHasSkillService;
+import spring_devjob.service.relationship.SubHasSkillService;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Slf4j
 @RequiredArgsConstructor

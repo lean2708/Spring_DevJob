@@ -1,4 +1,4 @@
-package spring_devjob.service;
+package spring_devjob.service.relationship;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +11,7 @@ import spring_devjob.entity.relationship.UserHasRole;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.repository.RoleRepository;
-import spring_devjob.repository.UserHasRoleRepository;
+import spring_devjob.repository.relationship.UserHasRoleRepository;
 
 @Slf4j
 @Service

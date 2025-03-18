@@ -130,9 +130,8 @@ public class EmailService {
         }
     }
 
-    public void sendResumeApprovedEmail(Resume resume, User hr) {
+    public void sendResumeApprovedEmail(Job job, Resume resume, User hr) {
         User user = resume.getUser();
-        Job job = resume.getJob();
         Company company = job.getCompany();
 
         Map<String, Object> model = new HashMap<>();
@@ -151,9 +150,8 @@ public class EmailService {
         );
     }
 
-    public void sendResumeRejectedEmail(Resume resume) {
+    public void sendResumeRejectedEmail(Job job, Resume resume) {
         User user = resume.getUser();
-        Job job = resume.getJob();
         Company company = job.getCompany();
 
         Map<String, Object> model = new HashMap<>();

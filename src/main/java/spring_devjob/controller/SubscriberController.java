@@ -1,5 +1,6 @@
 package spring_devjob.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -24,8 +25,12 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Slf4j
 public class SubscriberController {
+
     private final SubscriberService subscriberService;
 
+    @Operation(summary = "Create VNPay payment URL",
+            description = "API này tạo URL thanh toán VNPay dựa trên gói premium mà người dùng chọn. " +
+                    "Người dùng có thể chọn một trong các gói: 1-month|3-month|6-month|12-month")
     @GetMapping("/subscribers/vn-pay")
     public ApiResponse<VNPayResponse> pay(@NotBlank(message = "premiumType không được để trống")
                                               @Pattern(regexp = "^(1-month|3-month|6-month|12-month)$", message = "premiumType chỉ được là: 1-month, 3-month, 6-month, 12-month")
@@ -35,6 +40,9 @@ public class SubscriberController {
                 subscriberService.createVnPayPayment(premiumType, request));
     }
 
+    @Operation(summary = "VNPay payment callback",
+            description = "API này xử lý phản hồi từ VNPay sau khi thanh toán. Nếu mã phản hồi là '00', trạng thái tài khoản của người dùng sẽ được cập nhật lên Pro. " +
+                    "Nếu mã phản hồi khác, thanh toán sẽ bị coi là thất bại.")
     @PostMapping("/subscribers/vn-pay-callback")
     public ApiResponse<SubscriberResponse> payCallbackHandler(@Valid @RequestBody PaymentCallbackRequest request) {
         String status = request.getResponseCode();

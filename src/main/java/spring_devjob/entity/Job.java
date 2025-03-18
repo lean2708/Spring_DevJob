@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.constants.LevelEnum;
+import spring_devjob.entity.relationship.JobHasResume;
 import spring_devjob.entity.relationship.JobHasSkill;
 import spring_devjob.entity.relationship.UserSavedJob;
 
@@ -36,15 +37,15 @@ public class Job extends BaseEntity {
 
     LocalDate startDate;
     LocalDate endDate;
-    boolean jobStatus;
+    boolean jobStatus = true;
 
     @ManyToOne
     @JoinColumn(name = "company_id")
     Company company;
 
-    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "job")
     @JsonIgnore
-    Set<Resume> resumes = new HashSet<>();
+    Set<JobHasResume> resumes = new HashSet<>();
 
     @OneToMany(mappedBy = "job")
     Set<JobHasSkill> skills = new HashSet<>();

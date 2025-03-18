@@ -13,12 +13,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.JobRequest;
-import spring_devjob.dto.response.ApiResponse;
-import spring_devjob.dto.response.JobResponse;
-import spring_devjob.dto.response.PageResponse;
-import spring_devjob.dto.response.ResumeResponse;
+import spring_devjob.dto.request.UpdateCVStatusRequest;
+import spring_devjob.dto.response.*;
 import spring_devjob.service.JobService;
 import spring_devjob.service.ResumeService;
+import spring_devjob.service.relationship.JobHasResumeService;
 
 import java.util.List;
 import java.util.Set;
@@ -30,7 +29,7 @@ import java.util.Set;
 @RestController
 public class JobController {
     private final JobService jobService;
-    private final ResumeService resumeService;
+    private final JobHasResumeService jobHasResumeService;
 
     @PostMapping("/jobs")
     public ApiResponse<JobResponse> create(@Valid @RequestBody JobRequest request){
@@ -118,12 +117,40 @@ public class JobController {
                                                                      @RequestParam(defaultValue = "10") int pageSize,
                                                                      @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                          @RequestParam(required = false) String sortBy,
-                                                                     @PathVariable("jobId") long jobId){
+                                                                     @Positive(message = "jobId phải lớn hơn 0")  @PathVariable(value = "jobId") long jobId){
         return ApiResponse.<PageResponse<ResumeResponse>>builder()
                 .code(HttpStatus.OK.value())
-                .result(resumeService.getResumesByJob(pageNo, pageSize, sortBy, jobId))
+                .result(jobService.getResumesByJob(pageNo, pageSize, sortBy, jobId))
                 .message("Get resumes for a specific job")
                 .build();
 
     }
+
+    @Operation(summary = "Resume applied to the job",
+            description = "API này để nộp CV vào Job")
+    @PostMapping("/jobs/{jobId}/resumes/{resumeId}")
+    public ApiResponse<ApplyResponse> applyResume(@Positive(message = "jobId phải lớn hơn 0") @PathVariable(value = "jobId") Long jobId,
+                                                  @Positive(message = "resumeId phải lớn hơn 0")  @PathVariable(value = "resumeId") Long resumeId){
+        return ApiResponse.<ApplyResponse>builder()
+                .code(HttpStatus.OK.value())
+                .result(jobHasResumeService.applyResumeToJob(jobId, resumeId))
+                .message("Resume applied successfully to the job")
+                .build();
+
+    }
+
+    @Operation(summary = "Update CV status",
+            description = "API này để cập nhật trạng thái của CV cho một công việc cụ thể (HR duyệt CV)")
+    @PatchMapping("/jobs/{jobId}/resumes/{resumeId}/status")
+    public ApiResponse<Void> updateCVStatus(@PathVariable Long jobId,
+                                            @PathVariable Long resumeId,
+                                            @Valid @RequestBody UpdateCVStatusRequest request) {
+        jobHasResumeService.updateCVStatus(jobId, resumeId, request.getResumeStatus());
+        return ApiResponse.<Void>builder()
+                .code(HttpStatus.OK.value())
+                .message("Cập nhật trạng thái CV thành công")
+                .result(null)
+                .build();
+    }
+
 }
