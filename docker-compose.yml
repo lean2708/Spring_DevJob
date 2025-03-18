@@ -12,9 +12,16 @@ services:
       - devjob_data:/var/lib/mysql
       - ./initdb.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - '3309:3306'
+      - '3308:3306'
     networks:
       - devjob_backend
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456" ]
+      interval: 30s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
 
   spring-devjob:
     container_name: spring-devjob
@@ -29,7 +36,8 @@ services:
     networks:
       - devjob_backend
     depends_on:
-      - mysql-devjob
+      mysql-devjob:
+        condition: service_healthy
 
 networks:
   devjob_backend:
