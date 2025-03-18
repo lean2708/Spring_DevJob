@@ -30,7 +30,10 @@ public interface JobRepository extends JpaRepository<Job,Long> {
 
     Set<Job> findBySkillsIn(Set<Skill> skills);
 
-    Page<Job> findAllByResumesIn(Set<Resume> resumes, Pageable pageable);
+    @Query("SELECT j FROM Job j " +
+            "JOIN JobHasResume jhr ON j.id = jhr.job.id " +
+            "WHERE jhr.resume IN :resumes")
+    Page<Job> findAllByResumesIn(@Param("resumes") Set<Resume> resumes, Pageable pageable);
 
     Page<Job> findAllByCompanyId(Long companyId, Pageable pageable);
 

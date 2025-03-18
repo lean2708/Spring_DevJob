@@ -18,6 +18,7 @@ import spring_devjob.dto.response.JobResponse;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ResumeResponse;
 import spring_devjob.entity.*;
+import spring_devjob.entity.relationship.JobHasResume;
 import spring_devjob.entity.relationship.JobHasSkill;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
@@ -26,6 +27,7 @@ import spring_devjob.mapper.ResumeMapper;
 import spring_devjob.repository.*;
 import spring_devjob.repository.criteria.JobSearchCriteriaQueryConsumer;
 import spring_devjob.repository.criteria.SearchCriteria;
+import spring_devjob.repository.relationship.JobHasResumeRepository;
 import spring_devjob.repository.relationship.JobHasSkillRepository;
 import spring_devjob.service.relationship.JobHasResumeService;
 import spring_devjob.service.relationship.JobHasSkillService;
@@ -49,6 +51,7 @@ public class JobService {
     private final PageableService pageableService;
     private final ResumeMapper resumeMapper;
     private final JobHasSkillRepository jobHasSkillRepository;
+    private final JobHasResumeRepository jobHasResumeRepository;
     private final SavedJobService savedJobService;
     private final JobHasSkillService jobHasSkillService;
     private final JobHasResumeService jobHasResumeService;
@@ -278,7 +281,7 @@ public class JobService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
 
-        Page<Resume> resumePage = resumeRepository.findAllByJobs(job, pageable);
+        Page<Resume> resumePage = resumeRepository.findAllByJob(job, pageable);
 
         return PageResponse.<ResumeResponse>builder()
                 .page(resumePage.getNumber() + 1)  // Thêm 1 để bắt đầu từ trang 1

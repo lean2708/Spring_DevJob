@@ -31,10 +31,6 @@ public abstract class BaseEntity {
     LocalDate createdAt;
     @UpdateTimestamp
     LocalDate updatedAt;
-    @CreatedBy
-    String createdBy;
-    @LastModifiedBy
-    String updatedBy;
 
 
     @PrePersist

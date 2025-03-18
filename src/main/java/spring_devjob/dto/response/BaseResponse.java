@@ -2,6 +2,7 @@ package spring_devjob.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.Getter;
@@ -23,7 +24,4 @@ public abstract class BaseResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonFormat(pattern = "dd/MM/yyyy")
     LocalDate updatedAt;
-    String createdBy;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    String updatedBy;
 }

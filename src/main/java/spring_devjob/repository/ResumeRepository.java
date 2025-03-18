@@ -12,6 +12,7 @@ import spring_devjob.entity.Company;
 import spring_devjob.entity.Job;
 import spring_devjob.entity.Resume;
 import spring_devjob.entity.User;
+import spring_devjob.entity.relationship.JobHasResume;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -35,7 +36,10 @@ public interface ResumeRepository extends JpaRepository<Resume,Long> {
 
     Set<Resume> findAllByUserId(long userId);
 
-    Page<Resume> findAllByJobs(Job job, Pageable pageable);
+    @Query("SELECT r FROM Resume r " +
+            "JOIN JobHasResume jhr ON r.id = jhr.resume.id " +
+            "WHERE jhr.job = :job")
+    Page<Resume> findAllByJob(@Param("job") Job job, Pageable pageable);
 
     @Modifying
     @Query(value = "SELECT * FROM tbl_resume r WHERE r.state = :state AND r.deactivated_at < :date", nativeQuery = true)
