@@ -101,7 +101,7 @@ public class ApplicationInitConfig {
 
     private void updateRolePro(Role role) {
         Set<Permission> permissionSet = permissionRepository.findAllByNameIn(
-                Set.of(SEND_JOB_NOTIFICATIONS.name(), DOWNLOAD_FILE.name()));
+                Set.of(SEND_JOB_NOTIFICATIONS.name()));
 
         Set<RoleHasPermission> roleHasPermissions = permissionSet.stream()
                 .map(permission -> new RoleHasPermission(role, permission))

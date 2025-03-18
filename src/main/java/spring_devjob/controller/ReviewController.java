@@ -12,11 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.ReviewRequest;
-import spring_devjob.dto.request.RoleRequest;
 import spring_devjob.dto.response.ApiResponse;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ReviewResponse;
-import spring_devjob.dto.response.RoleResponse;
 import spring_devjob.service.ReviewService;
 
 import java.util.Set;

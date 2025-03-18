@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.*;
 import spring_devjob.dto.response.ApiResponse;
@@ -19,6 +20,7 @@ import spring_devjob.service.ForgotPasswordService;
 import java.text.ParseException;
 
 @RestController
+@Validated
 @RequiredArgsConstructor
 @RequestMapping("/v1/auth")
 public class AuthController {

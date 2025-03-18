@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import spring_devjob.dto.response.GoogleUserResponse;
 
-@FeignClient(name = "google-userInfo-client", url = "https://www.googleapis.com")
+@FeignClient(name = "google-userInfo-client", url = "${oauth2.google.google-userinfo-url}")
 public interface GoogleUserInfoClient {
 
     @GetMapping(value = "/oauth2/v1/userinfo")
