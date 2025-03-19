@@ -13,10 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.CompanyRequest;
-import spring_devjob.dto.response.CompanyResponse;
-import spring_devjob.dto.response.JobResponse;
-import spring_devjob.dto.response.PageResponse;
-import spring_devjob.dto.response.ReviewResponse;
+import spring_devjob.dto.response.*;
 import spring_devjob.entity.*;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
@@ -29,6 +26,7 @@ import spring_devjob.repository.ReviewRepository;
 import spring_devjob.repository.UserRepository;
 import spring_devjob.repository.criteria.JobSearchCriteriaQueryConsumer;
 import spring_devjob.repository.criteria.SearchCriteria;
+import spring_devjob.repository.history.CompanyHistoryRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -49,12 +47,16 @@ public class CompanyService {
     private final ReviewRepository reviewRepository;
     private final ReviewMapper reviewMapper;
     private final JobMapper jobMapper;
+    private final CompanyHistoryRepository companyHistoryRepository;
     @PersistenceContext
     private EntityManager entityManager;
 
     public CompanyResponse create(CompanyRequest request){
         if(companyRepository.existsByName(request.getName())){
             throw new AppException(ErrorCode.COMPANY_EXISTED);
+        }
+        if(companyRepository.existsInactiveCompanyByName(EntityStatus.INACTIVE.name(), request.getName()) > 0){
+            throw new AppException(ErrorCode.COMPANY_LOCKED);
         }
         Company company = companyMapper.toCompany(request);
 
@@ -104,17 +106,9 @@ public class CompanyService {
         company.getUsers().forEach(user -> user.setCompany(null));
         userRepository.saveAll(company.getUsers());
 
-        company.getJobs().forEach(job -> {
-            job.setState(EntityStatus.INACTIVE);
-            job.setDeactivatedAt(LocalDate.now());
-        });
-        jobRepository.saveAll(company.getJobs());
+        jobRepository.updateAllJobsByCompanyId(company.getId(), EntityStatus.INACTIVE.name(), LocalDate.now());
 
-        company.getReviews().forEach(review -> {
-            review.setState(EntityStatus.INACTIVE);
-            review.setDeactivatedAt(LocalDate.now());
-        });
-        reviewRepository.saveAll(company.getReviews());
+        reviewRepository.updateAllReviewsByCompanyId(company.getId(), EntityStatus.INACTIVE.name(), LocalDate.now());
 
         company.setState(EntityStatus.INACTIVE);
         company.setDeactivatedAt(LocalDate.now());
@@ -129,6 +123,27 @@ public class CompanyService {
         companySet.forEach(this::deactivateCompany);
 
         companyRepository.saveAll(companySet);
+    }
+
+    @Transactional
+    public CompanyResponse restoreCompany(long id) {
+        if(companyHistoryRepository.existsById(id)){
+            throw new AppException(ErrorCode.COMPANY_ARCHIVED_IN_HISTORY);
+        }
+        Company company = companyRepository.findCompanyById(id).
+                orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+
+        if (company.getState() == EntityStatus.INACTIVE) {
+            jobRepository.updateAllJobsByCompanyId(company.getId(), EntityStatus.INACTIVE.name(), null);
+
+            reviewRepository.updateAllReviewsByCompanyId(company.getId(), EntityStatus.ACTIVE.name(), null);
+
+            company.setState(EntityStatus.ACTIVE);
+            company.setDeactivatedAt(null);
+            return companyMapper.toCompanyResponse(companyRepository.save(company));
+        }else {
+            throw new AppException(ErrorCode.COMPANY_ALREADY_ACTIVE);
+        }
     }
 
     public PageResponse<CompanyResponse> searchCompany(int pageNo, int pageSize, String sortBy, List<String> search){
@@ -270,5 +285,6 @@ public class CompanyService {
         return companyRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
     }
+
 
 }

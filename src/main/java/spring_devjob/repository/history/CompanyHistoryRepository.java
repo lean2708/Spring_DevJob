@@ -6,4 +6,5 @@ import spring_devjob.entity.history.CompanyHistory;
 
 @Repository
 public interface CompanyHistoryRepository extends JpaRepository<CompanyHistory,Long> {
+    boolean existsById(long id);
 }

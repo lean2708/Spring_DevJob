@@ -28,7 +28,18 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     Set<User> findAllByIdIn(Set<Long> ids);
 
+    @Query(value = "SELECT * FROM tbl_user u WHERE u.id = :id", nativeQuery = true)
+    Optional<User> findUserById(@Param("id") Long id);
+    @Query(value = "SELECT * FROM tbl_user u WHERE u.email= :email", nativeQuery = true)
+    Optional<User> findUserByEmail(@Param("email") String email);
+
+    @Query(value = "SELECT COUNT(*) > 0 FROM tbl_user u WHERE u.state = :state AND u.email = :email", nativeQuery = true)
+    long existsUserInactiveByEmail(@Param("email") String email, @Param("state") String state);
+
+    @Query(value = "SELECT COUNT(*) > 0 FROM tbl_user u WHERE u.state = :state AND u.phone = :phone", nativeQuery = true)
+    long existsUserInactiveByPhone(@Param("phone") String phone, @Param("state") String state);
+
     @Modifying
     @Query(value = "SELECT * FROM tbl_user u WHERE u.state = :state AND u.deactivated_at < :date", nativeQuery = true)
-    List<User> findInactiveUsersBeforeDate(@Param("state") EntityStatus state, @Param("date") LocalDate date);
+    List<User> findInactiveUsersBeforeDate(@Param("state") String state, @Param("date") LocalDate date);
 }

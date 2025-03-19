@@ -32,4 +32,9 @@ public class UserHasRoleService {
         userHasRoleRepository.save(userHasRole);
     }
 
+    public void updateUserHasRoleToActive(UserHasRole userHasRole){
+        userHasRole.setState(EntityStatus.ACTIVE);
+        userHasRoleRepository.save(userHasRole);
+    }
+
 }

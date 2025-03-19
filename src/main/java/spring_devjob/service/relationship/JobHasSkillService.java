@@ -19,4 +19,9 @@ public class JobHasSkillService {
         jobHasSkillRepository.save(JobHasSkill);
     }
 
+    public void updateJobHasSkillToActive(JobHasSkill JobHasSkill){
+        JobHasSkill.setState(EntityStatus.ACTIVE);
+        jobHasSkillRepository.save(JobHasSkill);
+    }
+
 }

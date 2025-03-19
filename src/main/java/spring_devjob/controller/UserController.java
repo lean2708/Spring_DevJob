@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -36,7 +37,7 @@ public class UserController {
      }
 
     @GetMapping("/users/{id}")
-    public ApiResponse<UserResponse> fetchUser(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<UserResponse> fetchUser(@Positive(message = "ID phải lớn hơn 0")
                                                    @PathVariable long id){
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -61,7 +62,7 @@ public class UserController {
     @Operation(summary = "Update User (No update Password)",
               description = "API này được sử dụng để update user (không update password)")
     @PutMapping("/users/{id}")
-    public ApiResponse<UserResponse> update(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<UserResponse> update(@Positive(message = "ID phải lớn hơn 0")
                                                 @PathVariable long id, @RequestBody UserUpdateRequest request){
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -71,7 +72,7 @@ public class UserController {
     }
 
     @DeleteMapping("/users/{id}")
-    public ApiResponse<Void> delete(@Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1")
+    public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                         @PathVariable long id){
         userService.delete(id);
         return ApiResponse.<Void>builder()
@@ -89,6 +90,18 @@ public class UserController {
                 .code(HttpStatus.NO_CONTENT.value())
                 .message("Delete Users")
                 .result(null)
+                .build();
+    }
+
+    @Operation(summary = "Restore User",
+            description = "API này được sử dụng để phục hồi user đã bị xóa mềm")
+    @PatchMapping("/users/{id}/restore")
+    public ApiResponse<UserResponse> restore(@Positive(message = "ID phải lớn hơn 0")
+                                             @PathVariable long id) {
+        return ApiResponse.<UserResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Restore User By Id")
+                .result(userService.restoreUser(id))
                 .build();
     }
 

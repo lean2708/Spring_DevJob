@@ -6,4 +6,5 @@ import spring_devjob.entity.history.ResumeHistory;
 
 @Repository
 public interface ResumeHistoryRepository extends JpaRepository<ResumeHistory,Long> {
+    boolean existsById(long id);
 }

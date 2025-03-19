@@ -89,5 +89,9 @@ public class SavedJobService {
         userSavedJob.setState(EntityStatus.INACTIVE);
         userSavedJobRepository.save(userSavedJob);
     }
+    public void updateUserSavedJobToActive(UserSavedJob userSavedJob){
+        userSavedJob.setState(EntityStatus.ACTIVE);
+        userSavedJobRepository.save(userSavedJob);
+    }
 
 }

@@ -14,6 +14,7 @@ public enum PermissionEnum {
     UPDATE_USER("/v1/users/{id}","USER","PUT"),
     DELETE_USER("/v1/users/{id}","USER","DELETE"),
     DELETE_MULTIPLE_USERS("/v1/users", "USER", "DELETE"),
+    RESTORE_USER("/v1/users/{id}/restore", "USER", "PATCH"),
     FETCH_RESUMES_BY_USER("/v1/users/{userId}/resumes/by-user","USER","GET"),
     FETCH_APPLIED_JOBS("/v1/users/{userId}/applied-jobs-by-user","USER","GET"),
 
@@ -27,6 +28,7 @@ public enum PermissionEnum {
     UPDATE_COMPANY("/v1/companies/{id}","COMPANY","PUT"),
     DELETE_COMPANY("/v1/companies/{id}","COMPANY","DELETE"),
     DELETE_MULTIPLE_COMPANIES("/v1/companies", "COMPANY", "DELETE"),
+    RESTORE_COMPANY("/v1/companies/{id}/restore", "COMPANY", "PATCH"),
     SEARCH_COMPANIES("/v1/companies/search","COMPANY","GET"),
     FETCH_JOBS_BY_COMPANY("/v1/companies/{companyId}/jobs","COMPANY","GET"),
     FETCH_REVIEWS_BY_COMPANY("/v1/companies/{companyId}/reviews", "COMPANY","GET"),
@@ -37,6 +39,7 @@ public enum PermissionEnum {
     UPDATE_JOB("/v1/jobs/{id}","JOB","PUT"),
     DELETE_JOB("/v1/jobs/{id}","JOB","DELETE"),
     DELETE_MULTIPLE_JOBS("/v1/jobs", "JOB", "DELETE"),
+    RESTORE_JOB("/v1/jobs/{id}/restore", "JOB", "PATCH"),
     SEARCH_JOBS_BY_SKILLS("/v1/jobs/search-by-skills", "JOB", "GET"),
     FETCH_RESUMES_BY_JOB("/v1/jobs/{jobId}/resumes","JOB","GET"),
     APPLY_RESUME_TO_JOB("/v1/jobs/{jobId}/resumes/{resumeId}", "JOB", "POST"),
@@ -55,6 +58,7 @@ public enum PermissionEnum {
     UPDATE_RESUME("/v1/resumes/{id}","RESUME","PUT"),
     DELETE_RESUME("/v1/resumes/{id}","RESUME","DELETE"),
     DELETE_MULTIPLE_RESUMES("/v1/resumes", "RESUME", "DELETE"),
+    RESTORE_RESUME("/v1/resumes/{id}/restore", "RESUME", "PATCH"),
 
     CREATE_REVIEW("/v1/reviews", "USER", "POST"),
     GET_REVIEW_BY_ID("/v1/reviews/{id}", "USER", "GET"),

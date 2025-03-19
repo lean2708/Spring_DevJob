@@ -16,19 +16,11 @@ import spring_devjob.entity.relationship.JobHasResume;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
 public interface ResumeRepository extends JpaRepository<Resume,Long> {
-
-    @Modifying
-    @Query(value = "UPDATE tbl_resume r " +
-            "SET r.state = :state, r.deactivated_at = :deactivatedAt " +
-            "WHERE r.user_id = :userId", nativeQuery = true)
-    int updateAllResumesToInactiveByUserId(@Param("userId") Long userId,
-                                           @Param("state") EntityStatus state,
-                                           @Param("deactivatedAt") LocalDate deactivatedAt);
-
 
     Set<Resume> findAllByIdIn(Set<Long> ids);
 
@@ -41,7 +33,18 @@ public interface ResumeRepository extends JpaRepository<Resume,Long> {
             "WHERE jhr.job = :job")
     Page<Resume> findAllByJob(@Param("job") Job job, Pageable pageable);
 
+    @Query(value = "SELECT * FROM tbl_resume r WHERE r.id = :id", nativeQuery = true)
+    Optional<Resume> findResumeById(@Param("id") Long id);
+
+    @Modifying
+    @Query(value = "UPDATE tbl_resume r " +
+            "SET r.state = :state, r.deactivated_at = :deactivatedAt " +
+            "WHERE r.user_id = :userId", nativeQuery = true)
+    int updateAllResumesByUserId(@Param("userId") Long userId,
+                                           @Param("state") String state,
+                                           @Param("deactivatedAt") LocalDate deactivatedAt);
+
     @Modifying
     @Query(value = "SELECT * FROM tbl_resume r WHERE r.state = :state AND r.deactivated_at < :date", nativeQuery = true)
-    List<Resume> findInactiveResumesBeforeDate(@Param("state") EntityStatus state, @Param("date") LocalDate date);
+    List<Resume> findInactiveResumesBeforeDate(@Param("state") String state, @Param("date") LocalDate date);
 }

@@ -92,4 +92,16 @@ public class ResumeController {
                 .build();
     }
 
+    @Operation(summary = "Restore a deleted resume",
+            description = "API này để khôi phục resume đã xóa trước đó")
+    @PatchMapping("/resumes/{id}/restore")
+    public ApiResponse<ResumeResponse> restoreResume(@Positive(message = "ID phải lớn hơn 0")
+                                                     @PathVariable long id) {
+        return ApiResponse.<ResumeResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Restore Resume By Id")
+                .result(resumeService.restoreResume(id))
+                .build();
+    }
+
 }

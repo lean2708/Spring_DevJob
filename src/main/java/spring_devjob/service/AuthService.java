@@ -2,12 +2,15 @@ package spring_devjob.service;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jwt.SignedJWT;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.RoleEnum;
 import spring_devjob.constants.TokenType;
 import spring_devjob.dto.basic.EntityBasic;
@@ -18,6 +21,7 @@ import spring_devjob.dto.response.TokenResponse;
 import spring_devjob.dto.response.UserResponse;
 import spring_devjob.entity.Token;
 import spring_devjob.entity.User;
+import spring_devjob.entity.VerificationCodeEntity;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.RoleMapper;
@@ -26,6 +30,7 @@ import spring_devjob.repository.TokenRepository;
 import spring_devjob.repository.UserRepository;
 import spring_devjob.client.GoogleAuthClient;
 import spring_devjob.client.GoogleUserInfoClient;
+import spring_devjob.repository.history.UserHistoryRepository;
 import spring_devjob.service.relationship.UserHasRoleService;
 
 import java.text.ParseException;
@@ -45,6 +50,7 @@ public class AuthService {
     private final UserHasRoleService userHasRoleService;
     private final GoogleAuthClient googleAuthClient;
     private final GoogleUserInfoClient googleUserInfoClient;
+    private final UserHistoryRepository userHistoryRepository;
 
     @Value("${oauth2.google.client-id}")
     private String CLIENT_ID;
@@ -97,12 +103,7 @@ public class AuthService {
     }
 
     public TokenResponse register(RegisterRequest request) throws JOSEException {
-        if(userRepository.existsByEmail(request.getEmail())){
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
-        }
-        if(userRepository.existsByPhone(request.getPhone())){
-            throw new AppException(ErrorCode.PHONE_EXISTED);
-        }
+        checkUserExistenceAndStatus(request.getEmail(), request.getPhone());
 
         User user = userMapper.registerToUser(request);
 
@@ -115,6 +116,27 @@ public class AuthService {
         emailService.sendUserEmailWithRegister(userRepository.save(user));
 
         return generateAndSaveTokenResponse(user);
+    }
+
+    private void checkUserExistenceAndStatus(String email, String phone){
+        if(userRepository.existsByEmail(email)){
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+        if(userRepository.existsByPhone(phone)){
+            throw new AppException(ErrorCode.PHONE_EXISTED);
+        }
+        if(userRepository.existsUserInactiveByEmail(email, EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.EMAIL_LOCKED);
+        }
+        if(userRepository.existsUserInactiveByPhone(email, EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.PHONE_LOCKED);
+        }
+        if(userHistoryRepository.existsByEmail(email)){
+            throw new AppException(ErrorCode.EMAIL_ARCHIVED_IN_HISTORY);
+        }
+        if(userHistoryRepository.existsByPhone(phone)){
+            throw new AppException(ErrorCode.PHONE_ARCHIVED_IN_HISTORY);
+        }
     }
 
     public UserResponse getMyInfo() {
@@ -204,4 +226,6 @@ public class AuthService {
         }
         return authentication.getName(); // email
     }
+
+
 }

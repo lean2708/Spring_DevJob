@@ -65,7 +65,7 @@ public class EntityHistoryService {
     }
 
     private void moveUserToHistory(){
-        List<User> userList = userRepository.findInactiveUsersBeforeDate(EntityStatus.INACTIVE,
+        List<User> userList = userRepository.findInactiveUsersBeforeDate(EntityStatus.INACTIVE.name(),
                 LocalDate.now().minusDays(days));
 
         List<UserHistory> userHistoryList = userMapper.toUserHistoryList(userList);
@@ -76,7 +76,7 @@ public class EntityHistoryService {
     }
 
     private void moveCompanyToHistory(){
-        List<Company> companyList = companyRepository.findInactiveCompaniesBeforeDate(EntityStatus.INACTIVE,
+        List<Company> companyList = companyRepository.findInactiveCompaniesBeforeDate(EntityStatus.INACTIVE.name(),
                 LocalDate.now().minusDays(days));
 
         List<CompanyHistory> companyHistoryList = companyMapper.toCompanyHistoryList(companyList);
@@ -87,7 +87,7 @@ public class EntityHistoryService {
     }
 
     private void moveJobToHistory(){
-        List<Job> jobList = jobRepository.findInactiveJobsBeforeDate(EntityStatus.INACTIVE,
+        List<Job> jobList = jobRepository.findInactiveJobsBeforeDate(EntityStatus.INACTIVE.name(),
                 LocalDate.now().minusDays(days));
 
         List<JobHistory> jobHistoryList = jobMapper.toJobHistoryList(jobList);
@@ -98,7 +98,7 @@ public class EntityHistoryService {
     }
 
     private void moveResumeToHistory(){
-        List<Resume> resumeList = resumeRepository.findInactiveResumesBeforeDate(EntityStatus.INACTIVE,
+        List<Resume> resumeList = resumeRepository.findInactiveResumesBeforeDate(EntityStatus.INACTIVE.name(),
                 LocalDate.now().minusDays(days));
 
         List<ResumeHistory> resumeHistoryList = resumeMapper.toResumeHistoryList(resumeList);

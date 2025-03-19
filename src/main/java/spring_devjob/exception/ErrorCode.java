@@ -45,7 +45,9 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN(1035, "Refresh token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
     TOKEN_TYPE_INVALID(1036, "Loại token không hợp lệ", HttpStatus.UNAUTHORIZED),
     EMAIL_EXISTED(1037, "Email đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
+    EMAIL_LOCKED(1010, "Email của bạn đã bị khóa, vui lòng khôi phục lại.", HttpStatus.FORBIDDEN),
     PHONE_EXISTED(1037, "Phone đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
+    PHONE_LOCKED(1010, "Phone của bạn đã bị khóa, vui lòng khôi phục lại.", HttpStatus.FORBIDDEN),
     REVIEW_NOT_EXISTED(1003, "Review không tồn tại trong hệ thống", HttpStatus.NOT_FOUND),
     REVIEW_NOT_FOUND(1033, "Không tìm thấy review nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
     JOB_ALREADY_EXISTS_IN_COMPANY(1007, "Job đã tồn tại trong công ty", HttpStatus.BAD_REQUEST),
@@ -53,7 +55,18 @@ public enum ErrorCode {
     JOB_NOT_SAVED(1009, "Job chưa được user lưu", HttpStatus.BAD_REQUEST),
     RESUME_NOT_SUBMITTED(1009, "Resume chưa được nộp vào Job này", HttpStatus.BAD_REQUEST),
     RESUME_ALREADY_APPLIED(1005, "Resume đã được nộp vào công việc này", HttpStatus.CONFLICT),
-    JOB_EXPIRED(1010, "Công việc đã hết hạn, không thể nộp Resume", HttpStatus.BAD_REQUEST)
+    JOB_EXPIRED(1010, "Công việc đã hết hạn, không thể nộp Resume", HttpStatus.BAD_REQUEST),
+    USER_ARCHIVED_IN_HISTORY(1001, "Người dùng đã được lưu trữ trong lịch sử và không thể được khôi phục", HttpStatus.BAD_REQUEST),
+    EMAIL_ARCHIVED_IN_HISTORY(1001, "Email đã được lưu trữ trong lịch sử và không thể được khôi phục. Vui lòng sử dụng email khác", HttpStatus.BAD_REQUEST),
+    PHONE_ARCHIVED_IN_HISTORY(1001, "Phone đã được lưu trữ trong lịch sử và không thể được khôi phục. Vui lòng sử dụng phone khác", HttpStatus.BAD_REQUEST),
+    USER_ALREADY_ACTIVE(1038, "Nguời dùng đã hoạt động", HttpStatus.BAD_REQUEST),
+    COMPANY_LOCKED(1010, "Company đã bị khóa, vui lòng khôi phục lại.", HttpStatus.FORBIDDEN),
+    COMPANY_ARCHIVED_IN_HISTORY(1001, "Company đã được lưu trữ trong lịch sử và không thể được khôi phục", HttpStatus.BAD_REQUEST),
+    COMPANY_ALREADY_ACTIVE(1038, "Company đã hoạt động", HttpStatus.BAD_REQUEST),
+    JOB_ARCHIVED_IN_HISTORY(1001, "Job đã được lưu trữ trong lịch sử và không thể được khôi phục", HttpStatus.BAD_REQUEST),
+    JOB_ALREADY_ACTIVE(1038, "Job đã hoạt động", HttpStatus.BAD_REQUEST),
+    RESUME_ARCHIVED_IN_HISTORY(1001, "Resume đã được lưu trữ trong lịch sử và không thể được khôi phục", HttpStatus.BAD_REQUEST),
+    RESUME_ALREADY_ACTIVE(1038, "Resume đã hoạt động", HttpStatus.BAD_REQUEST)
     ;
 
 

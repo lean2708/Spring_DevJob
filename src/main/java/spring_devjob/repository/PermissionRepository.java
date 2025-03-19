@@ -14,8 +14,6 @@ import java.util.Set;
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission,Long> {
 
-    boolean existsByName(String name);
-
     Set<Permission> findAllByNameIn(Set<String> names);
 
     List<Permission> findAllByIdIn(List<Long> ids);

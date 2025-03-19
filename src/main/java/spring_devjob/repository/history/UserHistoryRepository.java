@@ -6,4 +6,7 @@ import spring_devjob.entity.history.UserHistory;
 
 @Repository
 public interface UserHistoryRepository extends JpaRepository<UserHistory,Long> {
+    boolean existsById(long id);
+    boolean existsByEmail(String email);
+    boolean existsByPhone(String phone);
 }

@@ -1,6 +1,7 @@
 package spring_devjob.service;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +26,7 @@ import spring_devjob.mapper.JobMapper;
 import spring_devjob.mapper.ResumeMapper;
 import spring_devjob.mapper.UserMapper;
 import spring_devjob.repository.*;
+import spring_devjob.repository.history.UserHistoryRepository;
 import spring_devjob.repository.relationship.UserHasRoleRepository;
 import spring_devjob.service.relationship.SavedJobService;
 import spring_devjob.service.relationship.UserHasRoleService;
@@ -52,16 +54,11 @@ public class UserService {
     private final JobRepository jobRepository;
     private final JobMapper jobMapper;
     private final ResumeMapper resumeMapper;
+    private final UserHistoryRepository userHistoryRepository;
 
 
     public UserResponse create(UserCreationRequest request){
-        if(userRepository.existsByEmail(request.getEmail())){
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
-        }
-
-        if(userRepository.existsByPhone(request.getPhone())){
-            throw new AppException(ErrorCode.PHONE_EXISTED);
-        }
+        checkUserExistenceAndStatus(request.getEmail(), request.getPhone());
 
         User user = userMapper.userCreationToUser(request);
 
@@ -81,10 +78,31 @@ public class UserService {
 
             user.setRoles(new HashSet<>(userHasRoleRepository.saveAll(userRoles)));
         } else{
-            userHasRoleService.saveUserHasRole(user, RoleEnum.USER);
+            user.setRoles(Set.of(userHasRoleService.saveUserHasRole(user, RoleEnum.USER)));
         }
 
        return userMapper.toUserResponse(user);
+    }
+
+    private void checkUserExistenceAndStatus(String email, String phone){
+        if(userRepository.existsByEmail(email)){
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+        if(userRepository.existsByPhone(phone)){
+            throw new AppException(ErrorCode.PHONE_EXISTED);
+        }
+        if(userRepository.existsUserInactiveByEmail(email, EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.EMAIL_LOCKED);
+        }
+        if(userRepository.existsUserInactiveByPhone(email, EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.PHONE_LOCKED);
+        }
+        if(userHistoryRepository.existsByEmail(email)){
+            throw new AppException(ErrorCode.EMAIL_ARCHIVED_IN_HISTORY);
+        }
+        if(userHistoryRepository.existsByPhone(phone)){
+            throw new AppException(ErrorCode.PHONE_ARCHIVED_IN_HISTORY);
+        }
     }
 
     public UserResponse fetchUserById(long id){
@@ -143,9 +161,9 @@ public class UserService {
     }
 
     private void deactivateUser(User user) {
-        resumeRepository.updateAllResumesToInactiveByUserId(user.getId(), EntityStatus.INACTIVE, LocalDate.now());
+        resumeRepository.updateAllResumesByUserId(user.getId(), EntityStatus.INACTIVE.name(), LocalDate.now());
 
-        reviewRepository.updateAllReviewsToInactiveByUserId(user.getId(), EntityStatus.INACTIVE, LocalDate.now());
+        reviewRepository.updateAllReviewsByUserId(user.getId(), EntityStatus.INACTIVE.name(), LocalDate.now());
 
         user.getRoles().forEach(userHasRoleService::updateUserHasRoleToInactive);
 
@@ -164,6 +182,31 @@ public class UserService {
         userSet.forEach(this::deactivateUser);
 
         userRepository.saveAll(userSet);
+    }
+
+    @Transactional
+    public UserResponse restoreUser(long id) {
+        if(userHistoryRepository.existsById(id)){
+            throw new AppException(ErrorCode.USER_ARCHIVED_IN_HISTORY);
+        }
+        User user = userRepository.findUserById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (user.getState() == EntityStatus.INACTIVE) {
+            resumeRepository.updateAllResumesByUserId(user.getId(), EntityStatus.ACTIVE.name(), null);
+
+            reviewRepository.updateAllReviewsByUserId(user.getId(), EntityStatus.ACTIVE.name(), null);
+
+            user.getRoles().forEach(userHasRoleService::updateUserHasRoleToActive);
+
+            user.getJobs().forEach(savedJobService::updateUserSavedJobToActive);
+
+            user.setState(EntityStatus.ACTIVE);
+            user.setDeactivatedAt(null);
+            return userMapper.toUserResponse(userRepository.save(user));
+        }else {
+            throw new AppException(ErrorCode.USER_ALREADY_ACTIVE);
+        }
     }
 
     public PageResponse<JobResponse> getAllAppliedJobsByUser(int pageNo, int pageSize, String sortBy, long userId){
@@ -210,5 +253,6 @@ public class UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
     }
+
 
 }

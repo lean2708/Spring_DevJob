@@ -2,8 +2,6 @@ package spring_devjob.controller;
 
 import com.nimbusds.jose.JOSEException;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -15,7 +13,7 @@ import spring_devjob.dto.response.UserResponse;
 import spring_devjob.entity.ForgotPasswordToken;
 import spring_devjob.entity.VerificationCodeEntity;
 import spring_devjob.service.AuthService;
-import spring_devjob.service.ForgotPasswordService;
+import spring_devjob.service.AccountRecoveryService;
 
 import java.text.ParseException;
 
@@ -26,7 +24,7 @@ import java.text.ParseException;
 public class AuthController {
 
     private final AuthService authService;
-    private final ForgotPasswordService forgotPasswordService;
+    private final AccountRecoveryService accountRecoveryService;
 
     @PostMapping("/google")
     ApiResponse<TokenResponse> authenticateWithGoogle(@RequestParam("code") String code) throws JOSEException {
@@ -95,10 +93,10 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ApiResponse<VerificationCodeEntity> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+    public ApiResponse<VerificationCodeEntity> forgotPassword(@Valid @RequestBody EmailRequest request) {
         return ApiResponse.<VerificationCodeEntity>builder()
                 .code(HttpStatus.OK.value())
-                .result(forgotPasswordService.forgotPassword(request))
+                .result(accountRecoveryService.forgotPassword(request))
                 .message("Mã xác nhận đã được gửi vào email của bạn")
                 .build();
     }
@@ -107,18 +105,35 @@ public class AuthController {
     public ApiResponse<ForgotPasswordToken> verifyCode(@Valid @RequestBody VerifyCodeRequest request) throws JOSEException {
         return ApiResponse.<ForgotPasswordToken>builder()
                 .code(HttpStatus.OK.value())
-                .result(forgotPasswordService.verifyCode(request.getEmail(), request.getVerificationCode()))
+                .result(accountRecoveryService.verifyCode(request.getEmail(), request.getVerificationCode()))
                 .message("Mã xác nhận hợp lệ")
                 .build();
     }
 
     @PostMapping("/forgot-password/reset-password")
     public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        forgotPasswordService.resetPassword(request);
-
+        accountRecoveryService.resetPassword(request);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.OK.value())
                 .message("Mật khẩu đã được thay đổi thành công")
+                .build();
+    }
+
+    @PostMapping("/recover-account")
+    public ApiResponse<VerificationCodeEntity> recoverAccount(@Valid @RequestBody EmailRequest request) {
+        return ApiResponse.<VerificationCodeEntity>builder()
+                .code(HttpStatus.OK.value())
+                .result(accountRecoveryService.recoverAccount(request.getEmail()))
+                .message("Mã xác nhận đã được gửi vào email của bạn")
+                .build();
+    }
+
+    @PostMapping("/recover-account/verify-code")
+    public ApiResponse<Void> verifyRecoverAccountCode(@Valid @RequestBody VerifyCodeRequest request) {
+        accountRecoveryService.verifyRecoverAccountCode(request.getEmail(), request.getVerificationCode());
+        return ApiResponse.<Void>builder()
+                .code(HttpStatus.OK.value())
+                .message("Mã xác nhận hợp lệ, tài khoản có thể được khôi phục")
                 .build();
     }
 }

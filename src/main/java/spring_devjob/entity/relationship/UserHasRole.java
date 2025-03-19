@@ -3,6 +3,7 @@ package spring_devjob.entity.relationship;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.entity.Role;
 import spring_devjob.entity.User;
@@ -10,6 +11,7 @@ import spring_devjob.entity.User;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@SQLRestriction("state = 'ACTIVE'")
 @Builder
 @NoArgsConstructor
 @Entity

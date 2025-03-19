@@ -91,6 +91,18 @@ public class CompanyController {
                 .build();
     }
 
+    @Operation(summary = "Restore Company",
+            description = "API này được sử dụng để phục hồi Company đã bị xóa mềm")
+    @PatchMapping("/companies/{id}/restore")
+    public ApiResponse<CompanyResponse> restore(@Positive(message = "ID phải lớn hơn 0")
+                                             @PathVariable long id) {
+        return ApiResponse.<CompanyResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Restore User By Id")
+                .result(companyService.restoreCompany(id))
+                .build();
+    }
+
     @Operation(summary = "Search companies based on attributes with pagination",
     description = "Giá trị của search: field~value hoặc field>value hoặc field<value")
     @GetMapping("/companies/search")

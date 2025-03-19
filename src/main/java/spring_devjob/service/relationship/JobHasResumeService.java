@@ -40,6 +40,11 @@ public class JobHasResumeService {
         jobHasResumeRepository.save(jobHasResume);
     }
 
+    public void updateJobHasResumeToActive(JobHasResume jobHasResume){
+        jobHasResume.setState(EntityStatus.ACTIVE);
+        jobHasResumeRepository.save(jobHasResume);
+    }
+
     public ApplyResponse applyResumeToJob(Long jobId, Long resumeId) {
         Job job = jobRepository.findById(jobId).
                 orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));

@@ -15,9 +15,6 @@ public interface RoleRepository extends JpaRepository<Role,Long> {
 
     boolean existsByName(String name);
 
-    @Query("SELECT COUNT(r) > 0 FROM Role r WHERE r.name = :name AND r.state = 'INACTIVE'")
-    boolean existsInactiveRoleByName(@Param("name") String name);
-
     Optional<Role> findByName(String name);
 
     Set<Role> findAllByIdIn(Set<Long> ids);

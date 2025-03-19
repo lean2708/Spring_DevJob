@@ -93,6 +93,16 @@ public class JobController {
                 .result(null)
                 .build();
     }
+    @Operation(summary = "Restore Job",
+            description = "API này để khôi phục trạng thái của Job từ INACTIVE về ACTIVE.")
+    @PatchMapping("/jobs/{id}/restore")
+    public ApiResponse<JobResponse> restoreJob(@Positive(message = "ID phải lớn hơn 0") @PathVariable long id) {
+        return ApiResponse.<JobResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Khôi phục Job thành công")
+                .result(jobService.restoreJob(id))
+                .build();
+    }
 
     @Operation(summary = "Fetch Jobs By Skills",
     description = "API này để lấy danh sách job theo field và skill name (với giá trị của search: field~value hoặc field>value hoặc field<value)")

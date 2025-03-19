@@ -71,7 +71,7 @@ public class EmailService {
         }
     }
 
-    public void sendVerificationCode(User user, String verificationCode) {
+    public void sendPasswordResetCode(User user, String verificationCode) {
         if (user != null && verificationCode != null) {
 
             Map<String, Object> model = new HashMap<>();
@@ -82,7 +82,22 @@ public class EmailService {
             this.sendEmail(user.getEmail(),
                     "Mã xác nhận của bạn để khôi phục mật khẩu",
                     model,
-                    "verification"
+                    "password-reset-verification"
+            );
+        }
+    }
+
+    public void sendAccountRecoveryCode(User user, String verificationCode) {
+        if (user != null && verificationCode != null) {
+            Map<String, Object> model = new HashMap<>();
+            model.put("name", user.getName());
+            model.put("verificationCode", verificationCode);
+            model.put("expirationTime", "10 phút");
+
+            this.sendEmail(user.getEmail(),
+                    "Mã xác nhận khôi phục tài khoản DevJob",
+                    model,
+                    "account-recovery"
             );
         }
     }

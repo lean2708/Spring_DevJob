@@ -15,30 +15,43 @@ import spring_devjob.entity.Skill;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job,Long> {
+
+    Page<Job> findAllByCompanyId(Long companyId, Pageable pageable);
+
+    Set<Job> findBySkillsIn(Set<Skill> skills);
+
+    Set<Job> findAllByIdIn(Set<Long> ids);
+
     @Query("SELECT COUNT(j) > 0 FROM Job j WHERE j.name = :name AND j.company.id = :companyId")
     boolean existsByNameAndCompanyId(@Param("name") String name, @Param("companyId") Long companyId);
 
-    Set<Job> findAllByIdIn(Set<Long> ids);
+    @Query(value = "SELECT * FROM tbl_job WHERE id = :id", nativeQuery = true)
+    Optional<Job> findJobById(@Param("id") Long id);
 
     @Modifying
     @Query("UPDATE Job j SET j.jobStatus = false WHERE j.endDate < :currentDate AND j.jobStatus = true")
     int updateExpiredJobs(@Param("currentDate") LocalDate currentDate);
-
-    Set<Job> findBySkillsIn(Set<Skill> skills);
 
     @Query("SELECT j FROM Job j " +
             "JOIN JobHasResume jhr ON j.id = jhr.job.id " +
             "WHERE jhr.resume IN :resumes")
     Page<Job> findAllByResumesIn(@Param("resumes") Set<Resume> resumes, Pageable pageable);
 
-    Page<Job> findAllByCompanyId(Long companyId, Pageable pageable);
 
     @Modifying
     @Query(value = "SELECT * FROM tbl_job t WHERE t.state = :state AND t.deactivated_at < :date", nativeQuery = true)
-    List<Job> findInactiveJobsBeforeDate(@Param("state") EntityStatus state, @Param("date") LocalDate date);
+    List<Job> findInactiveJobsBeforeDate(@Param("state") String state, @Param("date") LocalDate date);
 
+    @Modifying
+    @Query(value = "UPDATE tbl_job j " +
+            "SET j.state = :state, j.deactivated_at = :deactivatedAt " +
+            "WHERE j.company_id= :companyId", nativeQuery = true)
+    int updateAllJobsByCompanyId(@Param("companyId") Long companyId,
+                                           @Param("state") String state,
+                                           @Param("deactivatedAt") LocalDate deactivatedAt);
 }
