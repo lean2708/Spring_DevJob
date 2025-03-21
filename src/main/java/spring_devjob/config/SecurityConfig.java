@@ -36,9 +36,11 @@ public class SecurityConfig {
     private final CustomJwtAuthenticationConverter customJwtAuthenticationConverter;
 
     private final String[] PUBLIC_URLS  = {
-            "/v1/auth/login", "/v1/auth/register", "/v1/auth/logout", "/v1/auth/refresh-token",
+            "/v1/auth/login", "/v1/auth/register", "/v1/auth/google", "/v1/auth/logout",
+            "/v1/auth/refresh-token",
             "/v1/auth/forgot-password", "/v1/auth/forgot-password/verify-code",
-            "/v1/auth/forgot-password/reset-password"
+            "/v1/auth/forgot-password/reset-password",
+            "/v1/auth/recover-account", "/v1/auth/recover-account/verify-code"
     };
 
     @Bean
