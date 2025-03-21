@@ -92,6 +92,7 @@ public class ApplicationInitConfig {
                         .phone("099999999")
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
                         .gender(GenderEnum.MALE)
+                        .address("Viet Nam")
                         .build());
 
                 userHasRoleService.saveUserHasRole(admin, RoleEnum.ADMIN);
