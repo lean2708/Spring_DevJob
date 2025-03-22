@@ -101,6 +101,7 @@ public class AccountRecoveryService {
             return forgotPasswordTokenRepository.save(token);
     }
 
+    @Transactional
     public void resetPassword(ResetPasswordRequest request) {
         try {
             tokenService.verifyToken(request.getForgotPasswordToken(), TokenType.RESET_PASSWORD_TOKEN);
