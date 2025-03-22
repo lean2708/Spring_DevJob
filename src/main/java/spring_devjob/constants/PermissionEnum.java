@@ -8,6 +8,19 @@ import spring_devjob.entity.Permission;
 @AllArgsConstructor
 public enum PermissionEnum {
 
+    AUTH_GOOGLE_LOGIN("/v1/auth/google", "AUTH", "POST"),
+    AUTH_LOGIN("/v1/auth/login", "AUTH", "POST"),
+    AUTH_REGISTER("/v1/auth/register", "AUTH", "POST"),
+    AUTH_GET_MY_INFO("/v1/auth/myInfo", "AUTH", "GET"),
+    AUTH_REFRESH_TOKEN("/v1/auth/refresh-token", "AUTH", "POST"),
+    AUTH_CHANGE_PASSWORD("/v1/auth/change-password", "AUTH", "POST"),
+    AUTH_LOGOUT("/v1/auth/logout", "AUTH", "POST"),
+    AUTH_FORGOT_PASSWORD("/v1/auth/forgot-password", "AUTH", "POST"),
+    AUTH_VERIFY_FORGOT_PASSWORD_CODE("/v1/auth/forgot-password/verify-code", "AUTH", "POST"),
+    AUTH_RESET_PASSWORD("/v1/auth/forgot-password/reset-password", "AUTH", "POST"),
+    AUTH_RECOVER_ACCOUNT("/v1/auth/recover-account", "AUTH", "POST"),
+    AUTH_VERIFY_RECOVER_ACCOUNT_CODE("/v1/auth/recover-account/verify-code", "AUTH", "POST"),
+
     CREATE_USER("/v1/users","USER","POST"),
     FETCH_USER_BY_ID("/v1/users/{id}","USER","GET"),
     FETCH_ALL_USERS("/v1/users","USER","GET"),

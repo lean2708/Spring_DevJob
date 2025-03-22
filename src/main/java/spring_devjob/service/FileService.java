@@ -109,12 +109,5 @@ public class FileService {
         return true;
     }
 
-    public boolean isValidFile(MultipartFile multipartFile){
-        if (Objects.isNull(multipartFile.getOriginalFilename())){
-            return false;
-        }
-        return !multipartFile.getOriginalFilename().trim().equals("");
-    }
-
 }
 

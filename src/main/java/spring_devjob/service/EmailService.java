@@ -10,6 +10,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import spring_devjob.dto.response.ResponseEmailJob;
@@ -121,18 +122,22 @@ public class EmailService {
     @Transactional
     public void sendSubscribersEmailJobs() {
         List<Subscriber> listSubs = this.subscriberRepository.findAll();
-        if (listSubs != null && listSubs.size() > 0) {
+        if (!CollectionUtils.isEmpty(listSubs)) {
             for (Subscriber sub : listSubs) {
                 Set<Skill> skillSet = sub.getSkills().stream()
-                        .map(SubHasSkill::getSkill).collect(Collectors.toSet());
-                if (skillSet != null && skillSet.size() > 0) {
+                        .map(SubHasSkill::getSkill)
+                        .collect(Collectors.toSet());
+                if (!CollectionUtils.isEmpty(skillSet)) {
                     Set<Job> jobSet = this.jobRepository.findBySkillsIn(skillSet);
-                    if (jobSet != null && !jobSet.isEmpty()) {
-                        List<ResponseEmailJob> list = jobSet.stream().map(
-                                job -> this.convertJobToSendEmail(job)).collect(Collectors.toList());
+                    if (!CollectionUtils.isEmpty(jobSet)) {
+                        List<ResponseEmailJob> list = jobSet.stream()
+                                .map(this::convertJobToSendEmail)
+                                .collect(Collectors.toList());
+
                         Map<String, Object> model = new HashMap<>();
                         model.put("name", sub.getName());
                         model.put("jobs", list);
+
                         this.sendEmail(
                                 sub.getEmail(),
                                 "Cơ hội việc làm hot đang chờ đón bạn, khám phá ngay",

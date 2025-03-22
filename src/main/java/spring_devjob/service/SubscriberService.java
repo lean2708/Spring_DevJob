@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import spring_devjob.config.VNPAYConfig;
 import spring_devjob.constants.EntityStatus;
+import spring_devjob.constants.PaymentConstants;
 import spring_devjob.constants.RoleEnum;
 import spring_devjob.dto.request.PaymentCallbackRequest;
 import spring_devjob.dto.response.*;
@@ -57,16 +58,16 @@ public class SubscriberService {
 
         switch (premiumType) {
             case "1-month":
-                amount *=  30000L;
+                amount *= PaymentConstants.ONE_MONTH_PRICE;
                 break;
             case "3-month":
-                amount *= 79000L;
+                amount *= PaymentConstants.THREE_MONTHS_PRICE;
                 break;
             case "6-month":
-                amount *= 169000L;
+                amount *= PaymentConstants.SIX_MONTHS_PRICE;
                 break;
             case "12-month":
-                amount *= 349000L;
+                amount *= PaymentConstants.TWELVE_MONTHS_PRICE;
                 break;
             default:
                 throw new AppException(ErrorCode.INVALID_PAYMENT_AMOUNT);
@@ -120,17 +121,17 @@ public class SubscriberService {
 
         LocalDate expiryDate = subscriber.getExpiryDate();
 
-        switch ((int)  request.getAmount()) {
-            case 30000:
+        switch ((int) request.getAmount()) {
+            case (int) PaymentConstants.ONE_MONTH_PRICE:
                 expiryDate = expiryDate.plusMonths(1);
                 break;
-            case 79000:
+            case (int) PaymentConstants.THREE_MONTHS_PRICE:
                 expiryDate = expiryDate.plusMonths(3);
                 break;
-            case 169000:
+            case (int) PaymentConstants.SIX_MONTHS_PRICE:
                 expiryDate = expiryDate.plusMonths(6);
                 break;
-            case 349000:
+            case (int) PaymentConstants.TWELVE_MONTHS_PRICE:
                 expiryDate = expiryDate.plusYears(1);
                 break;
             default:
@@ -218,10 +219,8 @@ public class SubscriberService {
     }
 
     private Subscriber findActiveSubById(long id) {
-        Subscriber subscriberDB = subscriberRepository.findById(id)
+        return subscriberRepository.findById(id)
                 .orElseThrow(()->new AppException(ErrorCode.USER_NOT_REGISTERED));
-
-        return subscriberDB;
     }
 
     @Scheduled(cron = "0 0 */3 * * *")
@@ -237,8 +236,8 @@ public class SubscriberService {
                 User userDB = userRepository.findByEmail(subscriber.getEmail()).
                         orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-                roleRepository.findByName(RoleEnum.PRO.name()).ifPresent(role ->
-                        userHasRoleRepository.deleteByUserAndRole(userDB, role));
+                roleRepository.findByName(RoleEnum.PRO.name())
+                        .ifPresent(role -> userHasRoleRepository.deleteByUserAndRole(userDB, role));
             }
         }
     }

@@ -52,8 +52,8 @@ public class EntityHistoryService {
     @Value("${app.convert.days}")
     private long days;
 
-    @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
+    @Scheduled(cron = "0 0 0 * * ?")
     public void moveEntitiesToHistory() {
         moveUserToHistory();
 
