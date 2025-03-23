@@ -3,6 +3,7 @@ package spring_devjob.controller;
 import com.nimbusds.jose.JOSEException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import java.text.ParseException;
 
 @RestController
 @Validated
+@Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/v1/auth")
 public class AuthController {
@@ -64,7 +66,8 @@ public class AuthController {
     }
 
     @PostMapping("/refresh-token")
-    public ApiResponse<TokenResponse> refreshToken(@RequestBody TokenRequest request) throws ParseException, JOSEException {
+    public ApiResponse<TokenResponse> refreshToken(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
+        log.info("Received refresh token: {}", request.getRefreshToken());
         return ApiResponse.<TokenResponse>builder()
                 .code(HttpStatus.OK.value())
                 .result(authService.refreshToken(request))

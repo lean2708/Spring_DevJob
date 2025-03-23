@@ -1,6 +1,5 @@
 package spring_devjob.dto.request;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.Getter;

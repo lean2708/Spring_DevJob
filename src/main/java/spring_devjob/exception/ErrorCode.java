@@ -44,6 +44,7 @@ public enum ErrorCode {
     SUBSCRIBER_NOT_FOUND(1034, "Không tìm thấy subscriber nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
     INVALID_REFRESH_TOKEN(1035, "Refresh token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
     TOKEN_TYPE_INVALID(1036, "Loại token không hợp lệ", HttpStatus.UNAUTHORIZED),
+    TOKEN_NOT_EXISTED(1014, "Token không tồn tại trong hệ thống", HttpStatus.NOT_FOUND),
     EMAIL_EXISTED(1037, "Email đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
     EMAIL_LOCKED(1010, "Email của bạn đã bị khóa, vui lòng khôi phục lại.", HttpStatus.FORBIDDEN),
     PHONE_EXISTED(1037, "Phone đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),

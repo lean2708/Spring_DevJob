@@ -16,6 +16,5 @@ public class TokenResponse {
     String accessToken;
     String refreshToken;
     boolean authenticated;
-    String email; 
-    List<EntityBasic> roles;
+    String email;
 }

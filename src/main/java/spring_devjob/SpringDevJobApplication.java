@@ -13,7 +13,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 // 		org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration.class
 // })
 
-@EnableAsync
 @EnableScheduling
 @EnableFeignClients
 @SpringBootApplication
