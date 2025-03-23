@@ -28,6 +28,7 @@ public class CustomJwtDecoder implements JwtDecoder {
     @Override
     public Jwt decode(String token) throws JwtException {
         try {
+            // check token (signer key, blacklist, ...)
             tokenService.verifyToken(token, TokenType.ACCESS_TOKEN);
         } catch (JOSEException | ParseException e) {
             throw new BadJwtException(e.getMessage());

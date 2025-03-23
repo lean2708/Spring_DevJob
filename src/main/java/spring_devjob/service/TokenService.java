@@ -7,28 +7,30 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import spring_devjob.constants.TokenType;
-import spring_devjob.entity.Token;
+import spring_devjob.entity.RefreshToken;
 import spring_devjob.entity.User;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
-import spring_devjob.repository.TokenRepository;
+import spring_devjob.repository.RefreshTokenRepository;
+import spring_devjob.repository.RevokedTokenRepository;
 
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.Optional;
-import java.util.StringJoiner;
 import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
 public class TokenService {
 
-    private final TokenRepository tokenRepository;
+    private final RevokedTokenRepository revokedTokenRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${jwt.signer-key}")
     private String SIGNER_KEY;
@@ -46,18 +48,6 @@ public class TokenService {
 
     @Value("${jwt.reset.expiry-in-minutes}")
     private long resetTokenExpiration;
-
-    // save de token
-    public Token saveToken(Token token){
-        Optional<Token> optionalToken = tokenRepository.findByEmail(token.getEmail());
-        if(optionalToken.isEmpty()){
-            return tokenRepository.save(token);
-        }
-        Token currentToken  = optionalToken.get();
-        currentToken.setAccessToken(token.getAccessToken());
-        currentToken.setRefreshToken(token.getRefreshToken());
-        return currentToken;
-    }
 
     public String generateToken(User user, TokenType type) throws JOSEException {
         // Header
@@ -114,8 +104,32 @@ public class TokenService {
         if(!isVerified || expirationTime.before(new Date()) || jwtId == null){
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
+
+        // check accessToken (blacklist)
+        if (type == TokenType.ACCESS_TOKEN && revokedTokenRepository.existsById(token)){
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        if(type == TokenType.REFRESH_TOKEN && !refreshTokenRepository.existsByRefreshToken(token)){
+            throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
         return signedJWT;
     }
 
+    public void saveRefreshToken(String token) {
+        RefreshToken refreshToken = RefreshToken.builder()
+                .refreshToken(token)
+                .expiryDate(LocalDateTime.now().plusDays(refreshTokenExpiration))
+                .build();
+
+        refreshTokenRepository.save(refreshToken);
+    }
+
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void removeExpiredRefreshTokens() {
+        refreshTokenRepository.deleteExpiredTokens(LocalDateTime.now());
+    }
 
 }

@@ -2,8 +2,6 @@ package spring_devjob.service;
 
 import com.nimbusds.jose.JOSEException;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,13 +37,14 @@ public class AccountRecoveryService {
     private final ForgotPasswordTokenRepository forgotPasswordTokenRepository;
     private final TokenService tokenService;
     private final UserHistoryRepository userHistoryRepository;
+    private final RedisTokenService userCacheDataService;
 
     @Value("${jwt.reset.expiry-in-minutes}")
     protected long resetTokenExpiration;
 
     public VerificationCodeEntity forgotPassword(EmailRequest request){
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         String verificationCode = generateVerificationCode();
         try {

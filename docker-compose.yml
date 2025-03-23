@@ -1,4 +1,4 @@
-version: '3.5'
+
 
 services:
   mysql-devjob:
@@ -23,6 +23,20 @@ services:
       timeout: 10s
 
 
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis-devjob
+    hostname: redis-devjob
+    ports:
+      - '6379:6379'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=no
+      - REDIS_PASSWORD=123456
+      - REDIS_DISABLE_COMMANDS=FLUSHDB;FLUSHALL
+    networks:
+      - devjob_backend
+
+
   spring-devjob:
     container_name: spring-devjob
     image: lean2708/spring-devjob:0.0.1
@@ -45,3 +59,4 @@ networks:
 
 volumes:
   devjob_data:
+    driver: local
