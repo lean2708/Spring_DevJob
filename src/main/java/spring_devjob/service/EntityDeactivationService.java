@@ -39,12 +39,11 @@ public class EntityDeactivationService {
     @Transactional
     public void deactivateCompany(Company company){
         userRepository.updateUserStateByCompany(company.getId(), INACTIVE.name());
-        log.info("Chua update Review");
+
         reviewRepository.updateReviewStateByCompany(company.getId(), INACTIVE.name());
-        log.info("Da update Review");
-        log.info("Chua update Job");
+
         jobRepository.findJobsByCompanyIdAndState(company.getId(), ACTIVE.name()).forEach(this::deactivateJob);
-        log.info("Da update Job");
+
         company.setState(INACTIVE);
         companyRepository.saveAndFlush(company);
     }

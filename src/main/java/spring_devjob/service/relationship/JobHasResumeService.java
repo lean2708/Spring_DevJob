@@ -37,13 +37,8 @@ public class JobHasResumeService {
 
 
     public List<JobHasResume> getJobHasResumeByJobAndState(long jobId, EntityStatus status) {
-        System.out.println("jobId: " + jobId + ", state: " + status.name());
-        List<JobHasResume> result = jobHasResumeRepository.findByJobIdAndState(jobId, status.name());
-        System.out.println("Result: " + result);
-        return result;
+        return jobHasResumeRepository.findByJobIdAndState(jobId, status.name());
     }
-
-
 
     public void updateJobHasResume(JobHasResume jobHasResume, EntityStatus status){
         jobHasResume.setState(status);
