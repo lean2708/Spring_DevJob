@@ -7,11 +7,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.entity.*;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -28,18 +26,11 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     int getTotalReviewsByCompanyId(@Param("companyId") Long companyId);
 
     @Modifying
-    @Query(value = "UPDATE tbl_review r " +
-            "SET r.state = :state, r.deactivated_at = :deactivatedAt " +
-            "WHERE r.user_id = :userId", nativeQuery = true)
-    int updateAllReviewsByUserId(@Param("userId") Long userId,
-                               @Param("state") String state,
-                               @Param("deactivatedAt") LocalDate deactivatedAt);
+    @Query(value = "UPDATE tbl_review SET state = :state WHERE company_id = :companyId", nativeQuery = true)
+    void updateReviewStateByCompany(@Param("companyId") Long companyId, @Param("state") String state);
 
     @Modifying
-    @Query(value = "UPDATE tbl_review r " +
-            "SET r.state = :state, r.deactivated_at = :deactivatedAt " +
-            "WHERE r.company_id= :companyId", nativeQuery = true)
-    int updateAllReviewsByCompanyId(@Param("companyId") Long companyId,
-                                 @Param("state") String state,
-                                 @Param("deactivatedAt") LocalDate deactivatedAt);
+    @Query(value = "UPDATE tbl_review SET state = :state WHERE user_id = :userId", nativeQuery = true)
+    void updateReviewStateByUser(@Param("userId") Long userId, @Param("state") String state);
+
 }

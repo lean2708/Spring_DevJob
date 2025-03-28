@@ -52,8 +52,7 @@ public class ApplicationInitConfig {
                         .map(PermissionEnum::toPermission)
                         .collect(Collectors.toList());
 
-                permissionRepository.saveAll(permissionList);
-                permissionRepository.flush();
+                permissionRepository.saveAllAndFlush(permissionList);
             }
 
             if(roleRepository.count() == 0){
@@ -61,6 +60,7 @@ public class ApplicationInitConfig {
                         .name(RoleEnum.USER.name())
                         .description("ROLE_USER")
                         .build());
+                updateRoleUser(userRole);
 
                 Role proRole = roleRepository.save(Role.builder()
                         .name(RoleEnum.PRO.name())
@@ -81,8 +81,7 @@ public class ApplicationInitConfig {
                 updateRoleAdmin(adminRole);
 
                 List<Role> roleList = List.of(userRole, proRole, hrRole, adminRole);
-                roleRepository.saveAll(roleList);
-                roleRepository.flush();
+                roleRepository.saveAllAndFlush(roleList);
             }
 
             if (!userRepository.existsByEmail(ADMIN_EMAIL)) {
@@ -92,7 +91,7 @@ public class ApplicationInitConfig {
                         .phone("099999999")
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
                         .gender(GenderEnum.MALE)
-                        .address("Viet Nam")
+                        .address("VIET NAM")
                         .build());
 
                 userHasRoleService.saveUserHasRole(admin, RoleEnum.ADMIN);
@@ -102,7 +101,9 @@ public class ApplicationInitConfig {
 
     private void updateRolePro(Role role) {
         Set<Permission> permissionSet = permissionRepository.findAllByNameIn(
-                Set.of(SEND_JOB_NOTIFICATIONS.name()));
+                Set.of(FETCH_TOP_RATED_COMPANIES.name(), SEND_JOB_NOTIFICATIONS.name()
+                )
+        );
 
         Set<RoleHasPermission> roleHasPermissions = permissionSet.stream()
                 .map(permission -> new RoleHasPermission(role, permission))
@@ -113,9 +114,14 @@ public class ApplicationInitConfig {
 
     private void updateRoleHR(Role role) {
         Set<Permission> permissionSet = permissionRepository.findAllByNameIn(
-                Set.of(CREATE_JOB.name(), FETCH_JOB_BY_ID.name(),
-                        UPDATE_JOB.name(), DELETE_JOB.name(),
-                        FETCH_JOBS_BY_COMPANY.name(), FETCH_RESUMES_BY_JOB.name()));
+                Set.of(UPDATE_COMPANY.name(), DELETE_COMPANY.name(), RESTORE_COMPANY.name(),
+                        FETCH_JOBS_BY_COMPANY.name(), FETCH_REVIEWS_BY_COMPANY.name(),
+                        DELETE_REVIEWS.name(), CREATE_JOB.name(), FETCH_JOB_BY_ID.name(), UPDATE_JOB.name(),
+                        DELETE_JOB.name(), DELETE_MULTIPLE_JOBS.name(), RESTORE_JOB.name(),
+                        FETCH_RESUMES_BY_JOB.name(), UPDATE_CV_STATUS.name(),
+                        UPLOAD_IMAGE.name(), UPLOAD_VIDEO.name(), GET_ALL_FILES.name(), DELETE_FILE.name()
+                )
+        );
 
         Set<RoleHasPermission> roleHasPermissions = permissionSet.stream()
                 .map(permission -> new RoleHasPermission(role, permission))
@@ -128,6 +134,30 @@ public class ApplicationInitConfig {
         List<Permission> adminPermissions = permissionRepository.findAll();
 
         Set<RoleHasPermission> roleHasPermissions = adminPermissions.stream()
+                .map(permission -> new RoleHasPermission(role, permission))
+                .collect(Collectors.toSet());
+
+        roleHasPermissionRepository.saveAll(roleHasPermissions);
+    }
+
+    private void updateRoleUser(Role role) {
+        Set<Permission> permissionSet = permissionRepository.findAllByNameIn(
+                Set.of(CREATE_RESUME.name(), FETCH_RESUME_BY_ID.name(),
+                        FETCH_ALL_RESUMES.name(), UPDATE_RESUME.name(),
+                        DELETE_RESUME.name(), DELETE_MULTIPLE_RESUMES.name(), RESTORE_RESUME.name(),
+                        SAVE_JOB.name(), GET_SAVED_JOBS.name(), REMOVE_SAVED_JOB.name(),
+                        CREATE_REVIEW.name(), GET_REVIEW_BY_ID.name(),
+                        GET_ALL_REVIEWS.name(), UPDATE_REVIEW.name(), DELETE_REVIEW.name(),
+                        FETCH_JOB_BY_ID.name(), FETCH_ALL_JOBS.name(),
+                        SEARCH_JOBS_BY_SKILLS.name(), APPLY_RESUME_TO_JOB.name(),
+                        FETCH_ALL_COMPANIES.name(), FETCH_COMPANY_BY_ID.name(),
+                        SEARCH_COMPANIES.name(), FETCH_REVIEWS_BY_COMPANY.name(),
+                        CREATE_VNPAY_PAYMENT_URL.name(), VNPAY_PAYMENT_CALLBACK.name(),
+                        FETCH_SUBSCRIBER_BY_ID.name(), CHECK_PRO_STATUS.name(), UPLOAD_CV.name()
+                )
+        );
+
+        Set<RoleHasPermission> roleHasPermissions = permissionSet.stream()
                 .map(permission -> new RoleHasPermission(role, permission))
                 .collect(Collectors.toSet());
 

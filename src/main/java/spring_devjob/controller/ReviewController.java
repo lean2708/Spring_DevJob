@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.ReviewRequest;
@@ -30,6 +31,7 @@ public class ReviewController {
 
     @Operation(summary = "Create a review",
             description = "API này cho phép người dùng tạo đánh giá (review) cho một công ty")
+    @PreAuthorize("hasAuthority('CREATE_REVIEW')")
     @PostMapping("/reviews")
     public ApiResponse<ReviewResponse> create(@Valid @RequestBody ReviewRequest request){
         return ApiResponse.<ReviewResponse>builder()
@@ -39,6 +41,7 @@ public class ReviewController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('GET_REVIEW_BY_ID')")
     @GetMapping("/reviews/{id}")
     public ApiResponse<ReviewResponse> fetchReviewById(@Positive(message = "ID phải lớn hơn 0")
                                                    @PathVariable long id){
@@ -49,6 +52,7 @@ public class ReviewController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('GET_ALL_REVIEWS')")
     @GetMapping("/reviews")
     public ApiResponse<PageResponse<ReviewResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                             @RequestParam(defaultValue = "1") int pageNo,
@@ -62,6 +66,7 @@ public class ReviewController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('UPDATE_REVIEW')")
     @PutMapping("/reviews/{id}")
     public ApiResponse<ReviewResponse> update(@Positive(message = "ID phải lớn hơn 0")
                                             @PathVariable long id, @RequestBody ReviewRequest request){
@@ -72,6 +77,7 @@ public class ReviewController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_REVIEW')")
     @DeleteMapping("/reviews/{id}")
     public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                     @PathVariable long id){
@@ -83,6 +89,7 @@ public class ReviewController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_REVIEWS')")
     @DeleteMapping("/reviews")
     public ApiResponse<Void> deleteReviews(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                          Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){

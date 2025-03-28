@@ -11,7 +11,6 @@ import spring_devjob.entity.Job;
 import spring_devjob.entity.Resume;
 import spring_devjob.entity.User;
 import spring_devjob.entity.relationship.JobHasResume;
-import spring_devjob.entity.relationship.JobHasSkill;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.repository.JobRepository;
@@ -22,6 +21,7 @@ import spring_devjob.service.AuthService;
 import spring_devjob.service.EmailService;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -35,14 +35,23 @@ public class JobHasResumeService {
     private final AuthService authService;
     private final EmailService emailService;
 
-    public void updateJobHasResumeToInactive(JobHasResume jobHasResume){
-        jobHasResume.setState(EntityStatus.INACTIVE);
+
+    public List<JobHasResume> getJobHasResumeByJobAndState(long jobId, EntityStatus status) {
+        System.out.println("jobId: " + jobId + ", state: " + status.name());
+        List<JobHasResume> result = jobHasResumeRepository.findByJobIdAndState(jobId, status.name());
+        System.out.println("Result: " + result);
+        return result;
+    }
+
+
+
+    public void updateJobHasResume(JobHasResume jobHasResume, EntityStatus status){
+        jobHasResume.setState(status);
         jobHasResumeRepository.save(jobHasResume);
     }
 
-    public void updateJobHasResumeToActive(JobHasResume jobHasResume){
-        jobHasResume.setState(EntityStatus.ACTIVE);
-        jobHasResumeRepository.save(jobHasResume);
+    public List<JobHasResume> getJobHasResumeByResumeAndState(long resumeId, EntityStatus status){
+        return jobHasResumeRepository.findByResumeIdAndState(resumeId, status.name());
     }
 
     public ApplyResponse applyResumeToJob(Long jobId, Long resumeId) {

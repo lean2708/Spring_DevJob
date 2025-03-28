@@ -12,14 +12,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.JobRequest;
-import spring_devjob.dto.response.CompanyResponse;
+import spring_devjob.dto.request.JobUpdateRequest;
 import spring_devjob.dto.response.JobResponse;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ResumeResponse;
 import spring_devjob.entity.*;
-import spring_devjob.entity.relationship.JobHasResume;
 import spring_devjob.entity.relationship.JobHasSkill;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
@@ -28,12 +26,7 @@ import spring_devjob.mapper.ResumeMapper;
 import spring_devjob.repository.*;
 import spring_devjob.repository.criteria.JobSearchCriteriaQueryConsumer;
 import spring_devjob.repository.criteria.SearchCriteria;
-import spring_devjob.repository.history.JobHistoryRepository;
-import spring_devjob.repository.relationship.JobHasResumeRepository;
 import spring_devjob.repository.relationship.JobHasSkillRepository;
-import spring_devjob.service.relationship.JobHasResumeService;
-import spring_devjob.service.relationship.JobHasSkillService;
-import spring_devjob.service.relationship.SavedJobService;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -53,10 +46,7 @@ public class JobService {
     private final PageableService pageableService;
     private final ResumeMapper resumeMapper;
     private final JobHasSkillRepository jobHasSkillRepository;
-    private final JobHistoryRepository jobHistoryRepository;
-    private final SavedJobService savedJobService;
-    private final JobHasSkillService jobHasSkillService;
-    private final JobHasResumeService jobHasResumeService;
+    private final EntityDeactivationService entityDeactivationService;
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -110,16 +100,10 @@ public class JobService {
     }
 
     @Transactional
-    public JobResponse update(long id, JobRequest request){
+    public JobResponse update(long id, JobUpdateRequest request){
         Job jobDB = findActiveJobById(id);
 
-        if(!request.getCompanyId().equals(jobDB.getCompany().getId())) {
-            throw new AppException(ErrorCode.COMPANY_MISMATCH);
-        }
-
         jobMapper.updateJob(jobDB, request);
-
-        companyRepository.findById(request.getCompanyId()).ifPresent(jobDB::setCompany);
 
         if(!CollectionUtils.isEmpty(request.getSkillIds())){
             Set<Skill> skillSet = skillRepository.findAllByIdIn(request.getSkillIds());
@@ -140,21 +124,9 @@ public class JobService {
     public void delete(long id){
         Job jobDB = findActiveJobById(id);
 
-        deactivateJob(jobDB);
-
-        jobRepository.save(jobDB);
+        entityDeactivationService.deactivateJob(jobDB);
     }
 
-    private void deactivateJob(Job job){
-        job.getResumes().forEach(jobHasResumeService::updateJobHasResumeToInactive);
-
-        job.getSkills().forEach(jobHasSkillService::updateJobHasSkillToInactive);
-
-        job.getUsers().forEach(savedJobService::updateUserSavedJobToInactive);
-
-        job.setState(EntityStatus.INACTIVE);
-        job.setDeactivatedAt(LocalDate.now());
-    }
 
     @Transactional
     public void deleteJobs(Set<Long> ids){
@@ -162,33 +134,9 @@ public class JobService {
         if(jobSet.isEmpty()){
             throw new AppException(ErrorCode.JOB_NOT_FOUND);
         }
-        jobSet.forEach(this::deactivateJob);
-
-        jobRepository.saveAll(jobSet);
+        jobSet.forEach(entityDeactivationService::deactivateJob);
     }
 
-    @Transactional
-    public JobResponse restoreJob(long id) {
-        if(jobHistoryRepository.existsById(id)){
-            throw new AppException(ErrorCode.JOB_ARCHIVED_IN_HISTORY);
-        }
-        Job job = jobRepository.findJobById(id).
-                orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
-
-        if (job.getState() == EntityStatus.INACTIVE) {
-            job.getResumes().forEach(jobHasResumeService::updateJobHasResumeToActive);
-
-            job.getSkills().forEach(jobHasSkillService::updateJobHasSkillToActive);
-
-            job.getUsers().forEach(savedJobService::updateUserSavedJobToActive);
-
-            job.setState(EntityStatus.ACTIVE);
-            job.setDeactivatedAt(null);
-            return jobMapper.toJobResponse(jobRepository.save(job));
-        }else {
-            throw new AppException(ErrorCode.JOB_ALREADY_ACTIVE);
-        }
-    }
 
     public PageResponse<JobResponse> fetchAllJobsBySkills(int pageNo, int pageSize, String sortBy, List<String> search, List<String> skills){
         pageNo = pageNo - 1;

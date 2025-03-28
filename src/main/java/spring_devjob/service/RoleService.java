@@ -7,12 +7,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.RoleRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.RoleResponse;
 import spring_devjob.entity.*;
 import spring_devjob.entity.relationship.RoleHasPermission;
+import spring_devjob.entity.relationship.UserHasRole;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.RoleMapper;
@@ -23,6 +23,7 @@ import spring_devjob.service.relationship.UserHasRoleService;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -59,7 +60,7 @@ public class RoleService {
     }
 
     public RoleResponse fetchRoleById(long id){
-        Role roleDB = findActiveRoleById(id);
+        Role roleDB = findRoleById(id);
 
         return roleMapper.toRoleResponse(roleDB);
     }
@@ -83,7 +84,7 @@ public class RoleService {
 
     @Transactional
     public RoleResponse update(long id, RoleRequest request){
-        Role roleDB = findActiveRoleById(id);
+        Role roleDB = findRoleById(id);
 
         roleMapper.updateRole(roleDB, request);
 
@@ -104,25 +105,22 @@ public class RoleService {
 
     @Transactional
     public void delete(long id){
-        Role roleDB = findActiveRoleById(id);
+        Role roleDB = findRoleById(id);
 
         deactivateRole(roleDB);
 
-        roleRepository.save(roleDB);
+        roleRepository.delete(roleDB);
     }
 
     private void deactivateRole(Role role){
-        role.getUsers().forEach(userHasRoleService::updateUserHasRoleToInactive);
+        userHasRoleService.deleteUserHasRoleByRole(role.getId());
 
-        role.getPermissions().forEach(this::updateRoleHasPermissionToInactive);
-
-        role.setState(EntityStatus.INACTIVE);
-        role.setDeactivatedAt(LocalDate.now());
+        deleteRoleHasPermissionByRole(role.getId());
     }
 
-    private void updateRoleHasPermissionToInactive(RoleHasPermission roleHasPermission){
-        roleHasPermission.setState(EntityStatus.INACTIVE);
-        roleHasPermissionRepository.save(roleHasPermission);
+    private void deleteRoleHasPermissionByRole(long roleId){
+        List<RoleHasPermission> roleHasPermissions = roleHasPermissionRepository.findByRoleId(roleId);
+        roleHasPermissionRepository.deleteAll(roleHasPermissions);
     }
 
     @Transactional
@@ -134,10 +132,10 @@ public class RoleService {
         }
         roleSet.forEach(this::deactivateRole);
 
-        roleRepository.saveAll(roleSet);
+        roleRepository.deleteAllInBatch(roleSet);
     }
 
-    private Role findActiveRoleById(long id) {
+    private Role findRoleById(long id) {
         return roleRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
     }

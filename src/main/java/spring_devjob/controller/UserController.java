@@ -8,11 +8,13 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.UserCreationRequest;
 import spring_devjob.dto.request.UserUpdateRequest;
 import spring_devjob.dto.response.*;
+import spring_devjob.service.RestoreService;
 import spring_devjob.service.UserService;
 
 import java.util.Set;
@@ -24,9 +26,11 @@ import java.util.Set;
 @RestController
 public class UserController {
     private final UserService userService;
+    private final RestoreService restoreService;
 
     @Operation(summary = "Create User with Role",
             description = "API này được sử dụng để tạo user và gán role vào user đó")
+    @PreAuthorize("hasAuthority('CREATE_USER')")
     @PostMapping("/users")
     public ApiResponse<UserResponse> create(@Valid @RequestBody UserCreationRequest request){
          return ApiResponse.<UserResponse>builder()
@@ -36,6 +40,7 @@ public class UserController {
                  .build();
      }
 
+    @PreAuthorize("hasAuthority('FETCH_USER_BY_ID')")
     @GetMapping("/users/{id}")
     public ApiResponse<UserResponse> fetchUser(@Positive(message = "ID phải lớn hơn 0")
                                                    @PathVariable long id){
@@ -46,6 +51,7 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_ALL_USERS')")
     @GetMapping("/users")
     public ApiResponse<PageResponse<UserResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                 @RequestParam(defaultValue = "1") int pageNo,
@@ -61,6 +67,7 @@ public class UserController {
 
     @Operation(summary = "Update User (No update Password)",
               description = "API này được sử dụng để update user (không update password)")
+    @PreAuthorize("hasAuthority('UPDATE_USER')")
     @PutMapping("/users/{id}")
     public ApiResponse<UserResponse> update(@Positive(message = "ID phải lớn hơn 0")
                                                 @PathVariable long id, @RequestBody UserUpdateRequest request){
@@ -71,6 +78,7 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_USER')")
     @DeleteMapping("/users/{id}")
     public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                         @PathVariable long id){
@@ -82,6 +90,7 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_MULTIPLE_USERS')")
     @DeleteMapping("/users")
     public ApiResponse<Void> deleteUsers(@RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                          Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
@@ -95,18 +104,20 @@ public class UserController {
 
     @Operation(summary = "Restore User",
             description = "API này được sử dụng để phục hồi user đã bị xóa mềm")
+    @PreAuthorize("hasAuthority('RESTORE_USER')")
     @PatchMapping("/users/{id}/restore")
     public ApiResponse<UserResponse> restore(@Positive(message = "ID phải lớn hơn 0")
                                              @PathVariable long id) {
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Restore User By Id")
-                .result(userService.restoreUser(id))
+                .result(restoreService.restoreUser(id))
                 .build();
     }
 
     @Operation(summary = "Fetch All Resumes By User With Pagination",
             description = "API này được sử dụng để lấy tất cả CV của User")
+    @PreAuthorize("hasAuthority('FETCH_RESUMES_BY_USER')")
     @GetMapping("/users/{userId}/resumes")
     public ApiResponse<PageResponse<ResumeResponse>> fetchAllByUser(@RequestParam(defaultValue = "1") int pageNo,
                                                                     @RequestParam(defaultValue = "10") int pageSize,
@@ -122,6 +133,7 @@ public class UserController {
 
     @Operation(summary = "Get list of applied jobs",
             description = "API này để láy danh sách job mà người dùng đã ứng tuyển")
+    @PreAuthorize("hasAuthority('FETCH_APPLIED_JOBS')")
     @GetMapping("/users/{userId}/applied-jobs")
     public ApiResponse<PageResponse<JobResponse>> getAllAppliedJobsByUser(@RequestParam(defaultValue = "1") int pageNo,
                                                                           @RequestParam(defaultValue = "10") int pageSize,

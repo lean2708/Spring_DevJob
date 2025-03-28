@@ -8,14 +8,15 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
+import spring_devjob.constants.EntityStatus;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@SQLRestriction("state = 'ACTIVE'")
 @Entity
 @SuperBuilder
 @NoArgsConstructor
-@SQLRestriction("state = 'ACTIVE'")
 @Table(name = "tbl_review")
 public class Review extends BaseEntity{
 
@@ -25,6 +26,10 @@ public class Review extends BaseEntity{
     @Column(columnDefinition = "TEXT")
     String comment;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false)
+    EntityStatus state;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     User user;
@@ -32,4 +37,11 @@ public class Review extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)
     Company company;
+
+    @PrePersist
+    public void prePersist() {
+        if (state == null) {
+            this.state = EntityStatus.ACTIVE;
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package spring_devjob.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,5 +18,7 @@ public class ApplyResponse {
     Long resumeId;
     Long userId;
     ApplicationStatusEnum applicationStatus;
+
+    @JsonFormat(pattern = "dd/MM/yyyy")
     LocalDate appliedAt;
 }

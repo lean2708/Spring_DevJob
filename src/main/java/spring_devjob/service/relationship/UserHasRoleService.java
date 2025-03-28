@@ -1,5 +1,7 @@
 package spring_devjob.service.relationship;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,8 @@ import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.repository.RoleRepository;
 import spring_devjob.repository.relationship.UserHasRoleRepository;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -27,14 +31,17 @@ public class UserHasRoleService {
         return userHasRoleRepository.save(new UserHasRole(user, role));
     }
 
-    public void updateUserHasRoleToInactive(UserHasRole userHasRole){
-        userHasRole.setState(EntityStatus.INACTIVE);
+    public void deleteUserHasRoleByRole(Long roleId){
+        List<UserHasRole> userHasRoleList = userHasRoleRepository.findByRoleId(roleId);
+        userHasRoleRepository.deleteAll(userHasRoleList);
+    }
+
+    public void updateUserHasRole(UserHasRole userHasRole, EntityStatus status){
+        userHasRole.setState(status);
         userHasRoleRepository.save(userHasRole);
     }
 
-    public void updateUserHasRoleToActive(UserHasRole userHasRole){
-        userHasRole.setState(EntityStatus.ACTIVE);
-        userHasRoleRepository.save(userHasRole);
+    public List<UserHasRole> getUserHasRoleByUserAndState(Long userId, EntityStatus status){
+        return userHasRoleRepository.findByUserIdAndState(userId, status.name());
     }
-
 }

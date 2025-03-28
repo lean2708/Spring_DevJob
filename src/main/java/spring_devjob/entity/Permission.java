@@ -16,7 +16,6 @@ import java.util.Set;
 @Setter
 @Entity
 @SuperBuilder
-@SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor
 @Table(name = "tbl_permission")
 public class Permission extends BaseEntity {

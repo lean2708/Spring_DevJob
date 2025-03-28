@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.SkillRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.SkillResponse;
@@ -82,12 +81,9 @@ public class SkillService {
     }
 
     private void deactivateSkill(Skill skill){
-        skill.getSubscribers().forEach(subHasSkillService::updateJobHasSkillToInactive);
+        subHasSkillService.deleteSubHasSkillBySkill(skill.getId());
 
-        skill.getJobs().forEach(jobHasSkillService::updateJobHasSkillToInactive);
-
-        skill.setState(EntityStatus.INACTIVE);
-        skill.setDeactivatedAt(LocalDate.now());
+        jobHasSkillService.deleteJobHasSkillBySkill(skill.getId());
     }
 
     @Transactional
@@ -99,7 +95,7 @@ public class SkillService {
 
         skillSet.forEach(this::deactivateSkill);
 
-        skillRepository.saveAll(skillSet);
+        skillRepository.deleteAllInBatch(skillSet);
     }
 
     private Skill findActiveSkillById(long id) {
