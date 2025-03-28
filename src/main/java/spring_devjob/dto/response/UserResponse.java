@@ -1,5 +1,6 @@
 package spring_devjob.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.*;
@@ -24,6 +25,8 @@ public class UserResponse extends BaseResponse{
     GenderEnum gender;
     String address;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     EntityBasic company;
+
     Set<EntityBasic> roles;
 }

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,28 +26,33 @@ public class FileController {
 
     private final FileService fileService;
 
+    @PreAuthorize("hasAuthority('UPLOAD_IMAGE')")
     @PostMapping(value = "/upload/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<FileEntity> uploadImage(@RequestParam("fileImage") MultipartFile file) throws IOException, FileException {
         return new ResponseEntity<>(fileService.uploadFile(file, FileType.IMAGE), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('UPLOAD_VIDEO')")
     @PostMapping(value = "/upload/video", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<FileEntity> uploadVideo(@RequestParam("fileVideo") MultipartFile file) throws IOException, FileException {
         return new ResponseEntity<>(fileService.uploadFile(file, FileType.VIDEO), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('UPLOAD_CV')")
     @Operation(summary = "Upload CV", description = "API này để upload file CV (PDF, DOCX)")
     @PostMapping(value = "/upload/cv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<FileEntity> uploadCV(@RequestParam("fileCV") MultipartFile file) throws IOException, FileException {
         return new ResponseEntity<>(fileService.uploadFile(file, FileType.CV), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('GET_ALL_FILES')")
     @GetMapping("/all")
     public ResponseEntity<List<FileEntity>> getAllFiles() {
         return ResponseEntity.ok(fileService.getAllFiles());
     }
 
 
+    @PreAuthorize("hasAuthority('DELETE_FILE')")
     @DeleteMapping("/delete/{publicId}")
     public ResponseEntity<?> delete(@PathVariable String publicId) throws Exception {
         boolean isDeleted = fileService.deleteFile(publicId);

@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.SkillRequest;
@@ -25,6 +26,7 @@ import java.util.Set;
 public class SkillController {
     private final SkillService skillService;
 
+    @PreAuthorize("hasAuthority('CREATE_SKILL')")
     @PostMapping("/skills")
     public ApiResponse<SkillResponse> create(@Valid @RequestBody SkillRequest request){
         return ApiResponse.<SkillResponse>builder()
@@ -34,6 +36,7 @@ public class SkillController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_SKILL_BY_ID')")
     @GetMapping("/skills/{id}")
     public ApiResponse<SkillResponse> fetchSkillById(@Positive(message = "ID phải lớn hơn 0")
                                                          @PathVariable long id){
@@ -44,6 +47,7 @@ public class SkillController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_ALL_SKILLS')")
     @GetMapping("/skills")
     public ApiResponse<PageResponse<SkillResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                  @RequestParam(defaultValue = "1") int pageNo,
@@ -57,6 +61,7 @@ public class SkillController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('UPDATE_SKILL')")
     @PutMapping("/skills/{id}")
     public ApiResponse<SkillResponse> update(@Positive(message = "ID phải lớn hơn 0")
                                                  @PathVariable long id, @RequestBody SkillRequest request){
@@ -67,6 +72,7 @@ public class SkillController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_SKILL')")
     @DeleteMapping("/skills/{id}")
     public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                         @PathVariable long id){
@@ -78,6 +84,7 @@ public class SkillController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_MULTIPLE_SKILLS')")
     @DeleteMapping("/skills")
     public ApiResponse<Void> deleteSkills(@RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                           Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){

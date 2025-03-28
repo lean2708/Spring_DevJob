@@ -1,16 +1,13 @@
 package spring_devjob.service;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.RoleEnum;
 import spring_devjob.dto.request.UserCreationRequest;
 import spring_devjob.dto.request.UserUpdateRequest;
@@ -26,14 +23,13 @@ import spring_devjob.mapper.JobMapper;
 import spring_devjob.mapper.ResumeMapper;
 import spring_devjob.mapper.UserMapper;
 import spring_devjob.repository.*;
-import spring_devjob.repository.history.UserHistoryRepository;
 import spring_devjob.repository.relationship.UserHasRoleRepository;
-import spring_devjob.service.relationship.SavedJobService;
 import spring_devjob.service.relationship.UserHasRoleService;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static redis.clients.jedis.resps.StreamConsumerInfo.INACTIVE;
 
 
 @Slf4j
@@ -46,15 +42,13 @@ public class UserService {
     private final CompanyRepository companyRepository;
     private final RoleRepository roleRepository;
     private final ResumeRepository resumeRepository;
-    private final ReviewRepository reviewRepository;
     private final PageableService pageableService;
     private final UserHasRoleRepository userHasRoleRepository;
     private final UserHasRoleService userHasRoleService;
-    private final SavedJobService savedJobService;
     private final JobRepository jobRepository;
     private final JobMapper jobMapper;
     private final ResumeMapper resumeMapper;
-    private final UserHistoryRepository userHistoryRepository;
+    private final EntityDeactivationService entityDeactivationService;
 
 
     public UserResponse create(UserCreationRequest request){
@@ -69,17 +63,20 @@ public class UserService {
         }
         userRepository.save(user);
 
+        // role user mac dinh
+        Set<UserHasRole> roles = new HashSet<>();
+        roles.add(userHasRoleService.saveUserHasRole(user, RoleEnum.USER));
         if(!CollectionUtils.isEmpty(request.getRoleIds())){
             Set<Role> roleSet = roleRepository.findAllByIdIn(request.getRoleIds());
 
             Set<UserHasRole> userRoles = roleSet.stream()
+                    .filter(role -> !role.getName().equals(RoleEnum.USER.toString()))
                     .map(role -> new UserHasRole(user, role))
                     .collect(Collectors.toSet());
 
-            user.setRoles(new HashSet<>(userHasRoleRepository.saveAll(userRoles)));
-        } else{
-            user.setRoles(Set.of(userHasRoleService.saveUserHasRole(user, RoleEnum.USER)));
+            roles.addAll(userHasRoleRepository.saveAll(userRoles));
         }
+        user.setRoles(roles);
 
        return userMapper.toUserResponse(user);
     }
@@ -91,17 +88,11 @@ public class UserService {
         if(userRepository.existsByPhone(phone)){
             throw new AppException(ErrorCode.PHONE_EXISTED);
         }
-        if(userRepository.existsUserInactiveByEmail(email, EntityStatus.INACTIVE.name()) > 0){
-            throw new AppException(ErrorCode.EMAIL_LOCKED);
+        if(userRepository.countByEmailAndState(email, INACTIVE) > 0){
+            throw new AppException(ErrorCode.EMAIL_DELETED);
         }
-        if(userRepository.existsUserInactiveByPhone(email, EntityStatus.INACTIVE.name()) > 0){
-            throw new AppException(ErrorCode.PHONE_LOCKED);
-        }
-        if(userHistoryRepository.existsByEmail(email)){
-            throw new AppException(ErrorCode.EMAIL_ARCHIVED_IN_HISTORY);
-        }
-        if(userHistoryRepository.existsByPhone(phone)){
-            throw new AppException(ErrorCode.PHONE_ARCHIVED_IN_HISTORY);
+        if(userRepository.countByPhoneAndState(phone, INACTIVE) > 0){
+            throw new AppException(ErrorCode.PHONE_DELETED);
         }
     }
 
@@ -138,40 +129,35 @@ public class UserService {
         }
 
         if(!CollectionUtils.isEmpty(request.getRoleIds())){
-            Set<Role> roleSet = roleRepository.findAllByIdIn(request.getRoleIds());
-
             userHasRoleRepository.deleteByUser(userDB);
 
+            Set<UserHasRole> roles = new HashSet<>();
+            // role user mac dinh
+            roles.add(userHasRoleService.saveUserHasRole(userDB, RoleEnum.USER));
+
+            Set<Role> roleSet = roleRepository.findAllByIdIn(request.getRoleIds());
+
             Set<UserHasRole> userRoles = roleSet.stream()
+                    .filter(role -> !role.getName().equals(RoleEnum.USER.toString()))
                     .map(role -> new UserHasRole(userDB, role))
                     .collect(Collectors.toSet());
 
-            userDB.setRoles(new HashSet<>(userHasRoleRepository.saveAll(userRoles)));
+            roles.addAll(userHasRoleRepository.saveAll(userRoles));
+
+            userDB.setRoles(roles);
         }
+
         return userMapper.toUserResponse(userRepository.save(userDB));
     }
+
 
     @Transactional
     public void delete(long id){
         User userDB = findActiveUserById(id);
 
-        deactivateUser(userDB);
-
-        userRepository.save(userDB);
+        entityDeactivationService.deactivateUser(userDB);
     }
 
-    private void deactivateUser(User user) {
-        resumeRepository.updateAllResumesByUserId(user.getId(), EntityStatus.INACTIVE.name(), LocalDate.now());
-
-        reviewRepository.updateAllReviewsByUserId(user.getId(), EntityStatus.INACTIVE.name(), LocalDate.now());
-
-        user.getRoles().forEach(userHasRoleService::updateUserHasRoleToInactive);
-
-        user.getJobs().forEach(savedJobService::updateUserSavedJobToInactive);
-
-        user.setState(EntityStatus.INACTIVE);
-        user.setDeactivatedAt(LocalDate.now());
-    }
 
     @Transactional
     public void deleteUsers(Set<Long> ids){
@@ -179,34 +165,7 @@ public class UserService {
         if(userSet.isEmpty()){
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        userSet.forEach(this::deactivateUser);
-
-        userRepository.saveAll(userSet);
-    }
-
-    @Transactional
-    public UserResponse restoreUser(long id) {
-        if(userHistoryRepository.existsById(id)){
-            throw new AppException(ErrorCode.USER_ARCHIVED_IN_HISTORY);
-        }
-        User user = userRepository.findUserById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
-        if (user.getState() == EntityStatus.INACTIVE) {
-            resumeRepository.updateAllResumesByUserId(user.getId(), EntityStatus.ACTIVE.name(), null);
-
-            reviewRepository.updateAllReviewsByUserId(user.getId(), EntityStatus.ACTIVE.name(), null);
-
-            user.getRoles().forEach(userHasRoleService::updateUserHasRoleToActive);
-
-            user.getJobs().forEach(savedJobService::updateUserSavedJobToActive);
-
-            user.setState(EntityStatus.ACTIVE);
-            user.setDeactivatedAt(null);
-            return userMapper.toUserResponse(userRepository.save(user));
-        }else {
-            throw new AppException(ErrorCode.USER_ALREADY_ACTIVE);
-        }
+        userSet.forEach(entityDeactivationService::deactivateUser);
     }
 
     public PageResponse<JobResponse> getAllAppliedJobsByUser(int pageNo, int pageSize, String sortBy, long userId){

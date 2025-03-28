@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.constants.ApplicationStatusEnum;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.entity.Job;
 import spring_devjob.entity.Resume;
 
@@ -15,11 +16,16 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @SQLRestriction("state = 'ACTIVE'")
-@SuperBuilder
 @NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @Entity
 @Table(name = "tbl_job_has_resume")
-public class JobHasResume extends RelationBaseEntity {
+public class JobHasResume {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    long id;
 
     @ManyToOne
     @JoinColumn(name = "resume_id", nullable = false)
@@ -34,10 +40,24 @@ public class JobHasResume extends RelationBaseEntity {
 
     LocalDate appliedAt;
 
-    public JobHasResume( Job job, Resume resume) {
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false)
+    EntityStatus state;
+
+    @PrePersist
+    public void prePersist() {
+        if (state == null) {
+            this.state = EntityStatus.ACTIVE;
+        }
+    }
+
+    public JobHasResume(Job job, Resume resume) {
         this.resume = resume;
         this.job = job;
         this.applicationStatus = ApplicationStatusEnum.PENDING;
         this.appliedAt = LocalDate.now();
     }
+
+
+
 }

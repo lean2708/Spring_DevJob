@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.LevelEnum;
 import spring_devjob.entity.relationship.JobHasResume;
 import spring_devjob.entity.relationship.JobHasSkill;
@@ -18,9 +19,9 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@SQLRestriction("state = 'ACTIVE'")
 @Entity
 @SuperBuilder
-@SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor
 @Table(name = "tbl_job")
 public class Job extends BaseEntity {
@@ -39,8 +40,12 @@ public class Job extends BaseEntity {
     LocalDate endDate;
     boolean jobStatus = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false)
+    EntityStatus state;
+
     @ManyToOne
-    @JoinColumn(name = "company_id")
+    @JoinColumn(name = "company_id", nullable = false)
     Company company;
 
     @OneToMany(mappedBy = "job")
@@ -52,4 +57,11 @@ public class Job extends BaseEntity {
 
     @OneToMany(mappedBy = "job")
     Set<UserSavedJob> users = new HashSet<>();
+
+    @PrePersist
+    public void prePersist() {
+        if (state == null) {
+            this.state = EntityStatus.ACTIVE;
+        }
+    }
 }

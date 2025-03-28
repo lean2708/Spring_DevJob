@@ -1,6 +1,7 @@
 package spring_devjob.controller;
 
 import com.nimbusds.jose.JOSEException;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,8 @@ public class AuthController {
     private final AuthService authService;
     private final AccountRecoveryService accountRecoveryService;
 
+    @Operation(summary = "Login Google",
+            description = "API này được sử dụng để login với Google")
     @PostMapping("/google")
     ApiResponse<TokenResponse> authenticateWithGoogle(@RequestParam("code") String code) throws JOSEException {
         var result = authService.authenticateWithGoogle(code);
@@ -66,8 +69,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh-token")
-    public ApiResponse<TokenResponse> refreshToken(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
-        log.info("Received refresh token: {}", request.getRefreshToken());
+    public ApiResponse<TokenResponse> refreshToken(@Valid @RequestBody RefreshRequest request) throws ParseException, JOSEException {log.info("Received refresh token: {}", request.getRefreshToken());
         return ApiResponse.<TokenResponse>builder()
                 .code(HttpStatus.OK.value())
                 .result(authService.refreshToken(request))
@@ -75,6 +77,8 @@ public class AuthController {
                 .build();
     }
 
+    @Operation(summary = "Change Password",
+            description = "API này được sử dụng để thay đổi password khi user đã đăng nhập")
     @PostMapping("/change-password")
     public ApiResponse<UserResponse> changePassword(@Valid @RequestBody ChangePasswordRequest request){
         authService.changePassword(request.getOldPassword(), request.getNewPassword());
@@ -95,6 +99,8 @@ public class AuthController {
                 .build();
     }
 
+    @Operation(summary = "Forgot Password",
+            description = "API này được sử dụng để quên mật khẩu")
     @PostMapping("/forgot-password")
     public ApiResponse<VerificationCodeEntity> forgotPassword(@Valid @RequestBody EmailRequest request) {
         return ApiResponse.<VerificationCodeEntity>builder()
@@ -122,6 +128,9 @@ public class AuthController {
                 .build();
     }
 
+
+    @Operation(summary = "Recover Account",
+            description = "API này được sử dụng để khôi phục tài khoản")
     @PostMapping("/recover-account")
     public ApiResponse<VerificationCodeEntity> recoverAccount(@Valid @RequestBody EmailRequest request) {
         return ApiResponse.<VerificationCodeEntity>builder()

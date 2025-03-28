@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.PaymentCallbackRequest;
@@ -31,6 +32,7 @@ public class SubscriberController {
     @Operation(summary = "Create VNPay payment URL",
             description = "API này tạo URL thanh toán VNPay dựa trên gói premium mà người dùng chọn. " +
                     "Người dùng có thể chọn một trong các gói: 1-month|3-month|6-month|12-month")
+    @PreAuthorize("hasAuthority('CREATE_VNPAY_PAYMENT_URL')")
     @GetMapping("/subscribers/vn-pay")
     public ApiResponse<VNPayResponse> pay(@NotBlank(message = "premiumType không được để trống")
                                               @Pattern(regexp = "^(1-month|3-month|6-month|12-month)$", message = "premiumType chỉ được là: 1-month, 3-month, 6-month, 12-month")
@@ -43,6 +45,7 @@ public class SubscriberController {
     @Operation(summary = "VNPay payment callback",
             description = "API này xử lý phản hồi từ VNPay sau khi thanh toán. Nếu mã phản hồi là '00', trạng thái tài khoản của người dùng sẽ được cập nhật lên Pro. " +
                     "Nếu mã phản hồi khác, thanh toán sẽ bị coi là thất bại.")
+    @PreAuthorize("hasAuthority('VNPAY_PAYMENT_CALLBACK')")
     @PostMapping("/subscribers/vn-pay-callback")
     public ApiResponse<SubscriberResponse> payCallbackHandler(@Valid @RequestBody PaymentCallbackRequest request) {
         String status = request.getResponseCode();
@@ -56,6 +59,7 @@ public class SubscriberController {
         }
     }
 
+    @PreAuthorize("hasAuthority('CHECK_PRO_STATUS')")
     @GetMapping("/subscribers/pro-status")
     public ApiResponse<SubscriberResponse> checkProStatus(HttpServletRequest request){
         return ApiResponse.<SubscriberResponse>builder()
@@ -65,6 +69,7 @@ public class SubscriberController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_SUBSCRIBER_BY_ID')")
     @GetMapping("/subscribers/{id}")
     public ApiResponse<SubscriberResponse> fetchById(@PathVariable long id){
         return ApiResponse.<SubscriberResponse>builder()
@@ -74,6 +79,7 @@ public class SubscriberController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_ALL_SUBSCRIBERS')")
     @GetMapping("/subscribers")
     public ApiResponse<PageResponse<SubscriberResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                       @RequestParam(defaultValue = "1") int pageNo,
@@ -87,6 +93,7 @@ public class SubscriberController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_SUBSCRIBER_BY_ID')")
     @DeleteMapping("/subscribers/{id}")
     public ApiResponse<Void> delete(@PathVariable long id){
         subscriberService.delete(id);
@@ -97,6 +104,7 @@ public class SubscriberController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_SUBSCRIBERS')")
     @DeleteMapping("/subscribers")
     public ApiResponse<Void> deleteSubscribers(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                                Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){

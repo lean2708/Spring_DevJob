@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.stereotype.Service;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.TokenType;
 import spring_devjob.dto.request.EmailRequest;
 import spring_devjob.dto.request.ResetPasswordRequest;
@@ -20,7 +19,6 @@ import spring_devjob.exception.ErrorCode;
 import spring_devjob.repository.ForgotPasswordTokenRepository;
 import spring_devjob.repository.UserRepository;
 import spring_devjob.repository.VerificationCodeRepository;
-import spring_devjob.repository.history.UserHistoryRepository;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
@@ -36,8 +34,7 @@ public class AccountRecoveryService {
     private final PasswordEncoder passwordEncoder;
     private final ForgotPasswordTokenRepository forgotPasswordTokenRepository;
     private final TokenService tokenService;
-    private final UserHistoryRepository userHistoryRepository;
-    private final RedisTokenService userCacheDataService;
+    private final RestoreService restoreService;
 
     @Value("${jwt.reset.expiry-in-minutes}")
     protected long resetTokenExpiration;
@@ -123,15 +120,12 @@ public class AccountRecoveryService {
     }
 
     public VerificationCodeEntity recoverAccount(String email) {
-        if(userHistoryRepository.existsByEmail(email)){
-            throw new AppException(ErrorCode.USER_ARCHIVED_IN_HISTORY);
-        }
-        User user = userRepository.findUserByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
-        if (user.getState() == EntityStatus.ACTIVE) {
+        if(userRepository.existsByEmail(email)){
             throw new AppException(ErrorCode.USER_ALREADY_ACTIVE);
         }
+
+        User user = userRepository.findUserByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         String verificationCode = generateVerificationCode();
         try {
@@ -164,9 +158,7 @@ public class AccountRecoveryService {
         User user = userRepository.findUserByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        user.setState(EntityStatus.ACTIVE);
-        user.setDeactivatedAt(null);
-        userRepository.save(user);
+        restoreService.restoreUser(user.getId());
 
         verificationCodeRepository.delete(verificationCodeEntity);
     }

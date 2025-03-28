@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.response.ApiResponse;
@@ -24,6 +25,7 @@ public class PermissionController {
 
     private final PermissionService permissionService;
 
+    @PreAuthorize("hasAuthority('FETCH_PERMISSION_BY_ID')")
     @GetMapping("/permissions/{id}")
     public ApiResponse<PermissionResponse> fetchRoleById(@Positive(message = "ID phải lớn hơn 0")
                                                              @PathVariable long id){
@@ -34,6 +36,7 @@ public class PermissionController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_ALL_PERMISSIONS')")
     @GetMapping("/permissions")
     public ApiResponse<PageResponse<PermissionResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                       @RequestParam(defaultValue = "1") int pageNo,

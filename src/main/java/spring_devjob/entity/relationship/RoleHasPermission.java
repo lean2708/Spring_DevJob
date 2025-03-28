@@ -3,8 +3,8 @@ package spring_devjob.entity.relationship;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.entity.Permission;
 import spring_devjob.entity.Role;
 
@@ -12,11 +12,16 @@ import spring_devjob.entity.Role;
 @Getter
 @Setter
 @SQLRestriction("state = 'ACTIVE'")
-@Builder
 @NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @Entity
 @Table(name = "tbl_role_has_permission")
-public class RoleHasPermission extends RelationBaseEntity {
+public class RoleHasPermission {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    long id;
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)

@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.RoleRequest;
@@ -28,6 +29,7 @@ public class RoleController {
 
     private final RoleService roleService;
 
+    @PreAuthorize("hasAuthority('CREATE_ROLE')")
     @PostMapping("/roles")
     public ApiResponse<RoleResponse> create(@Valid @RequestBody RoleRequest request){
         return ApiResponse.<RoleResponse>builder()
@@ -37,6 +39,7 @@ public class RoleController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_ROLE_BY_ID')")
     @GetMapping("/roles/{id}")
     public ApiResponse<RoleResponse> fetchRoleById(@Positive(message = "ID phải lớn hơn 0")
                                                        @PathVariable long id){
@@ -47,6 +50,7 @@ public class RoleController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_ALL_ROLES')")
     @GetMapping("/roles")
     public ApiResponse<PageResponse<RoleResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                 @RequestParam(defaultValue = "1") int pageNo,
@@ -60,6 +64,7 @@ public class RoleController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('UPDATE_ROLE')")
     @PutMapping("/roles/{id}")
     public ApiResponse<RoleResponse> update(@Positive(message = "ID phải lớn hơn 0")
                                             @PathVariable long id, @RequestBody RoleRequest request){
@@ -70,6 +75,7 @@ public class RoleController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_ROLE')")
     @DeleteMapping("/roles/{id}")
     public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                     @PathVariable long id){
@@ -81,6 +87,7 @@ public class RoleController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_MULTIPLE_ROLES')")
     @DeleteMapping("/roles")
     public ApiResponse<Void> deleteRoles(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                          Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){

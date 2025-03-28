@@ -13,11 +13,15 @@ import spring_devjob.entity.Skill;
 @Getter
 @Setter
 @SQLRestriction("state = 'ACTIVE'")
-@SuperBuilder
 @NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @Entity
 @Table(name = "tbl_job_has_skill")
-public class JobHasSkill extends RelationBaseEntity{
+public class JobHasSkill {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    long id;
 
     @ManyToOne
     @JoinColumn(name = "job_id", nullable = false)
@@ -26,6 +30,17 @@ public class JobHasSkill extends RelationBaseEntity{
     @ManyToOne
     @JoinColumn(name = "skill_id", nullable = false)
     Skill skill;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false)
+    EntityStatus state;
+
+    @PrePersist
+    public void prePersist() {
+        if (state == null) {
+            this.state = EntityStatus.ACTIVE;
+        }
+    }
 
     public JobHasSkill(Job job, Skill skill) {
         this.job = job;
