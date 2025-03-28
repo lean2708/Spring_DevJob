@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.CompanyRequest;
 import spring_devjob.dto.response.*;
 import spring_devjob.entity.*;
@@ -26,14 +25,14 @@ import spring_devjob.repository.ReviewRepository;
 import spring_devjob.repository.UserRepository;
 import spring_devjob.repository.criteria.JobSearchCriteriaQueryConsumer;
 import spring_devjob.repository.criteria.SearchCriteria;
-import spring_devjob.repository.history.CompanyHistoryRepository;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static spring_devjob.constants.EntityStatus.INACTIVE;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -41,13 +40,12 @@ import java.util.regex.Pattern;
 public class CompanyService {
     private final CompanyRepository companyRepository;
     private final CompanyMapper companyMapper;
-    private final UserRepository userRepository;
+    private final EntityDeactivationService entityDeactivationService;
     private final JobRepository jobRepository;
     private final PageableService pageableService;
     private final ReviewRepository reviewRepository;
     private final ReviewMapper reviewMapper;
     private final JobMapper jobMapper;
-    private final CompanyHistoryRepository companyHistoryRepository;
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -55,9 +53,7 @@ public class CompanyService {
         if(companyRepository.existsByName(request.getName())){
             throw new AppException(ErrorCode.COMPANY_EXISTED);
         }
-        if(companyRepository.existsInactiveCompanyByName(EntityStatus.INACTIVE.name(), request.getName()) > 0){
-            throw new AppException(ErrorCode.COMPANY_LOCKED);
-        }
+
         Company company = companyMapper.toCompany(request);
 
         return companyMapper.toCompanyResponse(companyRepository.save(company));
@@ -97,21 +93,8 @@ public class CompanyService {
     public void delete(long id){
         Company companyDB = findActiveCompanyById(id);
 
-        deactivateCompany(companyDB);
+        entityDeactivationService.deactivateCompany(companyDB);
 
-        companyRepository.save(companyDB);
-    }
-
-    private void deactivateCompany(Company company){
-        company.getUsers().forEach(user -> user.setCompany(null));
-        userRepository.saveAll(company.getUsers());
-
-        jobRepository.updateAllJobsByCompanyId(company.getId(), EntityStatus.INACTIVE.name(), LocalDate.now());
-
-        reviewRepository.updateAllReviewsByCompanyId(company.getId(), EntityStatus.INACTIVE.name(), LocalDate.now());
-
-        company.setState(EntityStatus.INACTIVE);
-        company.setDeactivatedAt(LocalDate.now());
     }
 
     @Transactional
@@ -120,31 +103,10 @@ public class CompanyService {
         if(companySet.isEmpty()){
             throw new AppException(ErrorCode.COMPANY_NOT_FOUND);
         }
-        companySet.forEach(this::deactivateCompany);
-
-        companyRepository.saveAll(companySet);
+        companySet.forEach(entityDeactivationService::deactivateCompany);
     }
 
-    @Transactional
-    public CompanyResponse restoreCompany(long id) {
-        if(companyHistoryRepository.existsById(id)){
-            throw new AppException(ErrorCode.COMPANY_ARCHIVED_IN_HISTORY);
-        }
-        Company company = companyRepository.findCompanyById(id).
-                orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
 
-        if (company.getState() == EntityStatus.INACTIVE) {
-            jobRepository.updateAllJobsByCompanyId(company.getId(), EntityStatus.INACTIVE.name(), null);
-
-            reviewRepository.updateAllReviewsByCompanyId(company.getId(), EntityStatus.ACTIVE.name(), null);
-
-            company.setState(EntityStatus.ACTIVE);
-            company.setDeactivatedAt(null);
-            return companyMapper.toCompanyResponse(companyRepository.save(company));
-        }else {
-            throw new AppException(ErrorCode.COMPANY_ALREADY_ACTIVE);
-        }
-    }
 
     public PageResponse<CompanyResponse> searchCompany(int pageNo, int pageSize, String sortBy, List<String> search){
         pageNo = pageNo - 1;
@@ -248,6 +210,10 @@ public class CompanyService {
                 .totalItems(jobPage.getTotalElements())
                 .items(jobMapper.toJobResponseList(jobPage.getContent()))
                 .build();
+    }
+
+    public PageResponse<CompanyResponse> getTopRatedCompanies(int pageNo, int pageSize, double rating){
+        return searchCompany(pageNo, pageSize, "rating-desc", List.of("rating>=" + rating));
     }
 
     public PageResponse<ReviewResponse> getReviewsByCompany(int pageNo, int pageSize, String sortBy, long companyId) {

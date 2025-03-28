@@ -17,7 +17,6 @@ import java.util.Set;
 @Setter
 @Entity
 @SuperBuilder
-@SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor
 @Table(name = "tbl_subscriber")
 public class Subscriber extends BaseEntity {

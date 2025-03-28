@@ -1,6 +1,6 @@
 
-
 services:
+
   mysql-devjob:
     image: mysql:8.0.41-debian
     container_name: mysql-devjob
@@ -27,6 +27,7 @@ services:
     image: redis:6.2-alpine
     container_name: redis-devjob
     hostname: redis-devjob
+    restart: unless-stopped
     ports:
       - '6379:6379'
     environment:

@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLRestriction;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.service.AuthService;
 
 import java.time.LocalDate;
@@ -18,8 +19,8 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@SuperBuilder
 @SQLRestriction("state = 'ACTIVE'")
+@SuperBuilder
 @NoArgsConstructor
 @Table(name = "tbl_company")
 public class Company extends BaseEntity {
@@ -31,10 +32,14 @@ public class Company extends BaseEntity {
     String logoUrl;
 
     @Column(nullable = false)
-    double averageRating = 0.0;
+    double averageRating;
 
     @Column(nullable = false)
-    int totalReviews = 0;
+    int totalReviews;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false)
+    EntityStatus state;
 
 
     @OneToMany( mappedBy = "company", fetch = FetchType.LAZY)
@@ -50,4 +55,10 @@ public class Company extends BaseEntity {
     Set<Review> reviews = new HashSet<>();
 
 
+    @PrePersist
+    public void prePersist() {
+        if (state == null) {
+            this.state = EntityStatus.ACTIVE;
+        }
+    }
 }

@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.entity.Company;
 import spring_devjob.entity.Job;
 import spring_devjob.entity.Resume;
@@ -27,11 +26,15 @@ public interface JobRepository extends JpaRepository<Job,Long> {
 
     Set<Job> findAllByIdIn(Set<Long> ids);
 
-    @Query("SELECT COUNT(j) > 0 FROM Job j WHERE j.name = :name AND j.company.id = :companyId")
-    boolean existsByNameAndCompanyId(@Param("name") String name, @Param("companyId") Long companyId);
-
     @Query(value = "SELECT * FROM tbl_job WHERE id = :id", nativeQuery = true)
     Optional<Job> findJobById(@Param("id") Long id);
+
+    @Query(value = "SELECT * FROM tbl_job WHERE company_id = :companyId AND state = :state",
+            nativeQuery = true)
+    List<Job> findJobsByCompanyIdAndState(@Param("companyId") Long companyId, @Param("state") String state);
+
+    @Query("SELECT COUNT(j) > 0 FROM Job j WHERE j.name = :name AND j.company.id = :companyId")
+    boolean existsByNameAndCompanyId(@Param("name") String name, @Param("companyId") Long companyId);
 
     @Modifying
     @Query("UPDATE Job j SET j.jobStatus = false WHERE j.endDate < :currentDate AND j.jobStatus = true")
@@ -43,15 +46,4 @@ public interface JobRepository extends JpaRepository<Job,Long> {
     Page<Job> findAllByResumesIn(@Param("resumes") Set<Resume> resumes, Pageable pageable);
 
 
-    @Modifying
-    @Query(value = "SELECT * FROM tbl_job t WHERE t.state = :state AND t.deactivated_at < :date", nativeQuery = true)
-    List<Job> findInactiveJobsBeforeDate(@Param("state") String state, @Param("date") LocalDate date);
-
-    @Modifying
-    @Query(value = "UPDATE tbl_job j " +
-            "SET j.state = :state, j.deactivated_at = :deactivatedAt " +
-            "WHERE j.company_id= :companyId", nativeQuery = true)
-    int updateAllJobsByCompanyId(@Param("companyId") Long companyId,
-                                           @Param("state") String state,
-                                           @Param("deactivatedAt") LocalDate deactivatedAt);
 }

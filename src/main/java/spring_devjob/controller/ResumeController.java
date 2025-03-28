@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.ResumeRequest;
@@ -16,6 +17,7 @@ import spring_devjob.dto.request.UpdateCVStatusRequest;
 import spring_devjob.dto.response.ApiResponse;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ResumeResponse;
+import spring_devjob.service.RestoreService;
 import spring_devjob.service.ResumeService;
 
 import java.util.List;
@@ -28,7 +30,9 @@ import java.util.Set;
 @RestController
 public class ResumeController {
     private final ResumeService resumeService;
+    private final RestoreService restoreService;
 
+    @PreAuthorize("hasAuthority('CREATE_RESUME')")
     @PostMapping("/resumes")
     public ApiResponse<ResumeResponse> create(@Valid @RequestBody ResumeRequest request){
         return ApiResponse.<ResumeResponse>builder()
@@ -38,6 +42,7 @@ public class ResumeController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_RESUME_BY_ID')")
     @GetMapping("/resumes/{id}")
     public ApiResponse<ResumeResponse> fetchResume(@Positive(message = "ID phải lớn hơn 0")
                                                        @PathVariable long id){
@@ -48,6 +53,7 @@ public class ResumeController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_ALL_RESUMES')")
     @GetMapping("/resumes")
     public ApiResponse<PageResponse<ResumeResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                   @RequestParam(defaultValue = "1") int pageNo,
@@ -61,6 +67,7 @@ public class ResumeController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('UPDATE_RESUME')")
     @PutMapping("/resumes/{id}")
     public ApiResponse<ResumeResponse> update(@Positive(message = "ID phải lớn hơn 0")
                                                   @PathVariable long id, @RequestBody ResumeRequest request){
@@ -71,6 +78,7 @@ public class ResumeController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_RESUME')")
     @DeleteMapping("/resumes/{id}")
     public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                         @PathVariable long id){
@@ -81,6 +89,8 @@ public class ResumeController {
                 .result(null)
                 .build();
     }
+
+    @PreAuthorize("hasAuthority('DELETE_MULTIPLE_RESUMES')")
     @DeleteMapping("/resumes")
     public ApiResponse<Void> deleteResumes(@RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                            Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
@@ -94,13 +104,14 @@ public class ResumeController {
 
     @Operation(summary = "Restore a deleted resume",
             description = "API này để khôi phục resume đã xóa trước đó")
+    @PreAuthorize("hasAuthority('RESTORE_RESUME')")
     @PatchMapping("/resumes/{id}/restore")
     public ApiResponse<ResumeResponse> restoreResume(@Positive(message = "ID phải lớn hơn 0")
                                                      @PathVariable long id) {
         return ApiResponse.<ResumeResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Restore Resume By Id")
-                .result(resumeService.restoreResume(id))
+                .result(restoreService.restoreResume(id))
                 .build();
     }
 

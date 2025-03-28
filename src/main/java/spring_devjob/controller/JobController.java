@@ -10,12 +10,15 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.JobRequest;
+import spring_devjob.dto.request.JobUpdateRequest;
 import spring_devjob.dto.request.UpdateCVStatusRequest;
 import spring_devjob.dto.response.*;
 import spring_devjob.service.JobService;
+import spring_devjob.service.RestoreService;
 import spring_devjob.service.ResumeService;
 import spring_devjob.service.relationship.JobHasResumeService;
 
@@ -30,7 +33,9 @@ import java.util.Set;
 public class JobController {
     private final JobService jobService;
     private final JobHasResumeService jobHasResumeService;
+    private final RestoreService restoreService;
 
+    @PreAuthorize("hasAuthority('CREATE_JOB')")
     @PostMapping("/jobs")
     public ApiResponse<JobResponse> create(@Valid @RequestBody JobRequest request){
         return ApiResponse.<JobResponse>builder()
@@ -40,6 +45,7 @@ public class JobController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_JOB_BY_ID')")
     @GetMapping("/jobs/{id}")
     public ApiResponse<JobResponse> fetchJob(@Positive(message = "ID phải lớn hơn 0") @PathVariable long id){
         return ApiResponse.<JobResponse>builder()
@@ -49,6 +55,7 @@ public class JobController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_ALL_JOBS')")
     @GetMapping("/jobs")
     public ApiResponse<PageResponse<JobResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                @RequestParam(defaultValue = "1") int pageNo,
@@ -62,9 +69,10 @@ public class JobController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('UPDATE_JOB')")
     @PutMapping("/jobs/{id}")
     public ApiResponse<JobResponse> update(@Positive(message = "ID phải lớn hơn 0")
-                                               @PathVariable long id, @RequestBody JobRequest request){
+                                               @PathVariable long id, @RequestBody JobUpdateRequest request){
         return ApiResponse.<JobResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Update job By Id")
@@ -72,6 +80,7 @@ public class JobController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_JOB')")
     @DeleteMapping("/jobs/{id}")
     public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
                                         @PathVariable long id){
@@ -83,6 +92,7 @@ public class JobController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_MULTIPLE_JOBS')")
     @DeleteMapping("/jobs")
     public ApiResponse<Void> deleteJobs(@RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                         Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
@@ -93,19 +103,22 @@ public class JobController {
                 .result(null)
                 .build();
     }
+
     @Operation(summary = "Restore Job",
-            description = "API này để khôi phục trạng thái của Job từ INACTIVE về ACTIVE.")
+            description = "API này để khôi phục trạng thái của Job từ INACTIVE về ACTIVE")
+    @PreAuthorize("hasAuthority('RESTORE_JOB')")
     @PatchMapping("/jobs/{id}/restore")
     public ApiResponse<JobResponse> restoreJob(@Positive(message = "ID phải lớn hơn 0") @PathVariable long id) {
         return ApiResponse.<JobResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Khôi phục Job thành công")
-                .result(jobService.restoreJob(id))
+                .result(restoreService.restoreJob(id))
                 .build();
     }
 
     @Operation(summary = "Fetch Jobs By Skills",
     description = "API này để lấy danh sách job theo field và skill name (với giá trị của search: field~value hoặc field>value hoặc field<value)")
+    @PreAuthorize("hasAuthority('SEARCH_JOBS_BY_SKILLS')")
     @GetMapping("/jobs/search-by-skills")
     public ApiResponse<PageResponse<JobResponse>> fetchAllBySkills(@RequestParam(defaultValue = "1") int pageNo,
                                                            @RequestParam(defaultValue = "10") int pageSize,
@@ -122,6 +135,7 @@ public class JobController {
 
     @Operation(summary = "Get resumes for a specific job",
     description = "API này để lấy tất cả cv của một job")
+    @PreAuthorize("hasAuthority('FETCH_RESUMES_BY_JOB')")
     @GetMapping("/jobs/{jobId}/resumes")
     public ApiResponse<PageResponse<ResumeResponse>> getResumesByJob(@RequestParam(defaultValue = "1") int pageNo,
                                                                      @RequestParam(defaultValue = "10") int pageSize,
@@ -138,7 +152,8 @@ public class JobController {
 
     @Operation(summary = "Resume applied to the job",
             description = "API này để nộp CV vào Job")
-    @PostMapping("/jobs/{jobId}/resumes/{resumeId}")
+    @PreAuthorize("hasAuthority('APPLY_RESUME_TO_JOB')")
+    @PostMapping("/jobs/{jobId}/applications/{resumeId}")
     public ApiResponse<ApplyResponse> applyResume(@Positive(message = "jobId phải lớn hơn 0") @PathVariable(value = "jobId") Long jobId,
                                                   @Positive(message = "resumeId phải lớn hơn 0")  @PathVariable(value = "resumeId") Long resumeId){
         return ApiResponse.<ApplyResponse>builder()
@@ -151,6 +166,7 @@ public class JobController {
 
     @Operation(summary = "Update CV status",
             description = "API này để cập nhật trạng thái của CV cho một công việc cụ thể (HR duyệt CV)")
+    @PreAuthorize("hasAuthority('UPDATE_CV_STATUS')")
     @PatchMapping("/jobs/{jobId}/resumes/{resumeId}/status")
     public ApiResponse<Void> updateCVStatus(@PathVariable Long jobId,
                                             @PathVariable Long resumeId,

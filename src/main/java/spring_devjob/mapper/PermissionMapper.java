@@ -3,6 +3,7 @@ package spring_devjob.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.mapstruct.NullValueCheckStrategy;
 import spring_devjob.dto.basic.EntityBasic;
 import spring_devjob.dto.response.PermissionResponse;
 import spring_devjob.entity.Permission;
@@ -10,7 +11,7 @@ import spring_devjob.entity.relationship.RoleHasPermission;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
 public interface PermissionMapper {
 
     PermissionResponse toPermissionResponse(Permission permission);

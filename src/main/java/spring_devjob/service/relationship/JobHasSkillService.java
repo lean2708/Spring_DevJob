@@ -7,6 +7,8 @@ import spring_devjob.constants.EntityStatus;
 import spring_devjob.entity.relationship.JobHasSkill;
 import spring_devjob.repository.relationship.JobHasSkillRepository;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -14,14 +16,19 @@ public class JobHasSkillService {
 
     private final JobHasSkillRepository jobHasSkillRepository;
 
-    public void updateJobHasSkillToInactive(JobHasSkill JobHasSkill){
-        JobHasSkill.setState(EntityStatus.INACTIVE);
+    public void updateJobHasSkill(JobHasSkill JobHasSkill, EntityStatus status){
+        JobHasSkill.setState(status);
         jobHasSkillRepository.save(JobHasSkill);
     }
 
-    public void updateJobHasSkillToActive(JobHasSkill JobHasSkill){
-        JobHasSkill.setState(EntityStatus.ACTIVE);
-        jobHasSkillRepository.save(JobHasSkill);
+    public List<JobHasSkill> getJobHasSkillByJobAndState(Long jobId, EntityStatus status){
+        return jobHasSkillRepository.findByJobIdAndState(jobId, status.name());
+    }
+
+    public void deleteJobHasSkillBySkill(long skillId){
+        List<JobHasSkill> jobHasSkillList = jobHasSkillRepository.findBySkillId(skillId);
+
+        jobHasSkillRepository.deleteAll(jobHasSkillList);
     }
 
 }

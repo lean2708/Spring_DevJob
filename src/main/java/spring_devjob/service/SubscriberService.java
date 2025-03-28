@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import spring_devjob.config.VNPAYConfig;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.PaymentConstants;
 import spring_devjob.constants.RoleEnum;
 import spring_devjob.dto.request.PaymentCallbackRequest;
@@ -163,7 +162,7 @@ public class SubscriberService {
     }
 
     public SubscriberResponse fetchById(long id){
-        Subscriber subscriberDB = findActiveSubById(id);
+        Subscriber subscriberDB = findSubById(id);
 
         return subscriberMapper.toSubscriberResponse(subscriberDB);
     }
@@ -192,7 +191,7 @@ public class SubscriberService {
 
     @Transactional
     public void delete(long id){
-        Subscriber subscriberDB = findActiveSubById(id);
+        Subscriber subscriberDB = findSubById(id);
 
         deactivateSub(subscriberDB);
 
@@ -200,10 +199,15 @@ public class SubscriberService {
     }
 
     private void deactivateSub(Subscriber subscriber){
-        subscriber.getSkills().forEach(subHasSkillService::updateJobHasSkillToInactive);
+        subHasSkillService.deleteSubHasSkillBySub(subscriber.getId());
 
-        subscriber.setState(EntityStatus.INACTIVE);
-        subscriber.setDeactivatedAt(LocalDate.now());
+        User userDB = userRepository.findByEmail(subscriber.getEmail()).
+                orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        roleRepository.findByName(RoleEnum.PRO.name())
+                .ifPresent(role -> userHasRoleRepository.deleteByUserAndRole(userDB, role));
+
+        subscriberRepository.delete(subscriber);
     }
 
     @Transactional
@@ -218,7 +222,7 @@ public class SubscriberService {
         subscriberRepository.deleteAllInBatch(subscriberSet);
     }
 
-    private Subscriber findActiveSubById(long id) {
+    public Subscriber findSubById(long id) {
         return subscriberRepository.findById(id)
                 .orElseThrow(()->new AppException(ErrorCode.USER_NOT_REGISTERED));
     }
@@ -231,13 +235,15 @@ public class SubscriberService {
 
         for (Subscriber subscriber : subscriberList) {
             if(subscriber.getExpiryDate() != null && subscriber.getExpiryDate().isBefore(currentDate)){
-                subscriberRepository.delete(subscriber);
+                subHasSkillService.deleteSubHasSkillBySub(subscriber.getId());
 
                 User userDB = userRepository.findByEmail(subscriber.getEmail()).
                         orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
                 roleRepository.findByName(RoleEnum.PRO.name())
                         .ifPresent(role -> userHasRoleRepository.deleteByUserAndRole(userDB, role));
+
+                subscriberRepository.delete(subscriber);
             }
         }
     }

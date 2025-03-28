@@ -1,16 +1,14 @@
 package spring_devjob.mapper;
 
 import org.mapstruct.*;
+import org.springframework.context.annotation.DependsOn;
 import spring_devjob.dto.request.ResumeRequest;
 import spring_devjob.dto.response.ResumeResponse;
-import spring_devjob.dto.response.ReviewResponse;
 import spring_devjob.entity.Resume;
-import spring_devjob.entity.Review;
-import spring_devjob.entity.history.ResumeHistory;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {JobMapper.class})
+@Mapper(componentModel = "spring",nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS, uses = {JobMapper.class})
 public interface ResumeMapper {
     @Mapping(target = "user", ignore = true)
     Resume toResume(ResumeRequest request);
@@ -20,11 +18,7 @@ public interface ResumeMapper {
 
     List<ResumeResponse> toResumeResponseList(List<Resume> resumes);
 
-    ResumeHistory toResumeHistory(Resume resume);
-
-    List<ResumeHistory> toResumeHistoryList(List<Resume> resumes);
 
     @Mapping(target = "user", ignore = true)
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateResume(@MappingTarget Resume resume, ResumeRequest request);
 }

@@ -22,6 +22,7 @@ import spring_devjob.service.PageableService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -42,11 +43,7 @@ public class SavedJobService {
         User user = userRepository.findByEmail(authService.getCurrentUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        userSavedJobRepository.save(UserSavedJob.builder()
-                .user(user)
-                .job(job)
-                .savedAt(LocalDate.now())
-                .build());
+        userSavedJobRepository.save(new UserSavedJob(job, user));
     }
 
     public PageResponse<JobResponse> getSavedJobs(int pageNo, int pageSize, String sortBy) {
@@ -85,13 +82,16 @@ public class SavedJobService {
         userSavedJobRepository.delete(userHasJob);
     }
 
-    public void updateUserSavedJobToInactive(UserSavedJob userSavedJob){
-        userSavedJob.setState(EntityStatus.INACTIVE);
-        userSavedJobRepository.save(userSavedJob);
-    }
-    public void updateUserSavedJobToActive(UserSavedJob userSavedJob){
-        userSavedJob.setState(EntityStatus.ACTIVE);
+    public void updateUserSavedJob(UserSavedJob userSavedJob, EntityStatus status){
+        userSavedJob.setState(status);
         userSavedJobRepository.save(userSavedJob);
     }
 
+    public List<UserSavedJob> getUserSavedJobByJobAndState(Long jobId, EntityStatus status){
+        return userSavedJobRepository.findByJobIdAndState(jobId, status.name());
+    }
+
+    public List<UserSavedJob> getUserSavedJobByUserAndState(Long userId, EntityStatus status){
+        return userSavedJobRepository.findByUserIdAndState(userId, status.name());
+    }
 }

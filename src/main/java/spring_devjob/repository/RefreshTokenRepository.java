@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 import spring_devjob.entity.RefreshToken;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {

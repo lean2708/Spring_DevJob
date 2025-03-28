@@ -18,7 +18,6 @@ import java.util.Set;
 @Entity
 @SuperBuilder
 @NoArgsConstructor
-@SQLRestriction("state = 'ACTIVE'")
 @Table(name = "tbl_role")
 public class Role extends BaseEntity {
     @Column(nullable = false, unique = true)

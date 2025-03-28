@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.ReviewRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ReviewResponse;
@@ -49,7 +48,7 @@ public class ReviewService {
     }
 
     public ReviewResponse fetchReviewById(long id) {
-        Review review = findActiveResumeById(id);
+        Review review = findActiveReviewById(id);
 
         return reviewMapper.toReviewResponse(review);
     }
@@ -71,7 +70,9 @@ public class ReviewService {
     }
 
     public ReviewResponse update(long id, ReviewRequest request) {
-        Review review = findActiveResumeById(id);
+        Review review = findActiveReviewById(id);
+
+        reviewMapper.updateReview(review, request);
 
         Company company = companyRepository.findById(request.getCompanyId()).
                 orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
@@ -82,16 +83,9 @@ public class ReviewService {
 
     @Transactional
     public void delete(long id) {
-        Review review = findActiveResumeById(id);
+        Review review = findActiveReviewById(id);
 
-        deactivateReview(review);
-
-        reviewRepository.save(review);
-    }
-
-    private void deactivateReview(Review review) {
-        review.setState(EntityStatus.INACTIVE);
-        review.setDeactivatedAt(LocalDate.now());
+        reviewRepository.delete(review);
     }
 
     @Transactional
@@ -102,12 +96,10 @@ public class ReviewService {
             throw new AppException(ErrorCode.REVIEW_NOT_FOUND);
         }
 
-        reviewSet.forEach(this::deactivateReview);
-
-        reviewRepository.saveAll(reviewSet);
+        reviewRepository.deleteAllInBatch(reviewSet);
     }
 
-    private Review findActiveResumeById(long id) {
+    private Review findActiveReviewById(long id) {
         return reviewRepository.findById(id)
                 .orElseThrow(()->new AppException(ErrorCode.REVIEW_NOT_EXISTED));
     }

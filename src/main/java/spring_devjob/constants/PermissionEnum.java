@@ -42,6 +42,7 @@ public enum PermissionEnum {
     DELETE_COMPANY("/v1/companies/{id}","COMPANY","DELETE"),
     DELETE_MULTIPLE_COMPANIES("/v1/companies", "COMPANY", "DELETE"),
     RESTORE_COMPANY("/v1/companies/{id}/restore", "COMPANY", "PATCH"),
+    FETCH_TOP_RATED_COMPANIES("/companies/top-rated","COMPANY","GET"),
     SEARCH_COMPANIES("/v1/companies/search","COMPANY","GET"),
     FETCH_JOBS_BY_COMPANY("/v1/companies/{companyId}/jobs","COMPANY","GET"),
     FETCH_REVIEWS_BY_COMPANY("/v1/companies/{companyId}/reviews", "COMPANY","GET"),

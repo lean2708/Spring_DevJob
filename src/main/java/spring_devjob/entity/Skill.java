@@ -18,7 +18,6 @@ import java.util.Set;
 @Entity
 @SuperBuilder
 @NoArgsConstructor
-@SQLRestriction("state = 'ACTIVE'")
 @Table(name = "tbl_skill")
 public class Skill extends BaseEntity {
 

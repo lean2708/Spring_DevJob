@@ -14,6 +14,7 @@ import spring_devjob.dto.request.CompanyRequest;
 import spring_devjob.dto.response.*;
 import spring_devjob.service.CompanyService;
 import spring_devjob.service.JobService;
+import spring_devjob.service.RestoreService;
 import spring_devjob.service.ReviewService;
 
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.Set;
 public class CompanyController {
 
     private final CompanyService companyService;
+    private final RestoreService restoreService;
 
     @PreAuthorize("hasAuthority('CREATE_COMPANY')")
     @PostMapping("/companies")
@@ -38,6 +40,7 @@ public class CompanyController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_COMPANY_BY_ID')")
     @GetMapping("/companies/{id}")
     public ApiResponse<CompanyResponse> fetchCompany(@Positive(message = "CompanyID phải lớn hơn 0")
                                                          @PathVariable("id") long id){
@@ -48,6 +51,7 @@ public class CompanyController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('FETCH_ALL_COMPANIES')")
     @GetMapping("/companies")
     public ApiResponse<PageResponse<CompanyResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                    @RequestParam(defaultValue = "1") int pageNo,
@@ -61,6 +65,7 @@ public class CompanyController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('UPDATE_COMPANY')")
     @PutMapping("/companies/{id}")
     public ApiResponse<CompanyResponse> update(@Positive(message = "CompanyID phải lớn hơn 0")
                                                    @PathVariable long id, @RequestBody CompanyRequest request){
@@ -71,6 +76,7 @@ public class CompanyController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_COMPANY')")
     @DeleteMapping("/companies/{id}")
     public ApiResponse<Void> delete(@Positive(message = "CompanyID phải lớn hơn 0") @PathVariable long id){
         companyService.delete(id);
@@ -81,6 +87,7 @@ public class CompanyController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('DELETE_MULTIPLE_COMPANIES')")
     @DeleteMapping("/companies")
     public ApiResponse<Void> deleteCompanies(@Valid @RequestBody @NotEmpty(message = "Danh sách ID không được để trống!")
                                              Set<@Min(value = 1, message = "ID phải lớn hơn 0")Long> ids){
@@ -94,18 +101,20 @@ public class CompanyController {
 
     @Operation(summary = "Restore Company",
             description = "API này được sử dụng để phục hồi Company đã bị xóa mềm")
+    @PreAuthorize("hasAuthority('RESTORE_COMPANY')")
     @PatchMapping("/companies/{id}/restore")
     public ApiResponse<CompanyResponse> restore(@Positive(message = "ID phải lớn hơn 0")
                                              @PathVariable long id) {
         return ApiResponse.<CompanyResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Restore User By Id")
-                .result(companyService.restoreCompany(id))
+                .result(restoreService.restoreCompany(id))
                 .build();
     }
 
     @Operation(summary = "Search companies based on attributes with pagination",
     description = "Giá trị của search: field~value hoặc field>value hoặc field<value")
+    @PreAuthorize("hasAuthority('SEARCH_COMPANIES')")
     @GetMapping("/companies/search")
     public ApiResponse<PageResponse<CompanyResponse>> searchCompany(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                         @RequestParam(defaultValue = "1") int pageNo,
@@ -120,8 +129,25 @@ public class CompanyController {
                 .build();
     }
 
+    @Operation(summary = "Fetched top-rated companies",
+              description = "Lọc danh sách công ty có rating >= x, sắp xếp giảm dần theo rating.")
+    @PreAuthorize("hasAuthority('FETCH_TOP_RATED_COMPANIES')")
+    @GetMapping("/companies/top-rated")
+    public ApiResponse<PageResponse<CompanyResponse>> getTopRatedCompanies(@RequestParam(defaultValue = "1") int pageNo,
+                                                                           @RequestParam(defaultValue = "10") int pageSize,
+                                                                           @Min(4) @Max(5)
+                                                                           @RequestParam(defaultValue = "4.5") double rating) {
+        return ApiResponse.<PageResponse<CompanyResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .result(companyService.getTopRatedCompanies(pageNo, pageSize, rating))
+                .message("Fetched top-rated companies")
+                .build();
+    }
+
+
     @Operation(summary = "Get a paginated list of jobs for a company",
             description = "API này để lấy danh sách công việc của một công ty")
+    @PreAuthorize("hasAuthority('FETCH_JOBS_BY_COMPANY')")
     @GetMapping("/companies/{companyId}/all-jobs")
     public  ApiResponse<PageResponse<JobResponse>> getAllJobsByCompany(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                        @RequestParam(defaultValue = "1") int pageNo,
@@ -137,6 +163,7 @@ public class CompanyController {
     }
 
     @Operation(description = "API này để lấy các review của một công ty")
+    @PreAuthorize("hasAuthority('FETCH_REVIEWS_BY_COMPANY')")
     @GetMapping("/companies/{companyId}/reviews")
     public ApiResponse<PageResponse<ReviewResponse>> getReviewsByCompany(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                               @RequestParam(defaultValue = "1") int pageNo,

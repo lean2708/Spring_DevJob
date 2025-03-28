@@ -10,7 +10,7 @@ import spring_devjob.entity.relationship.SubHasSkill;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
 public interface SkillMapper {
 
     Skill toSkill(SkillRequest request);
@@ -19,7 +19,6 @@ public interface SkillMapper {
 
     List<SkillResponse> toSkillResponseList(List<Skill> skills);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateSkill(@MappingTarget Skill skill, SkillRequest request);
 
     @Mapping(target = "id", source = "subHasSkill.skill.id")
