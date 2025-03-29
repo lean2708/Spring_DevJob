@@ -29,7 +29,7 @@ public class Resume extends BaseEntity {
     boolean primaryCv = false;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "state", nullable = false)
+    @JoinColumn(name = "state", nullable = false)
     EntityStatus state;
 
     @ManyToOne

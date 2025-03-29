@@ -57,7 +57,8 @@ public enum ErrorCode {
     COMPANY_DELETED(1052, "Company đã bị xóa, vui lòng khôi phục lại.", HttpStatus.FORBIDDEN),
     COMPANY_ALREADY_ACTIVE(1054, "Company đã hoạt động", HttpStatus.BAD_REQUEST),
     JOB_ALREADY_ACTIVE(1056, "Job đã hoạt động", HttpStatus.BAD_REQUEST),
-    RESUME_ALREADY_ACTIVE(1058, "Resume đã hoạt động", HttpStatus.BAD_REQUEST)
+    RESUME_ALREADY_ACTIVE(1058, "Resume đã hoạt động", HttpStatus.BAD_REQUEST),
+    CANNOT_CHANGE_DEFAULT_ROLE(1059, "Không thể thay đổi role mặc định (USER, PRO, HR, ADMIN)", HttpStatus.BAD_REQUEST)
     ;
 
 

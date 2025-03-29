@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static spring_devjob.constants.RoleEnum.IMMUTABLE_SYSTEM_ROLES;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -86,6 +88,10 @@ public class RoleService {
     public RoleResponse update(long id, RoleRequest request){
         Role roleDB = findRoleById(id);
 
+        if (IMMUTABLE_SYSTEM_ROLES.contains(roleDB.getName())) {
+            throw new AppException(ErrorCode.CANNOT_CHANGE_DEFAULT_ROLE);
+        }
+
         roleMapper.updateRole(roleDB, request);
 
         if(!CollectionUtils.isEmpty(request.getPermissions())){
@@ -113,6 +119,10 @@ public class RoleService {
     }
 
     private void deactivateRole(Role role){
+        if (IMMUTABLE_SYSTEM_ROLES.contains(role.getName())) {
+            throw new AppException(ErrorCode.CANNOT_CHANGE_DEFAULT_ROLE);
+        }
+
         userHasRoleService.deleteUserHasRoleByRole(role.getId());
 
         deleteRoleHasPermissionByRole(role.getId());

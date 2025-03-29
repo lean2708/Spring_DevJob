@@ -27,7 +27,7 @@ public class Review extends BaseEntity{
     String comment;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "state", nullable = false)
+    @JoinColumn(name = "state", nullable = false)
     EntityStatus state;
 
     @ManyToOne
