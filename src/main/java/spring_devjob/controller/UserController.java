@@ -66,7 +66,7 @@ public class UserController {
     }
 
     @Operation(summary = "Update User (No update Password)",
-              description = "API này được sử dụng để update user (không update password)")
+              description = "API này được sử dụng để update user (Gán company nếu người dùng là HR)")
     @PreAuthorize("hasAuthority('UPDATE_USER')")
     @PutMapping("/users/{id}")
     public ApiResponse<UserResponse> update(@Positive(message = "ID phải lớn hơn 0")

@@ -45,5 +45,8 @@ public interface JobRepository extends JpaRepository<Job,Long> {
             "WHERE jhr.resume IN :resumes")
     Page<Job> findAllByResumesIn(@Param("resumes") Set<Resume> resumes, Pageable pageable);
 
-
+    @Query("SELECT DISTINCT j FROM Job j " +
+            "JOIN j.resumes jr " +
+            "WHERE j.company.id = :companyId AND jr.resume IN :resumes")
+    List<Job> findAllByCompanyIdAndResumesIn(@Param("companyId") Long companyId, @Param("resumes") Set<Resume> resumes);
 }

@@ -12,7 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import spring_devjob.dto.request.ReviewRequest;
+import spring_devjob.dto.request.ReviewCreationRequest;
+import spring_devjob.dto.request.ReviewUpdateRequest;
 import spring_devjob.dto.response.ApiResponse;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ReviewResponse;
@@ -33,7 +34,7 @@ public class ReviewController {
             description = "API này cho phép người dùng tạo đánh giá (review) cho một công ty")
     @PreAuthorize("hasAuthority('CREATE_REVIEW')")
     @PostMapping("/reviews")
-    public ApiResponse<ReviewResponse> create(@Valid @RequestBody ReviewRequest request){
+    public ApiResponse<ReviewResponse> create(@Valid @RequestBody ReviewCreationRequest request){
         return ApiResponse.<ReviewResponse>builder()
                 .code(HttpStatus.CREATED.value())
                 .message("Create Review")
@@ -69,7 +70,7 @@ public class ReviewController {
     @PreAuthorize("hasAuthority('UPDATE_REVIEW')")
     @PutMapping("/reviews/{id}")
     public ApiResponse<ReviewResponse> update(@Positive(message = "ID phải lớn hơn 0")
-                                            @PathVariable long id, @RequestBody ReviewRequest request){
+                                            @PathVariable long id, @RequestBody ReviewUpdateRequest request){
         return ApiResponse.<ReviewResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Update Review By Id")

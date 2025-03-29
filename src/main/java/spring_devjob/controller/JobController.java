@@ -1,7 +1,6 @@
 package spring_devjob.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
@@ -13,13 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import spring_devjob.dto.request.JobRequest;
+import spring_devjob.dto.request.JobCreationRequest;
 import spring_devjob.dto.request.JobUpdateRequest;
 import spring_devjob.dto.request.UpdateCVStatusRequest;
 import spring_devjob.dto.response.*;
 import spring_devjob.service.JobService;
 import spring_devjob.service.RestoreService;
-import spring_devjob.service.ResumeService;
 import spring_devjob.service.relationship.JobHasResumeService;
 
 import java.util.List;
@@ -37,7 +35,7 @@ public class JobController {
 
     @PreAuthorize("hasAuthority('CREATE_JOB')")
     @PostMapping("/jobs")
-    public ApiResponse<JobResponse> create(@Valid @RequestBody JobRequest request){
+    public ApiResponse<JobResponse> create(@Valid @RequestBody JobCreationRequest request){
         return ApiResponse.<JobResponse>builder()
                 .code(HttpStatus.CREATED.value())
                 .message("Create Job")

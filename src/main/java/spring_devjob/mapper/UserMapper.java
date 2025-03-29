@@ -14,7 +14,6 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS, uses = {RoleMapper.class})
 public interface UserMapper {
-    @Mapping(target = "company", ignore = true)
     @Mapping(target = "roles", ignore = true)
     User userCreationToUser(UserCreationRequest request);
 

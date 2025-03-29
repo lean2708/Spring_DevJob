@@ -58,9 +58,6 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        if(request.getCompanyId() != null){
-            companyRepository.findById(request.getCompanyId()).ifPresent(user::setCompany);
-        }
         userRepository.save(user);
 
         // role user mac dinh
@@ -124,10 +121,6 @@ public class UserService {
 
         userMapper.updateUser(userDB, request);
 
-        if(request.getCompanyId() != null){
-            companyRepository.findById(request.getCompanyId()).ifPresent(userDB::setCompany);
-        }
-
         if(!CollectionUtils.isEmpty(request.getRoleIds())){
             userHasRoleRepository.deleteByUser(userDB);
 
@@ -145,6 +138,14 @@ public class UserService {
             roles.addAll(userHasRoleRepository.saveAll(userRoles));
 
             userDB.setRoles(roles);
+        }
+        Set<String> roleNames = userDB.getRoles().stream()
+                .map(role -> role.getRole().getName())
+                .collect(Collectors.toSet());
+        boolean isHR = roleNames.contains(RoleEnum.HR.name());
+
+        if(request.getCompanyId() != null && isHR){
+            companyRepository.findById(request.getCompanyId()).ifPresent(userDB::setCompany);
         }
 
         return userMapper.toUserResponse(userRepository.save(userDB));

@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import spring_devjob.dto.request.JobRequest;
+import spring_devjob.dto.request.JobCreationRequest;
 import spring_devjob.dto.request.JobUpdateRequest;
 import spring_devjob.dto.response.JobResponse;
 import spring_devjob.dto.response.PageResponse;
@@ -50,7 +50,7 @@ public class JobService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public JobResponse create(JobRequest request){
+    public JobResponse create(JobCreationRequest request){
         Company company = companyRepository.findById(request.getCompanyId()).
                 orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
 

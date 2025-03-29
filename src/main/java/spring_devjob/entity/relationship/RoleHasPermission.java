@@ -4,14 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.entity.Permission;
 import spring_devjob.entity.Role;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
-@SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder

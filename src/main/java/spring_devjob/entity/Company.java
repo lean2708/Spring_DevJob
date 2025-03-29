@@ -26,7 +26,7 @@ import java.util.Set;
 public class Company extends BaseEntity {
     @Column(nullable = false, unique = true)
     String name;
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "MEDIUMTEXT")
     String description;
     String address;
     String logoUrl;

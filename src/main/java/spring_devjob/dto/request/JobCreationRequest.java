@@ -10,12 +10,11 @@ import spring_devjob.constants.LevelEnum;
 import spring_devjob.dto.validator.EnumPattern;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Set;
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class JobRequest {
+public class JobCreationRequest {
     @NotBlank(message = "Name không được để trống")
     String name;
     boolean jobStatus;

@@ -58,7 +58,8 @@ public enum ErrorCode {
     COMPANY_ALREADY_ACTIVE(1054, "Company đã hoạt động", HttpStatus.BAD_REQUEST),
     JOB_ALREADY_ACTIVE(1056, "Job đã hoạt động", HttpStatus.BAD_REQUEST),
     RESUME_ALREADY_ACTIVE(1058, "Resume đã hoạt động", HttpStatus.BAD_REQUEST),
-    CANNOT_CHANGE_DEFAULT_ROLE(1059, "Không thể thay đổi role mặc định (USER, PRO, HR, ADMIN)", HttpStatus.BAD_REQUEST)
+    CANNOT_CHANGE_DEFAULT_ROLE(1059, "Không thể thay đổi role mặc định (USER, PRO, HR, ADMIN)", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_ALLOWED(1060, "Bạn chưa apply vào công ty này nên không thể review được", HttpStatus.BAD_REQUEST)
     ;
 
 

@@ -2,12 +2,10 @@
 package spring_devjob.mapper;
 
 import org.mapstruct.*;
-import org.springframework.context.annotation.DependsOn;
-import spring_devjob.dto.request.ReviewRequest;
+import spring_devjob.dto.request.ReviewCreationRequest;
+import spring_devjob.dto.request.ReviewUpdateRequest;
 import spring_devjob.dto.response.ReviewResponse;
-import spring_devjob.dto.response.UserResponse;
 import spring_devjob.entity.Review;
-import spring_devjob.entity.User;
 
 import java.util.List;
 
@@ -15,7 +13,7 @@ import java.util.List;
 public interface ReviewMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "company", ignore = true)
-    Review toReview(ReviewRequest request);
+    Review toReview(ReviewCreationRequest request);
 
     ReviewResponse toReviewResponse(Review review);
 
@@ -23,5 +21,5 @@ public interface ReviewMapper {
 
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "company", ignore = true)
-    void updateReview(@MappingTarget Review review, ReviewRequest request);
+    void updateReview(@MappingTarget Review review, ReviewUpdateRequest request);
 }

@@ -34,6 +34,5 @@ public class UserCreationRequest {
     GenderEnum gender;
     String address;
 
-    Long companyId;
     Set<Long> roleIds;
 }
