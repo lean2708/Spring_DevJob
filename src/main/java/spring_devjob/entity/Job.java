@@ -41,7 +41,7 @@ public class Job extends BaseEntity {
     boolean jobStatus = true;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "state", nullable = false)
+    @JoinColumn(name = "state", nullable = false)
     EntityStatus state;
 
     @ManyToOne

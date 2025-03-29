@@ -38,7 +38,7 @@ public class Company extends BaseEntity {
     int totalReviews;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "state", nullable = false)
+    @JoinColumn(name = "state", nullable = false)
     EntityStatus state;
 
 
