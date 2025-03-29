@@ -7,7 +7,7 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ReviewRequest {
+public class ReviewCreationRequest {
 
     @NotBlank(message = "Name không được để trống")
     String name;

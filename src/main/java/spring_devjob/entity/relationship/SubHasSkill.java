@@ -11,7 +11,6 @@ import spring_devjob.entity.Subscriber;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
-@SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder

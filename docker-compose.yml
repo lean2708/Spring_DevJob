@@ -34,6 +34,7 @@ services:
       - ALLOW_EMPTY_PASSWORD=no
       - REDIS_PASSWORD=123456
       - REDIS_DISABLE_COMMANDS=FLUSHDB;FLUSHALL
+    command: redis-server --requirepass 123456
     networks:
       - devjob_backend
 

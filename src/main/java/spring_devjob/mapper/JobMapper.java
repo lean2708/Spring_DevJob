@@ -1,15 +1,12 @@
 package spring_devjob.mapper;
 
 import org.mapstruct.*;
-import org.springframework.context.annotation.DependsOn;
-import spring_devjob.dto.basic.EntityBasic;
 import spring_devjob.dto.basic.JobBasic;
-import spring_devjob.dto.request.JobRequest;
+import spring_devjob.dto.request.JobCreationRequest;
 import spring_devjob.dto.request.JobUpdateRequest;
 import spring_devjob.dto.response.JobResponse;
 import spring_devjob.entity.Job;
 import spring_devjob.entity.relationship.JobHasResume;
-import spring_devjob.entity.relationship.JobHasSkill;
 
 import java.util.List;
 import java.util.Set;
@@ -19,7 +16,7 @@ import java.util.Set;
 public interface JobMapper {
     @Mapping(target = "company", ignore = true)
     @Mapping(target = "skills", ignore = true)
-    Job toJob(JobRequest request);
+    Job toJob(JobCreationRequest request);
 
     @Mapping(target = "skills", source = "skills", qualifiedByName = "jobHasSkillToEntityBasic")
     JobResponse toJobResponse(Job job);

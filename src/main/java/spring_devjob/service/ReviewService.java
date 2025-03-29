@@ -6,18 +6,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import spring_devjob.dto.request.ReviewRequest;
+import spring_devjob.dto.request.ReviewCreationRequest;
+import spring_devjob.dto.request.ReviewUpdateRequest;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ReviewResponse;
 import spring_devjob.entity.*;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.mapper.ReviewMapper;
-import spring_devjob.repository.CompanyRepository;
-import spring_devjob.repository.ReviewRepository;
-import spring_devjob.repository.UserRepository;
+import spring_devjob.repository.*;
 
-import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -31,19 +30,29 @@ public class ReviewService {
     private final AuthService authService;
     private final UserRepository userRepository;
     private final PageableService pageableService;
+    private final ResumeRepository resumeRepository;
+    private final JobRepository jobRepository;
 
 
-    public ReviewResponse create(ReviewRequest request) {
-        Review review = reviewMapper.toReview(request);
-
+    public ReviewResponse create(ReviewCreationRequest request) {
         Company company = companyRepository.findById(request.getCompanyId()).
                 orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
-        review.setCompany(company);
-        
+
         User user = userRepository.findByEmail(authService.getCurrentUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Set<Resume> resumeSet = resumeRepository.findAllByUserId(user.getId());
+
+        List<Job> jobList = jobRepository.findAllByCompanyIdAndResumesIn(company.getId(), resumeSet);
+
+        if(jobList.isEmpty()){
+            throw new AppException(ErrorCode.REVIEW_NOT_ALLOWED);
+        }
+
+        Review review = reviewMapper.toReview(request);
         review.setUser(user);
-        
+        review.setCompany(company);
+
         return reviewMapper.toReviewResponse(reviewRepository.save(review));
     }
 
@@ -69,14 +78,10 @@ public class ReviewService {
                 .build();
     }
 
-    public ReviewResponse update(long id, ReviewRequest request) {
+    public ReviewResponse update(long id, ReviewUpdateRequest request) {
         Review review = findActiveReviewById(id);
 
         reviewMapper.updateReview(review, request);
-
-        Company company = companyRepository.findById(request.getCompanyId()).
-                orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
-        review.setCompany(company);
 
         return reviewMapper.toReviewResponse(reviewRepository.save(review));
     }

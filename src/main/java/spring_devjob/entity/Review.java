@@ -23,7 +23,7 @@ public class Review extends BaseEntity{
     @Column(nullable = false)
     double rating;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "MEDIUMTEXT")
     String comment;
 
     @Enumerated(EnumType.STRING)
