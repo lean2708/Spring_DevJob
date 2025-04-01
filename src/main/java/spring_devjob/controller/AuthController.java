@@ -114,7 +114,7 @@ public class AuthController {
     public ApiResponse<ForgotPasswordToken> verifyCode(@Valid @RequestBody VerifyCodeRequest request) throws JOSEException {
         return ApiResponse.<ForgotPasswordToken>builder()
                 .code(HttpStatus.OK.value())
-                .result(accountRecoveryService.verifyCode(request.getEmail(), request.getVerificationCode()))
+                .result(accountRecoveryService.verifyForgotPasswordCode(request.getEmail(), request.getVerificationCode()))
                 .message("Mã xác nhận hợp lệ")
                 .build();
     }
