@@ -1,5 +1,6 @@
 package spring_devjob.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -23,5 +24,7 @@ public class ForgotPasswordToken {
     String email;
     @Column(nullable = false, length = 1024)
     String forgotPasswordToken;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime expiryTime;
 }

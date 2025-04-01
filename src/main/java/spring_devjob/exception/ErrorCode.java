@@ -37,7 +37,7 @@ public enum ErrorCode {
     SKILL_NOT_FOUND(1028, "Không tìm thấy skill nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
     RESUME_NOT_FOUND(1029, "Không tìm thấy resume nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
     JOB_NOT_FOUND(1030, "Không tìm thấy job nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
-    ROLE_NOT_FOUND(1031, "Không tìm thấy role nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),,
+    ROLE_NOT_FOUND(1031, "Không tìm thấy role nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
     REVIEW_NOT_ALLOWED(1032, "Bạn chưa apply vào công ty này nên không thể review được", HttpStatus.BAD_REQUEST),
     SUBSCRIBER_NOT_FOUND(1033, "Không tìm thấy subscriber nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
     INVALID_REFRESH_TOKEN(1034, "Refresh token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),

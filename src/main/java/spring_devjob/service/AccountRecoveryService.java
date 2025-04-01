@@ -37,7 +37,14 @@ public class AccountRecoveryService {
     private final RestoreService restoreService;
 
     @Value("${jwt.reset.expiry-in-minutes}")
-    protected long resetTokenExpiration;
+    private long resetTokenExpiration;
+
+    @Value("${app.forgot-password.verification-code.expiration-minutes}")
+    private long forgotPasswordExpiration;
+
+    @Value("${app.recover-account.verification-code.expiration-minutes}")
+    private long recoverAccountExpiration;
+
 
     public VerificationCodeEntity forgotPassword(EmailRequest request){
         User user = userRepository.findByEmail(request.getEmail())
@@ -47,12 +54,12 @@ public class AccountRecoveryService {
         try {
             emailService.sendPasswordResetCode(user, verificationCode);
 
-            long expirationTimeInMinutes = System.currentTimeMillis() / 60000 + (5);
+            LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(forgotPasswordExpiration);
 
             VerificationCodeEntity verificationCodeEntity = VerificationCodeEntity.builder()
                     .email(user.getEmail())
                     .verificationCode(verificationCode)
-                    .expirationTime(expirationTimeInMinutes)
+                    .expirationTime(expirationTime)
                     .build();
 
             return saveVerificationCode(verificationCodeEntity);
@@ -78,7 +85,7 @@ public class AccountRecoveryService {
             VerificationCodeEntity verificationCodeEntity = verificationCodeRepository.findByEmailAndVerificationCode(email, verificationCode)
                     .orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_CODE_NOT_FOUND));
 
-            if (verificationCodeEntity.getExpirationTime() < System.currentTimeMillis() / 60000) {
+            if (verificationCodeEntity.getExpirationTime().isBefore(LocalDateTime.now())) {
                 throw new AppException(ErrorCode.VERIFICATION_CODE_EXPIRED);
             }
 
@@ -131,12 +138,12 @@ public class AccountRecoveryService {
         try {
             emailService.sendAccountRecoveryCode(user, verificationCode);
 
-            long expirationTimeInMinutes = System.currentTimeMillis() / 60000 + (10);
+            LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(recoverAccountExpiration);
 
             VerificationCodeEntity verificationCodeEntity = VerificationCodeEntity.builder()
                     .email(user.getEmail())
                     .verificationCode(verificationCode)
-                    .expirationTime(expirationTimeInMinutes)
+                    .expirationTime(expirationTime)
                     .build();
 
             return saveVerificationCode(verificationCodeEntity);
@@ -151,7 +158,7 @@ public class AccountRecoveryService {
         VerificationCodeEntity verificationCodeEntity = verificationCodeRepository.findByEmailAndVerificationCode(email, verificationCode)
                 .orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_CODE_NOT_FOUND));
 
-        if (verificationCodeEntity.getExpirationTime() < System.currentTimeMillis() / 60000) {
+        if (verificationCodeEntity.getExpirationTime().isBefore(LocalDateTime.now())) {
             throw new AppException(ErrorCode.VERIFICATION_CODE_EXPIRED);
         }
 
