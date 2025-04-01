@@ -13,5 +13,11 @@ app:
   resume:
     interview:
       days: 5
-  convert:
-    days: 30
+
+  forgot-password:
+    verification-code:
+      expiration-minutes: 5
+
+  recover-account:
+    verification-code:
+      expiration-minutes: 10
