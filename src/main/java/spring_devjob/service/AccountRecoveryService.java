@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.stereotype.Service;
 import spring_devjob.constants.TokenType;
+import spring_devjob.constants.VerificationType;
 import spring_devjob.dto.request.EmailRequest;
 import spring_devjob.dto.request.ResetPasswordRequest;
 import spring_devjob.entity.ForgotPasswordToken;
@@ -60,6 +61,7 @@ public class AccountRecoveryService {
                     .email(user.getEmail())
                     .verificationCode(verificationCode)
                     .expirationTime(expirationTime)
+                    .type(VerificationType.FORGOT_PASSWORD)
                     .build();
 
             return saveVerificationCode(verificationCodeEntity);
@@ -70,19 +72,22 @@ public class AccountRecoveryService {
     }
 
     private VerificationCodeEntity saveVerificationCode(VerificationCodeEntity code){
-        Optional<VerificationCodeEntity> entityOptional = verificationCodeRepository.findByEmail(code.getEmail());
-        if(entityOptional.isEmpty()){
-            return verificationCodeRepository.save(code);
-        }
-        VerificationCodeEntity entity = entityOptional.get();
-        entity.setVerificationCode(code.getVerificationCode());
-        entity.setExpirationTime(code.getExpirationTime());
+        Optional<VerificationCodeEntity> entityOptional = verificationCodeRepository
+                .findByEmailAndType(code.getEmail(), code.getType());
 
-        return entity;
+        if (entityOptional.isPresent()) {
+            VerificationCodeEntity entity = entityOptional.get();
+            entity.setVerificationCode(code.getVerificationCode());
+            entity.setExpirationTime(code.getExpirationTime());
+            return verificationCodeRepository.save(entity);
+        }
+
+        return verificationCodeRepository.save(code);
     }
 
-    public ForgotPasswordToken verifyCode(String email, String verificationCode) throws JOSEException {
-            VerificationCodeEntity verificationCodeEntity = verificationCodeRepository.findByEmailAndVerificationCode(email, verificationCode)
+    public ForgotPasswordToken verifyForgotPasswordCode(String email, String verificationCode) throws JOSEException {
+            VerificationCodeEntity verificationCodeEntity = verificationCodeRepository
+                    .findByEmailAndVerificationCode(email, verificationCode, VerificationType.FORGOT_PASSWORD)
                     .orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_CODE_NOT_FOUND));
 
             if (verificationCodeEntity.getExpirationTime().isBefore(LocalDateTime.now())) {
@@ -144,6 +149,7 @@ public class AccountRecoveryService {
                     .email(user.getEmail())
                     .verificationCode(verificationCode)
                     .expirationTime(expirationTime)
+                    .type(VerificationType.RECOVER_ACCOUNT)
                     .build();
 
             return saveVerificationCode(verificationCodeEntity);
@@ -155,7 +161,8 @@ public class AccountRecoveryService {
 
     @Transactional
     public void verifyRecoverAccountCode(String email, String verificationCode) {
-        VerificationCodeEntity verificationCodeEntity = verificationCodeRepository.findByEmailAndVerificationCode(email, verificationCode)
+        VerificationCodeEntity verificationCodeEntity = verificationCodeRepository
+                .findByEmailAndVerificationCode(email, verificationCode, VerificationType.RECOVER_ACCOUNT)
                 .orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_CODE_NOT_FOUND));
 
         if (verificationCodeEntity.getExpirationTime().isBefore(LocalDateTime.now())) {
