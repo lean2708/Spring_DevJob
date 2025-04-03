@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.UserCreationRequest;
 import spring_devjob.dto.request.UserUpdateRequest;
 import spring_devjob.dto.response.*;
@@ -111,7 +112,7 @@ public class UserController {
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Restore User By Id")
-                .result(restoreService.restoreUser(id))
+                .result(restoreService.restoreUser(id, EntityStatus.INACTIVE))
                 .build();
     }
 

@@ -4,7 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "tbl_file")
 @Getter
@@ -14,9 +16,9 @@ import lombok.*;
 @Builder
 public class FileEntity {
     @Id
-    private String id;
+    String id;
 
-    private String fileName;
-    private String url;
-    private String type;
+    String fileName;
+    String url;
+    String type;
 }

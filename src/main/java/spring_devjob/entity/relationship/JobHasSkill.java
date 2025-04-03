@@ -12,16 +12,19 @@ import spring_devjob.entity.Skill;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@Table(name = "tbl_job_has_skill", indexes = {
+        @Index(name = "idx_job_id", columnList = "job_id"),
+        @Index(name = "idx_skill_id", columnList = "skill_id")
+})
 @SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "tbl_job_has_skill")
 public class JobHasSkill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    Long id;
 
     @ManyToOne
     @JoinColumn(name = "job_id", nullable = false)

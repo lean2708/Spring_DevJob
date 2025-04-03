@@ -26,13 +26,6 @@ public interface JobRepository extends JpaRepository<Job,Long> {
 
     Set<Job> findAllByIdIn(Set<Long> ids);
 
-    @Query(value = "SELECT * FROM tbl_job WHERE id = :id", nativeQuery = true)
-    Optional<Job> findJobById(@Param("id") Long id);
-
-    @Query(value = "SELECT * FROM tbl_job WHERE company_id = :companyId AND state = :state",
-            nativeQuery = true)
-    List<Job> findJobsByCompanyIdAndState(@Param("companyId") Long companyId, @Param("state") String state);
-
     @Query("SELECT COUNT(j) > 0 FROM Job j WHERE j.name = :name AND j.company.id = :companyId")
     boolean existsByNameAndCompanyId(@Param("name") String name, @Param("companyId") Long companyId);
 
@@ -49,4 +42,11 @@ public interface JobRepository extends JpaRepository<Job,Long> {
             "JOIN j.resumes jr " +
             "WHERE j.company.id = :companyId AND jr.resume IN :resumes")
     List<Job> findAllByCompanyIdAndResumesIn(@Param("companyId") Long companyId, @Param("resumes") Set<Resume> resumes);
+
+    @Query(value = "SELECT * FROM tbl_job WHERE id = :id", nativeQuery = true)
+    Optional<Job> findJobById(@Param("id") Long id);
+
+    @Query(value = "SELECT * FROM tbl_job WHERE company_id = :companyId AND state = :state",
+            nativeQuery = true)
+    List<Job> findJobsByCompanyIdAndState(@Param("companyId") Long companyId, @Param("state") String state);
 }

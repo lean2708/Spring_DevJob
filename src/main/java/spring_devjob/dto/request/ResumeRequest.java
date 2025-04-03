@@ -11,6 +11,6 @@ public class ResumeRequest {
     String name;
     String cvUrl;
 
-    boolean primaryCv;
+    Boolean primaryCv;
 
 }

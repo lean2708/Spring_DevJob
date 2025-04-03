@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.request.CompanyRequest;
 import spring_devjob.dto.response.*;
 import spring_devjob.entity.*;
@@ -22,7 +23,6 @@ import spring_devjob.mapper.ReviewMapper;
 import spring_devjob.repository.CompanyRepository;
 import spring_devjob.repository.JobRepository;
 import spring_devjob.repository.ReviewRepository;
-import spring_devjob.repository.UserRepository;
 import spring_devjob.repository.criteria.JobSearchCriteriaQueryConsumer;
 import spring_devjob.repository.criteria.SearchCriteria;
 
@@ -32,9 +32,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static spring_devjob.constants.EntityStatus.INACTIVE;
 
-@Slf4j
+@Slf4j(topic = "COMPANY-SERVICE")
 @RequiredArgsConstructor
 @Service
 public class CompanyService {
@@ -50,8 +49,12 @@ public class CompanyService {
     private EntityManager entityManager;
 
     public CompanyResponse create(CompanyRequest request){
-        if(companyRepository.existsByName(request.getName())){
+        if(companyRepository.countByNameAndState(request.getName(),  EntityStatus.ACTIVE.name()) > 0){
             throw new AppException(ErrorCode.COMPANY_EXISTED);
+        }
+
+        if(companyRepository.countByNameAndState(request.getName(), EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.COMPANY_DISABLED);
         }
 
         Company company = companyMapper.toCompany(request);
@@ -82,6 +85,14 @@ public class CompanyService {
     }
 
     public CompanyResponse update(long id, CompanyRequest request){
+        if(companyRepository.countByNameAndState(request.getName(),  EntityStatus.ACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.COMPANY_EXISTED);
+        }
+
+        if(companyRepository.countByNameAndState(request.getName(), EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.COMPANY_DISABLED);
+        }
+
         Company companyDB = findActiveCompanyById(id);
 
         companyMapper.updateCompany(companyDB, request);
@@ -245,6 +256,7 @@ public class CompanyService {
             company.setTotalReviews(totalReviews);
             companyRepository.save(company);
         }
+        log.info("Update Companies Ratings");
     }
 
     private Company findActiveCompanyById(long id) {

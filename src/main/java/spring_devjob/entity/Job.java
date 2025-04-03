@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.LevelEnum;
@@ -19,17 +20,23 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@Table(name = "tbl_job", indexes = {
+        @Index(name = "idx_company_id", columnList = "company_id"),
+        @Index(name = "idx_name", columnList = "name")
+})
 @SQLRestriction("state = 'ACTIVE'")
-@Entity
 @SuperBuilder
+@Entity
 @NoArgsConstructor
-@Table(name = "tbl_job")
+@AllArgsConstructor
 public class Job extends BaseEntity {
     @Column(nullable = false)
     String name;
     String location;
-    double salary;
-    int quantity;
+    @ColumnDefault("0")
+    Double salary;
+    @ColumnDefault("0")
+    Integer quantity;
     @Enumerated(EnumType.STRING)
     LevelEnum level;
 
@@ -38,7 +45,8 @@ public class Job extends BaseEntity {
 
     LocalDate startDate;
     LocalDate endDate;
-    boolean jobStatus = true;
+    @ColumnDefault("true")
+    Boolean jobStatus;
 
     @Enumerated(EnumType.STRING)
     @JoinColumn(name = "state", nullable = false)

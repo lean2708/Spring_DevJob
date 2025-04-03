@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.RoleEnum;
 import spring_devjob.dto.request.UserCreationRequest;
 import spring_devjob.dto.request.UserUpdateRequest;
@@ -30,6 +31,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static redis.clients.jedis.resps.StreamConsumerInfo.INACTIVE;
+import static spring_devjob.constants.EntityStatus.LOCKED;
 
 
 @Slf4j
@@ -78,18 +80,24 @@ public class UserService {
        return userMapper.toUserResponse(user);
     }
 
-    private void checkUserExistenceAndStatus(String email, String phone){
-        if(userRepository.existsByEmail(email)){
+    public void checkUserExistenceAndStatus(String email, String phone){
+        if(userRepository.countByEmailAndState(email, EntityStatus.ACTIVE.name()) > 0){
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
-        if(userRepository.existsByPhone(phone)){
+        if(userRepository.countByPhoneAndState(phone, EntityStatus.ACTIVE.name()) > 0){
             throw new AppException(ErrorCode.PHONE_EXISTED);
         }
-        if(userRepository.countByEmailAndState(email, INACTIVE) > 0){
-            throw new AppException(ErrorCode.EMAIL_DELETED);
+        if(userRepository.countByEmailAndState(email, EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.EMAIL_DISABLED);
         }
-        if(userRepository.countByPhoneAndState(phone, INACTIVE) > 0){
-            throw new AppException(ErrorCode.PHONE_DELETED);
+        if(userRepository.countByPhoneAndState(phone, EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.PHONE_DISABLED);
+        }
+        if(userRepository.countByEmailAndState(email, EntityStatus.LOCKED.name()) > 0){
+            throw new AppException(ErrorCode.EMAIL_LOCKED);
+        }
+        if(userRepository.countByPhoneAndState(phone, EntityStatus.LOCKED.name()) > 0){
+            throw new AppException(ErrorCode.PHONE_LOCKED);
         }
     }
 
@@ -156,7 +164,7 @@ public class UserService {
     public void delete(long id){
         User userDB = findActiveUserById(id);
 
-        entityDeactivationService.deactivateUser(userDB);
+        entityDeactivationService.deactivateUser(userDB, EntityStatus.INACTIVE);
     }
 
 
@@ -166,7 +174,7 @@ public class UserService {
         if(userSet.isEmpty()){
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
-        userSet.forEach(entityDeactivationService::deactivateUser);
+        userSet.forEach(user -> entityDeactivationService.deactivateUser(user, EntityStatus.INACTIVE));
     }
 
     public PageResponse<JobResponse> getAllAppliedJobsByUser(int pageNo, int pageSize, String sortBy, long userId){

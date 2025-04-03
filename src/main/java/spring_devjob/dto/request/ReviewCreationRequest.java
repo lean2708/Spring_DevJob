@@ -14,7 +14,7 @@ public class ReviewCreationRequest {
 
     @Min(value = 0, message = "Rating trong khoảng 0.0-5.0")
     @Max(value = 5, message = "Rating trong khoảng 0.0-5.0")
-    double rating;
+    Double rating;
 
     String comment;
 

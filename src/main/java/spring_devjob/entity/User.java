@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.GenderEnum;
@@ -17,11 +18,15 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@Table(name = "tbl_user", indexes = {
+        @Index(name = "idx_email", columnList = "email", unique = true),
+        @Index(name = "idx_phone", columnList = "phone", unique = true)
+})
 @SQLRestriction("state = 'ACTIVE'")
-@Entity
 @SuperBuilder
 @NoArgsConstructor
-@Table(name = "tbl_user")
+@AllArgsConstructor
+@Entity
 public class User extends BaseEntity {
     @Column(nullable = false)
     String name;
@@ -31,7 +36,9 @@ public class User extends BaseEntity {
     String phone;
     String password;
     String avatarUrl;
-    int age;
+
+    @ColumnDefault("18")
+    Integer age;
     @Enumerated(EnumType.STRING)
     GenderEnum gender;
     String address;

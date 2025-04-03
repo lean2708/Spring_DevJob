@@ -21,8 +21,9 @@ public class JobCreationRequest {
     @NotBlank(message = "Location không được để trống")
     String location;
     @Positive(message = "Salary phải lớn hơn 0")
-    double salary;
-    int quantity;
+    Double salary;
+    @Positive(message = "Quantity phải lớn hơn 0")
+    Integer quantity;
     @NotNull(message = "Level không được để trống")
     @EnumPattern(name = "level", regexp = "INTERN|FRESHER|JUNIOR|MIDDLE|SENIOR")
     LevelEnum level;

@@ -12,17 +12,20 @@ import spring_devjob.entity.User;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@Table(name = "tbl_user_has_role", indexes = {
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_role_id", columnList = "role_id")
+})
 @SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "tbl_user_has_role")
 public class UserHasRole {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

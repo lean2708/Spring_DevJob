@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.stereotype.Service;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.TokenType;
 import spring_devjob.constants.VerificationType;
 import spring_devjob.dto.request.EmailRequest;
@@ -39,10 +40,8 @@ public class AccountRecoveryService {
 
     @Value("${jwt.reset.expiry-in-minutes}")
     private long resetTokenExpiration;
-
     @Value("${app.forgot-password.verification-code.expiration-minutes}")
     private long forgotPasswordExpiration;
-
     @Value("${app.recover-account.verification-code.expiration-minutes}")
     private long recoverAccountExpiration;
 
@@ -132,11 +131,14 @@ public class AccountRecoveryService {
     }
 
     public VerificationCodeEntity recoverAccount(String email) {
-        if(userRepository.existsByEmail(email)){
+        if(userRepository.countByEmailAndState(email, EntityStatus.ACTIVE.name()) > 0){
             throw new AppException(ErrorCode.USER_ALREADY_ACTIVE);
         }
+        if(userRepository.countByEmailAndState(email, EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.USER_DISABLED);
+        }
 
-        User user = userRepository.findUserByEmail(email)
+        User user = userRepository.findUserByEmail(email, EntityStatus.LOCKED.name())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         String verificationCode = generateVerificationCode();
@@ -169,10 +171,10 @@ public class AccountRecoveryService {
             throw new AppException(ErrorCode.VERIFICATION_CODE_EXPIRED);
         }
 
-        User user = userRepository.findUserByEmail(email)
+        User user = userRepository.findUserByEmail(email, EntityStatus.LOCKED.name())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        restoreService.restoreUser(user.getId());
+        restoreService.restoreUser(user.getId(), EntityStatus.LOCKED);
 
         verificationCodeRepository.delete(verificationCodeEntity);
     }

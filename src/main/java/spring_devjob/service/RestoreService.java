@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.dto.response.CompanyResponse;
 import spring_devjob.dto.response.JobResponse;
 import spring_devjob.dto.response.ResumeResponse;
@@ -92,11 +93,15 @@ public class RestoreService {
 
 
     @Transactional
-    public UserResponse restoreUser(long id) {
+    public UserResponse restoreUser(long id, EntityStatus oldStatus) {
         if(userRepository.existsById(id)){
             throw new AppException(ErrorCode.USER_ALREADY_ACTIVE);
         }
-        User user = userRepository.findUserById(id)
+        if(userRepository.countById(id, EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.USER_DISABLED);
+        }
+
+        User user = userRepository.findUserById(id, oldStatus.name())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         resumeRepository.findByUserIdAndState(user.getId(), INACTIVE.name())
@@ -111,7 +116,7 @@ public class RestoreService {
         userSavedJobList.forEach(userSavedJob -> savedJobService.updateUserSavedJob(userSavedJob, ACTIVE));
 
         user.setState(ACTIVE);
-        return userMapper.toUserResponse(user);
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Transactional
@@ -126,6 +131,6 @@ public class RestoreService {
         jobHasResumeList.forEach(jobHasResume -> jobHasResumeService.updateJobHasResume(jobHasResume, ACTIVE));
 
         resume.setState(ACTIVE);
-        return resumeMapper.toResumeResponse(resume);
+        return resumeMapper.toResumeResponse(resumeRepository.save(resume));
     }
 }

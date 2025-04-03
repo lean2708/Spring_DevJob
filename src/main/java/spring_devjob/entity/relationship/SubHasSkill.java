@@ -11,16 +11,19 @@ import spring_devjob.entity.Subscriber;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@Table(name = "tbl_subscriber_has_skill", indexes = {
+        @Index(name = "idx_subscriber_id", columnList = "subscriber_id"),
+        @Index(name = "idx_skill_id", columnList = "skill_id")
+})
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "tbl_subscriber_has_skill")
 public class SubHasSkill {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    Long id;
 
     @ManyToOne
     @JoinColumn(name = "subscriber_id", nullable = false)

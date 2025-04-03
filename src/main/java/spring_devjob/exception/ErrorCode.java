@@ -43,9 +43,11 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN(1034, "Refresh token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
     TOKEN_TYPE_INVALID(1035, "Loại token không hợp lệ", HttpStatus.UNAUTHORIZED),
     EMAIL_EXISTED(1036, "Email đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
-    EMAIL_DELETED(1037, "Email của bạn đã bị xoá, vui lòng khôi phục lại.", HttpStatus.FORBIDDEN),
+    EMAIL_DISABLED(1037, "Email của bạn đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
+    EMAIL_LOCKED(1037, "Email của bạn đã bị khoá", HttpStatus.FORBIDDEN),
     PHONE_EXISTED(1038, "Phone đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
-    PHONE_DELETED(1039, "Phone của bạn đã bị xoá, vui lòng khôi phục lại.", HttpStatus.FORBIDDEN),
+    PHONE_DISABLED(1039, "Phone của bạn đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
+    PHONE_LOCKED(1037, "Phone của bạn đã bị khoá", HttpStatus.FORBIDDEN),
     REVIEW_NOT_EXISTED(1040, "Review không tồn tại trong hệ thống", HttpStatus.NOT_FOUND),
     REVIEW_NOT_FOUND(1041, "Không tìm thấy review nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
     JOB_ALREADY_EXISTS_IN_COMPANY(1042, "Job đã tồn tại trong công ty", HttpStatus.BAD_REQUEST),
@@ -55,11 +57,13 @@ public enum ErrorCode {
     RESUME_ALREADY_APPLIED(1046, "Resume đã được nộp vào công việc này", HttpStatus.CONFLICT),
     JOB_EXPIRED(1047, "Công việc đã hết hạn, không thể nộp Resume", HttpStatus.BAD_REQUEST),
     USER_ALREADY_ACTIVE(1048, "Nguời dùng đã hoạt động", HttpStatus.BAD_REQUEST),
-    COMPANY_DELETED(1049, "Company đã bị xóa, vui lòng khôi phục lại.", HttpStatus.FORBIDDEN),
+    COMPANY_DISABLED(1049, "Company đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
     COMPANY_ALREADY_ACTIVE(1050, "Company đã hoạt động", HttpStatus.BAD_REQUEST),
     JOB_ALREADY_ACTIVE(1051, "Job đã hoạt động", HttpStatus.BAD_REQUEST),
     RESUME_ALREADY_ACTIVE(1052, "Resume đã hoạt động", HttpStatus.BAD_REQUEST),
-    CANNOT_CHANGE_DEFAULT_ROLE(1053, "Không thể thay đổi role mặc định (USER, PRO, HR, ADMIN)", HttpStatus.BAD_REQUEST)
+    CANNOT_CHANGE_DEFAULT_ROLE(1053, "Không thể thay đổi role mặc định (USER, PRO, HR, ADMIN)", HttpStatus.BAD_REQUEST),
+    USER_LOCKED(1054, "User của bạn đã bị khoá", HttpStatus.FORBIDDEN),
+    USER_DISABLED(1055, "User của bạn đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
     ;
 
 

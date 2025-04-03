@@ -84,7 +84,7 @@ public class ApplicationInitConfig {
                 roleRepository.saveAllAndFlush(roleList);
             }
 
-            if (!userRepository.existsByEmail(ADMIN_EMAIL)) {
+            if (userRepository.countByEmail(ADMIN_EMAIL) == 0) {
                 User admin = userRepository.save(User.builder()
                         .name("Admin")
                         .email(ADMIN_EMAIL)
