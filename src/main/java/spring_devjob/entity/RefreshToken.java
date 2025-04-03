@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 public class RefreshToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    Long id;
 
     @Column(name = "refresh_token",nullable = false, unique = true, columnDefinition = "TEXT")
     String refreshToken;

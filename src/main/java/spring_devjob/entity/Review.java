@@ -7,21 +7,25 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.constants.EntityStatus;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@Table(name = "tbl_review", indexes = {
+        @Index(name = "idx_company_id", columnList = "company_id"),
+        @Index(name = "idx_user_id", columnList = "user_id")
+})
 @SQLRestriction("state = 'ACTIVE'")
 @Entity
 @SuperBuilder
 @NoArgsConstructor
-@Table(name = "tbl_review")
 public class Review extends BaseEntity{
 
-    @Column(nullable = false)
-    double rating;
+    @ColumnDefault("5")
+    Double rating;
 
     @Column(columnDefinition = "MEDIUMTEXT")
     String comment;

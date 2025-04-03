@@ -16,13 +16,15 @@ import java.util.Set;
 @Repository
 public interface UserRepository extends JpaRepository<User,Long> {
 
-    boolean existsByEmail(String email);
-
-    boolean existsByPhone(String phone);
-
     Optional<User> findByEmail(String email);
 
     Set<User> findAllByIdIn(Set<Long> ids);
+
+    @Query(value = "SELECT COUNT(*) FROM tbl_user WHERE email = :email", nativeQuery = true)
+    Integer countByEmail(@Param("email") String email);
+
+    @Query(value = "SELECT COUNT(*) FROM tbl_user WHERE id = :id AND state = :state", nativeQuery = true)
+    Integer countById(@Param("id") Long id, @Param("state") String state);
 
     @Query(value = "SELECT COUNT(*) FROM tbl_user WHERE email = :email AND state = :state", nativeQuery = true)
     Integer countByEmailAndState(@Param("email") String email, @Param("state") String state);
@@ -30,11 +32,11 @@ public interface UserRepository extends JpaRepository<User,Long> {
     @Query(value = "SELECT COUNT(*) FROM tbl_user WHERE phone = :phone AND state = :state", nativeQuery = true)
     Integer countByPhoneAndState(@Param("phone") String phone, @Param("state") String state);
 
-    @Query(value = "SELECT * FROM tbl_user WHERE id = :id", nativeQuery = true)
-    Optional<User> findUserById(@Param("id") Long id);
+    @Query(value = "SELECT * FROM tbl_user WHERE id = :id AND state = :state", nativeQuery = true)
+    Optional<User> findUserById(@Param("id") Long id, @Param("state") String state);
 
-    @Query(value = "SELECT * FROM tbl_user WHERE email = :email", nativeQuery = true)
-    Optional<User> findUserByEmail(@Param("email") String email);
+    @Query(value = "SELECT * FROM tbl_user WHERE email = :email AND state = :state", nativeQuery = true)
+    Optional<User> findUserByEmail(@Param("email") String email, @Param("state") String state);
 
     @Modifying
     @Query(value = "UPDATE tbl_user SET state = :state WHERE company_id = :companyId", nativeQuery = true)

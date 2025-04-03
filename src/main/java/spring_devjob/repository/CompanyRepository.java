@@ -14,10 +14,12 @@ import java.util.Set;
 
 @Repository
 public interface CompanyRepository  extends JpaRepository<Company,Long> {
-    boolean existsByName(String name);
 
     Set<Company> findAllByIdIn(Set<Long> ids);
 
     @Query(value = "SELECT * FROM tbl_company WHERE id = :id", nativeQuery = true)
     Optional<Company> findCompanyById(@Param("id") Long id);
+
+    @Query(value = "SELECT COUNT(*) FROM tbl_company WHERE name = :name AND state = :state", nativeQuery = true)
+    Integer countByNameAndState(@Param("name") String name, @Param("state") String state);
 }

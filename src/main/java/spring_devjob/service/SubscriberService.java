@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
-@Slf4j
+@Slf4j(topic = "SUB-SERVICE")
 public class SubscriberService {
 
     private final VNPAYConfig vnPayConfig;
@@ -230,6 +230,8 @@ public class SubscriberService {
     @Scheduled(cron = "0 0 */3 * * *")
     @Async
     public void checkProExpiry() {
+        log.info("Update Pro Expiry");
+
         LocalDate currentDate = LocalDate.now();
         List<Subscriber> subscriberList = subscriberRepository.findAll();
 

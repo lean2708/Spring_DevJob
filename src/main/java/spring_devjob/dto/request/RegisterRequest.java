@@ -24,7 +24,7 @@ public class RegisterRequest {
     @Size(min = 5, message = "Password phải từ 5 kí tự trở lên")
     @NotBlank(message = "Password không được để trống")
     String password;
-    int age;
+    Integer age;
     @EnumPattern(name = "gender", regexp = "FEMALE|MALE|OTHER")
     GenderEnum gender;
     String address;

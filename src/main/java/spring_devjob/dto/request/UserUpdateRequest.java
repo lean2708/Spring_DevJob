@@ -19,7 +19,7 @@ public class UserUpdateRequest {
     @NotBlank(message = "Name không được để trống")
     String name;
     String avatarUrl;
-    int age;
+    Integer age;
     @NotNull(message = "gender không được để trống")
     @EnumPattern(name = "gender", regexp = "FEMALE|MALE|OTHER")
     GenderEnum gender;

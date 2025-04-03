@@ -10,6 +10,9 @@ public class CompanyRequest {
     @NotBlank(message = "Name không được để trống")
     String name;
     String description;
+    @NotBlank(message = "Address không được để trống")
     String address;
     String logoUrl;
+    Double averageRating;
+    Integer totalReviews;
 }

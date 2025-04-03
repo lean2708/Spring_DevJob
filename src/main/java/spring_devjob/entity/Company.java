@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.service.AuthService;
@@ -18,11 +19,14 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
-@Entity
+@Table(name = "tbl_company", indexes = {
+        @Index(name = "idx_name", columnList = "name", unique = true)
+})
 @SQLRestriction("state = 'ACTIVE'")
 @SuperBuilder
+@Entity
 @NoArgsConstructor
-@Table(name = "tbl_company")
+@AllArgsConstructor
 public class Company extends BaseEntity {
     @Column(nullable = false, unique = true)
     String name;
@@ -31,11 +35,13 @@ public class Company extends BaseEntity {
     String address;
     String logoUrl;
 
+    @ColumnDefault("0")
     @Column(nullable = false)
-    double averageRating;
+    Double averageRating;
 
+    @ColumnDefault("0")
     @Column(nullable = false)
-    int totalReviews;
+    Integer totalReviews;
 
     @Enumerated(EnumType.STRING)
     @JoinColumn(name = "state", nullable = false)

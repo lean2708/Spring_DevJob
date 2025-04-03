@@ -14,12 +14,14 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@Table(name = "tbl_permission", indexes = {
+        @Index(name = "idx_name", columnList = "name", unique = true)
+})
 @Entity
 @SuperBuilder
 @NoArgsConstructor
-@Table(name = "tbl_permission")
 public class Permission extends BaseEntity {
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     String name;
 
     String module;

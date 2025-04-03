@@ -2,12 +2,16 @@ package spring_devjob.service;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jwt.SignedJWT;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.RoleEnum;
 import spring_devjob.constants.TokenType;
 import spring_devjob.dto.request.*;
@@ -30,9 +34,8 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static redis.clients.jedis.resps.StreamConsumerInfo.INACTIVE;
 
-@Slf4j
+@Slf4j(topic = "AUTH-SERVICE")
 @RequiredArgsConstructor
 @Service
 public class AuthService {
@@ -114,18 +117,24 @@ public class AuthService {
         return generateAndSaveTokenResponse(user);
     }
 
-    private void checkUserExistenceAndStatus(String email, String phone){
-        if(userRepository.existsByEmail(email)){
+    public  void checkUserExistenceAndStatus(String email, String phone){
+        if(userRepository.countByEmailAndState(email, EntityStatus.ACTIVE.name()) > 0){
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
-        if(userRepository.existsByPhone(phone)){
+        if(userRepository.countByPhoneAndState(phone, EntityStatus.ACTIVE.name()) > 0){
             throw new AppException(ErrorCode.PHONE_EXISTED);
         }
-        if(userRepository.countByEmailAndState(email, INACTIVE) > 0){
-            throw new AppException(ErrorCode.EMAIL_DELETED);
+        if(userRepository.countByEmailAndState(email, EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.EMAIL_DISABLED);
         }
-        if(userRepository.countByPhoneAndState(phone, INACTIVE) > 0){
-            throw new AppException(ErrorCode.PHONE_DELETED);
+        if(userRepository.countByPhoneAndState(phone, EntityStatus.INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.PHONE_DISABLED);
+        }
+        if(userRepository.countByEmailAndState(email, EntityStatus.LOCKED.name()) > 0){
+            throw new AppException(ErrorCode.EMAIL_LOCKED);
+        }
+        if(userRepository.countByPhoneAndState(phone, EntityStatus.LOCKED.name()) > 0){
+            throw new AppException(ErrorCode.PHONE_LOCKED);
         }
     }
 
@@ -200,6 +209,7 @@ public class AuthService {
                 .build();
     }
 
+
     private void processUserRolesAndPermissions(User user) {
         Set<Long> roleIds = user.getRoles().stream()
                 .map(UserHasRole::getRole)
@@ -227,6 +237,5 @@ public class AuthService {
         }
         return authentication.getName(); // email
     }
-
 
 }

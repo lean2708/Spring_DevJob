@@ -15,10 +15,12 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@Table(name = "tbl_role", indexes = {
+        @Index(name = "idx_name", columnList = "name", unique = true)
+})
 @Entity
 @SuperBuilder
 @NoArgsConstructor
-@Table(name = "tbl_role")
 public class Role extends BaseEntity {
     @Column(nullable = false, unique = true)
     String name;

@@ -3,12 +3,17 @@ package spring_devjob.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import spring_devjob.constants.EntityStatus;
+import spring_devjob.dto.request.LockAccountRequest;
 import spring_devjob.entity.*;
 import spring_devjob.entity.relationship.JobHasResume;
 import spring_devjob.entity.relationship.JobHasSkill;
 import spring_devjob.entity.relationship.UserHasRole;
 import spring_devjob.entity.relationship.UserSavedJob;
+import spring_devjob.exception.AppException;
+import spring_devjob.exception.ErrorCode;
 import spring_devjob.repository.*;
 import spring_devjob.service.relationship.JobHasResumeService;
 import spring_devjob.service.relationship.JobHasSkillService;
@@ -34,7 +39,23 @@ public class EntityDeactivationService {
     private final JobHasResumeService jobHasResumeService;
     private final JobHasSkillService jobHasSkillService;
     private final CompanyRepository companyRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthService authService;
 
+
+    @Transactional
+    public void lockAccount(LockAccountRequest request) {
+        User user = userRepository.findByEmail(authService.getCurrentUsername())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        deactivateUser(user, EntityStatus.LOCKED);
+
+        log.info("Locked user");
+    }
 
     @Transactional
     public void deactivateCompany(Company company){
@@ -64,7 +85,7 @@ public class EntityDeactivationService {
     }
 
     @Transactional
-    public void deactivateUser(User user) {
+    public void deactivateUser(User user, EntityStatus status) {
         resumeRepository.findByUserId(user.getId()).forEach(this::deactivateResume);
 
         reviewRepository.updateReviewStateByUser(user.getId(), INACTIVE.name());
@@ -75,7 +96,7 @@ public class EntityDeactivationService {
         List<UserSavedJob> userSavedJobList = savedJobService.getUserSavedJobByUserAndState(user.getId(), ACTIVE);
         userSavedJobList.forEach(userSavedJob -> savedJobService.updateUserSavedJob(userSavedJob, INACTIVE));
 
-        user.setState(INACTIVE);
+        user.setState(status);
         userRepository.save(user);
     }
 

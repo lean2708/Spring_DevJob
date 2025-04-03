@@ -28,7 +28,7 @@ public class UserCreationRequest {
     @NotBlank(message = "Password không được để trống")
     String password;
     String avatarUrl;
-    int age;
+    Integer age;
     @NotNull(message = "gender không được để trống")
     @EnumPattern(name = "gender", regexp = "FEMALE|MALE|OTHER")
     GenderEnum gender;

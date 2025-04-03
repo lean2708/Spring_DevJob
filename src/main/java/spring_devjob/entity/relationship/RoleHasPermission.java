@@ -10,16 +10,19 @@ import spring_devjob.entity.Role;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@Table(name = "tbl_role_has_permission", indexes = {
+        @Index(name = "idx_role_id", columnList = "role_id"),
+        @Index(name = "idx_permission_id", columnList = "permission_id")
+})
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "tbl_role_has_permission")
 public class RoleHasPermission {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    Long id;
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)

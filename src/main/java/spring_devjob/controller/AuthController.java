@@ -3,6 +3,7 @@ package spring_devjob.controller;
 import com.nimbusds.jose.JOSEException;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import spring_devjob.entity.ForgotPasswordToken;
 import spring_devjob.entity.VerificationCodeEntity;
 import spring_devjob.service.AuthService;
 import spring_devjob.service.AccountRecoveryService;
+import spring_devjob.service.EntityDeactivationService;
 
 import java.text.ParseException;
 
@@ -28,6 +30,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final AccountRecoveryService accountRecoveryService;
+    private final EntityDeactivationService entityDeactivationService;
 
     @Operation(summary = "Login Google",
             description = "API này được sử dụng để login với Google")
@@ -128,6 +131,16 @@ public class AuthController {
                 .build();
     }
 
+    @Operation(summary = "Lock Account",
+            description = "API này được sử dụng để khóa tài khoản của người dùng")
+    @PostMapping("/lock-account")
+    public ApiResponse<Void> lockAccount(@Valid @RequestBody LockAccountRequest request) {
+        entityDeactivationService.lockAccount(request);
+        return ApiResponse.<Void>builder()
+                .code(HttpStatus.OK.value())
+                .message("Tài khoản đã được khóa thành công")
+                .build();
+    }
 
     @Operation(summary = "Recover Account",
             description = "API này được sử dụng để khôi phục tài khoản")
@@ -145,7 +158,7 @@ public class AuthController {
         accountRecoveryService.verifyRecoverAccountCode(request.getEmail(), request.getVerificationCode());
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.OK.value())
-                .message("Mã xác nhận hợp lệ, tài khoản có thể được khôi phục")
+                .message("Mã xác nhận hợp lệ, tài khoản đã được khôi phục")
                 .build();
     }
 }

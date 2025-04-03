@@ -15,17 +15,20 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@Table(name = "tbl_job_has_resume", indexes = {
+        @Index(name = "idx_job_id", columnList = "job_id"),
+        @Index(name = "idx_resume_id", columnList = "resume_id")
+})
 @SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "tbl_job_has_resume")
 public class JobHasResume {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    Long id;
 
     @ManyToOne
     @JoinColumn(name = "resume_id", nullable = false)
