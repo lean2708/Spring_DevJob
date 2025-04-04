@@ -18,6 +18,7 @@ public enum PermissionEnum {
     AUTH_FORGOT_PASSWORD("/v1/auth/forgot-password", "AUTH", "POST"),
     AUTH_VERIFY_FORGOT_PASSWORD_CODE("/v1/auth/forgot-password/verify-code", "AUTH", "POST"),
     AUTH_RESET_PASSWORD("/v1/auth/forgot-password/reset-password", "AUTH", "POST"),
+    LOCK_USER_ACCOUNT("/v1/users/{id}/lock-account", "USER", "POST"),
     AUTH_RECOVER_ACCOUNT("/v1/auth/recover-account", "AUTH", "POST"),
     AUTH_VERIFY_RECOVER_ACCOUNT_CODE("/v1/auth/recover-account/verify-code", "AUTH", "POST"),
 
