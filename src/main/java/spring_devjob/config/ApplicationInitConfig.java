@@ -40,7 +40,7 @@ public class ApplicationInitConfig {
     static final String ADMIN_EMAIL = "admin@gmail.com";
 
     @NonFinal
-    static final String ADMIN_PASSWORD = "admin";
+    static final String ADMIN_PASSWORD = "123456";
 
     @Bean
     ApplicationRunner applicationRunner(){
@@ -90,6 +90,7 @@ public class ApplicationInitConfig {
                         .email(ADMIN_EMAIL)
                         .phone("099999999")
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
+                        .age(100)
                         .gender(GenderEnum.MALE)
                         .address("VIET NAM")
                         .build());

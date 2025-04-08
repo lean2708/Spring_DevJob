@@ -101,7 +101,7 @@ public class UserService {
         }
     }
 
-    public UserResponse fetchUserById(long id){
+    public UserResponse fetchUserById(Long id){
         User userDB = findActiveUserById(id);
 
         return userMapper.toUserResponse(userDB);

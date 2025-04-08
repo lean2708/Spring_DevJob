@@ -71,7 +71,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('UPDATE_USER')")
     @PutMapping("/users/{id}")
     public ApiResponse<UserResponse> update(@Positive(message = "ID phải lớn hơn 0")
-                                                @PathVariable long id, @RequestBody UserUpdateRequest request){
+                                                @PathVariable long id,@Valid @RequestBody UserUpdateRequest request){
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Update User By Id")
