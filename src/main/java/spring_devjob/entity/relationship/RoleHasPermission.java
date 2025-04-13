@@ -11,8 +11,8 @@ import spring_devjob.entity.Role;
 @Getter
 @Setter
 @Table(name = "tbl_role_has_permission", indexes = {
-        @Index(name = "idx_role_id", columnList = "role_id"),
-        @Index(name = "idx_permission_id", columnList = "permission_id")
+        @Index(name = "idx_role_has_permission_role_id", columnList = "role_id"),
+        @Index(name = "idx_role_has_permission_permission_id", columnList = "permission_id")
 })
 @NoArgsConstructor
 @AllArgsConstructor

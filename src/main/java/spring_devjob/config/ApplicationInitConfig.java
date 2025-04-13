@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 import static spring_devjob.constants.PermissionEnum.*;
 
-@Slf4j
+@Slf4j(topic = "APPLICATION-INITIALIZATION")
 @RequiredArgsConstructor
 @Configuration
 public class ApplicationInitConfig {
@@ -40,14 +40,17 @@ public class ApplicationInitConfig {
     static final String ADMIN_EMAIL = "admin@gmail.com";
 
     @NonFinal
-    static final String ADMIN_PASSWORD = "admin";
+    static final String ADMIN_PASSWORD = "123456";
 
     @Bean
     ApplicationRunner applicationRunner(){
-        log.info("INIT APPLICATION....");
+        log.info("INIT APPLICATION STARTING....");
+
         return args ->{
 
             if (permissionRepository.count() == 0) {
+                log.info("Initializing permissions...");
+
                 List<Permission> permissionList = Arrays.stream(PermissionEnum.values())
                         .map(PermissionEnum::toPermission)
                         .collect(Collectors.toList());
@@ -56,6 +59,8 @@ public class ApplicationInitConfig {
             }
 
             if(roleRepository.count() == 0){
+                log.info("Initializing roles...");
+
                 Role userRole = roleRepository.save(Role.builder()
                         .name(RoleEnum.USER.name())
                         .description("ROLE_USER")
@@ -85,11 +90,14 @@ public class ApplicationInitConfig {
             }
 
             if (userRepository.countByEmail(ADMIN_EMAIL) == 0) {
+                log.info("Creating default admin account...");
+
                 User admin = userRepository.save(User.builder()
                         .name("Admin")
                         .email(ADMIN_EMAIL)
                         .phone("099999999")
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
+                        .age(100)
                         .gender(GenderEnum.MALE)
                         .address("VIET NAM")
                         .build());

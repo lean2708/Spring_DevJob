@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -44,7 +42,7 @@ public class ReviewController {
 
     @PreAuthorize("hasAuthority('GET_REVIEW_BY_ID')")
     @GetMapping("/reviews/{id}")
-    public ApiResponse<ReviewResponse> fetchReviewById(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<ReviewResponse> fetchReviewById(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                    @PathVariable long id){
         return ApiResponse.<ReviewResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -58,7 +56,6 @@ public class ReviewController {
     public ApiResponse<PageResponse<ReviewResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                             @RequestParam(defaultValue = "1") int pageNo,
                                                             @RequestParam(defaultValue = "10") int pageSize,
-                                                            @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                             @RequestParam(required = false) String sortBy){
         return ApiResponse.<PageResponse<ReviewResponse>>builder()
                 .code(HttpStatus.OK.value())
@@ -69,8 +66,8 @@ public class ReviewController {
 
     @PreAuthorize("hasAuthority('UPDATE_REVIEW')")
     @PutMapping("/reviews/{id}")
-    public ApiResponse<ReviewResponse> update(@Positive(message = "ID phải lớn hơn 0")
-                                            @PathVariable long id, @RequestBody ReviewUpdateRequest request){
+    public ApiResponse<ReviewResponse> update(@Min(value = 1, message = "Id phải lớn hơn 0")
+                                            @PathVariable long id,@Valid @RequestBody ReviewUpdateRequest request){
         return ApiResponse.<ReviewResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Update Review By Id")
@@ -80,7 +77,7 @@ public class ReviewController {
 
     @PreAuthorize("hasAuthority('DELETE_REVIEW')")
     @DeleteMapping("/reviews/{id}")
-    public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<Void> delete(@Min(value = 1, message = "Id phải lớn hơn 0")
                                     @PathVariable long id){
         reviewService.delete(id);
         return ApiResponse.<Void>builder()

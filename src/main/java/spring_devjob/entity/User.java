@@ -19,8 +19,8 @@ import java.util.Set;
 @Getter
 @Setter
 @Table(name = "tbl_user", indexes = {
-        @Index(name = "idx_email", columnList = "email", unique = true),
-        @Index(name = "idx_phone", columnList = "phone", unique = true)
+        @Index(name = "idx_tbl_user_email", columnList = "email", unique = true),
+        @Index(name = "idx_tbl_user_phone", columnList = "phone", unique = true)
 })
 @SQLRestriction("state = 'ACTIVE'")
 @SuperBuilder
@@ -37,7 +37,6 @@ public class User extends BaseEntity {
     String password;
     String avatarUrl;
 
-    @ColumnDefault("18")
     Integer age;
     @Enumerated(EnumType.STRING)
     GenderEnum gender;

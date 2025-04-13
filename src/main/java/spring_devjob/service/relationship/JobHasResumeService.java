@@ -18,6 +18,7 @@ import spring_devjob.repository.ResumeRepository;
 import spring_devjob.repository.UserRepository;
 import spring_devjob.repository.relationship.JobHasResumeRepository;
 import spring_devjob.service.AuthService;
+import spring_devjob.service.CurrentUserService;
 import spring_devjob.service.EmailService;
 
 import java.time.LocalDate;
@@ -32,7 +33,7 @@ public class JobHasResumeService {
     private final JobRepository jobRepository;
     private final ResumeRepository resumeRepository;
     private final UserRepository userRepository;
-    private final AuthService authService;
+    private final CurrentUserService currentUserService;
     private final EmailService emailService;
 
 
@@ -89,7 +90,7 @@ public class JobHasResumeService {
         jobHasResume.setApplicationStatus(applicationStatus);
         jobHasResumeRepository.save(jobHasResume);
 
-        User hrOrAdmin = userRepository.findByEmail(authService.getCurrentUsername())
+        User hrOrAdmin = userRepository.findByEmail(currentUserService.getCurrentUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         Company company = job.getCompany();

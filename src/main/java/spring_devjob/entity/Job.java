@@ -21,8 +21,8 @@ import java.util.Set;
 @Getter
 @Setter
 @Table(name = "tbl_job", indexes = {
-        @Index(name = "idx_company_id", columnList = "company_id"),
-        @Index(name = "idx_name", columnList = "name")
+        @Index(name = "idx_tbl_job_company_id", columnList = "company_id"),
+        @Index(name = "idx_tbl_job_name", columnList = "name")
 })
 @SQLRestriction("state = 'ACTIVE'")
 @SuperBuilder
@@ -33,19 +33,16 @@ public class Job extends BaseEntity {
     @Column(nullable = false)
     String name;
     String location;
-    @ColumnDefault("0")
     Double salary;
-    @ColumnDefault("0")
     Integer quantity;
     @Enumerated(EnumType.STRING)
     LevelEnum level;
 
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @Column(columnDefinition = "TEXT")
     String description;
 
     LocalDate startDate;
     LocalDate endDate;
-    @ColumnDefault("true")
     Boolean jobStatus;
 
     @Enumerated(EnumType.STRING)
@@ -70,6 +67,9 @@ public class Job extends BaseEntity {
     public void prePersist() {
         if (state == null) {
             this.state = EntityStatus.ACTIVE;
+        }
+        if(jobStatus == null){
+            this.jobStatus = true;
         }
     }
 }

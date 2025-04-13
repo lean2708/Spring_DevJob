@@ -17,7 +17,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Table(name = "tbl_resume", indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id")
+        @Index(name = "idx_tbl_resume_user_id", columnList = "user_id")
 })
 @SQLRestriction("state = 'ACTIVE'")
 @Entity
@@ -30,7 +30,6 @@ public class Resume extends BaseEntity {
 
     String cvUrl;
 
-    @ColumnDefault("false")
     Boolean primaryCv;
 
     @Enumerated(EnumType.STRING)
@@ -48,6 +47,9 @@ public class Resume extends BaseEntity {
     public void prePersist() {
         if (state == null) {
             this.state = EntityStatus.ACTIVE;
+        }
+        if(primaryCv == null){
+            this.primaryCv = true;
         }
     }
 }

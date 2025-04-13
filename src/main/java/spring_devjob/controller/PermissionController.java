@@ -1,8 +1,6 @@
 package spring_devjob.controller;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -13,8 +11,6 @@ import spring_devjob.dto.response.ApiResponse;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.PermissionResponse;
 import spring_devjob.service.PermissionService;
-
-import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -27,7 +23,7 @@ public class PermissionController {
 
     @PreAuthorize("hasAuthority('FETCH_PERMISSION_BY_ID')")
     @GetMapping("/permissions/{id}")
-    public ApiResponse<PermissionResponse> fetchRoleById(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<PermissionResponse> fetchRoleById(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                              @PathVariable long id){
         return ApiResponse.<PermissionResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -41,7 +37,6 @@ public class PermissionController {
     public ApiResponse<PageResponse<PermissionResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                       @RequestParam(defaultValue = "1") int pageNo,
                                                             @RequestParam(defaultValue = "10") int pageSize,
-                                                                  @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                       @RequestParam(required = false) String sortBy){
         return ApiResponse.<PageResponse<PermissionResponse>>builder()
                 .code(HttpStatus.OK.value())

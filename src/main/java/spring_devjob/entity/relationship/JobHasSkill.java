@@ -13,8 +13,8 @@ import spring_devjob.entity.Skill;
 @Getter
 @Setter
 @Table(name = "tbl_job_has_skill", indexes = {
-        @Index(name = "idx_job_id", columnList = "job_id"),
-        @Index(name = "idx_skill_id", columnList = "skill_id")
+        @Index(name = "idx_job_has_skill_job_id", columnList = "job_id"),
+        @Index(name = "idx_job_has_skill_skill_id", columnList = "skill_id")
 })
 @SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor

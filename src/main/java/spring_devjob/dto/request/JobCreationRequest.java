@@ -17,12 +17,14 @@ import java.util.Set;
 public class JobCreationRequest {
     @NotBlank(message = "Name không được để trống")
     String name;
-    boolean jobStatus;
+    Boolean jobStatus;
     @NotBlank(message = "Location không được để trống")
     String location;
-    @Positive(message = "Salary phải lớn hơn 0")
+    @Min(value = 0, message = "salary phải lớn hơn 0")
+    @NotNull(message = "salary không được null")
     Double salary;
-    @Positive(message = "Quantity phải lớn hơn 0")
+    @Min(value = 0, message = "quantity phải lớn hơn 0")
+    @NotNull(message = "quantity không được null")
     Integer quantity;
     @NotNull(message = "Level không được để trống")
     @EnumPattern(name = "level", regexp = "INTERN|FRESHER|JUNIOR|MIDDLE|SENIOR")
@@ -30,18 +32,13 @@ public class JobCreationRequest {
 
     String description;
 
-    @DateTimeFormat(pattern = "dd/MM/yyyy")
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    @Schema(type = "string", pattern = "dd/MM/yyyy", example = "25/03/2025")
     LocalDate startDate;
-    @DateTimeFormat(pattern = "dd/MM/yyyy")
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    @Schema(type = "string", pattern = "dd/MM/yyyy", example = "25/03/2025")
     LocalDate endDate;
 
-    @Positive(message = "CompanyID phải lớn hơn 0")
+    @Min(value = 0, message = "companyId phải lớn hơn 0")
+    @NotNull(message = "companyId không được null")
     Long companyId;
 
-    @NotEmpty(message = "Skill không được để trống")
+    @NotEmpty(message = "Skills không được để trống")
     Set<Long> skillIds;
 }

@@ -17,7 +17,6 @@ import spring_devjob.dto.request.PaymentCallbackRequest;
 import spring_devjob.dto.response.*;
 import spring_devjob.service.SubscriberService;
 
-import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -84,7 +83,6 @@ public class SubscriberController {
     public ApiResponse<PageResponse<SubscriberResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                       @RequestParam(defaultValue = "1") int pageNo,
                                                             @RequestParam(defaultValue = "10") int pageSize,
-                                                                  @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                       @RequestParam(required = false) String sortBy){
         return ApiResponse.<PageResponse<SubscriberResponse>>builder()
                 .code(HttpStatus.OK.value())
@@ -95,7 +93,7 @@ public class SubscriberController {
 
     @PreAuthorize("hasAuthority('DELETE_SUBSCRIBER_BY_ID')")
     @DeleteMapping("/subscribers/{id}")
-    public ApiResponse<Void> delete(@PathVariable long id){
+    public ApiResponse<Void> delete(@Min(value = 1, message = "Id phải lớn hơn 0") @PathVariable long id){
         subscriberService.delete(id);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.NO_CONTENT.value())

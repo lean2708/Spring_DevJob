@@ -28,7 +28,7 @@ public class SavedJobController {
             description = "API này cho phép user lưu job")
     @PreAuthorize("hasAuthority('SAVE_JOB')")
     @PostMapping("/saved-jobs/{jobId}")
-    public ApiResponse<Void> saveJob(@Positive(message = "JobID phải lớn hơn 0") @PathVariable Long jobId) {
+    public ApiResponse<Void> saveJob(@Min(value = 1, message = "jobId phải lớn hơn 0") @PathVariable Long jobId) {
         savedJobService.saveJob(jobId);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.OK.value())
@@ -38,22 +38,23 @@ public class SavedJobController {
     }
 
     @PreAuthorize("hasAuthority('GET_SAVED_JOBS')")
+    @Operation(summary = "Fetched all saved jobs By User")
     @GetMapping("/saved-jobs")
     public ApiResponse<PageResponse<JobResponse>> getSavedJobs(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                            @RequestParam(defaultValue = "1") int pageNo,
                                                            @RequestParam(defaultValue = "10") int pageSize,
-                                                           @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                            @RequestParam(required = false) String sortBy){
         return ApiResponse.<PageResponse<JobResponse>>builder()
                 .code(HttpStatus.OK.value())
                 .result(savedJobService.getSavedJobs(pageNo, pageSize, sortBy))
-                .message("Fetched all saved jobs with pagination")
+                .message("Fetched all saved jobs By User")
                 .build();
     }
 
     @PreAuthorize("hasAuthority('REMOVE_SAVED_JOB')")
+    @Operation(summary = "Remove a saved Job for a User")
     @DeleteMapping("/saved-jobs/{jobId}")
-    public ApiResponse<Void> removeSaveJob(@Positive(message = "JobID phải lớn hơn 0") @PathVariable long jobId) {
+    public ApiResponse<Void> removeSaveJob(@Min(value = 1, message = "jobId phải lớn hơn 0") @PathVariable long jobId) {
         savedJobService.removeSaveJob(jobId);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.OK.value())

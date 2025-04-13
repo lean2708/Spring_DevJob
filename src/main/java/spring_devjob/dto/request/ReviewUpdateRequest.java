@@ -12,12 +12,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReviewUpdateRequest {
 
-    @NotBlank(message = "Name không được để trống")
     String name;
-
-    @Min(value = 0, message = "Rating trong khoảng 0.0-5.0")
-    @Max(value = 5, message = "Rating trong khoảng 0.0-5.0")
-    double rating;
-
+    Double rating;
     String comment;
 }

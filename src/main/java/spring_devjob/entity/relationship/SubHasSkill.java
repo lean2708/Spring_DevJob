@@ -12,8 +12,8 @@ import spring_devjob.entity.Subscriber;
 @Getter
 @Setter
 @Table(name = "tbl_subscriber_has_skill", indexes = {
-        @Index(name = "idx_subscriber_id", columnList = "subscriber_id"),
-        @Index(name = "idx_skill_id", columnList = "skill_id")
+        @Index(name = "idx_subscriber_has_skill_subscriber_id", columnList = "subscriber_id"),
+        @Index(name = "idx_subscriber_has_skill_skill_id", columnList = "skill_id")
 })
 @NoArgsConstructor
 @AllArgsConstructor

@@ -18,11 +18,10 @@ import spring_devjob.repository.JobRepository;
 import spring_devjob.repository.relationship.UserSavedJobRepository;
 import spring_devjob.repository.UserRepository;
 import spring_devjob.service.AuthService;
+import spring_devjob.service.CurrentUserService;
 import spring_devjob.service.PageableService;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -31,7 +30,7 @@ public class SavedJobService {
 
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
-    private final AuthService authService;
+    private final CurrentUserService currentUserService;
     private final UserSavedJobRepository userSavedJobRepository;
     private final PageableService pageableService;
     private final JobMapper jobMapper;
@@ -40,7 +39,7 @@ public class SavedJobService {
         Job job = jobRepository.findById(jobId).
                 orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
 
-        User user = userRepository.findByEmail(authService.getCurrentUsername())
+        User user = userRepository.findByEmail(currentUserService.getCurrentUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         userSavedJobRepository.save(new UserSavedJob(job, user));
@@ -51,7 +50,7 @@ public class SavedJobService {
 
         Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
 
-        User user = userRepository.findByEmail(authService.getCurrentUsername())
+        User user = userRepository.findByEmail(currentUserService.getCurrentUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         Page<UserSavedJob> userHasJobs = userSavedJobRepository.findAllByUserId(pageable, user.getId());
@@ -73,7 +72,7 @@ public class SavedJobService {
         Job job = jobRepository.findById(jobId).
                 orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));
 
-        User user = userRepository.findByEmail(authService.getCurrentUsername())
+        User user = userRepository.findByEmail(currentUserService.getCurrentUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         UserSavedJob userHasJob = userSavedJobRepository.findByUserIdAndJobId(user.getId(), job.getId())

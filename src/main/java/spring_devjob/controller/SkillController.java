@@ -3,8 +3,6 @@ package spring_devjob.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,7 +13,6 @@ import spring_devjob.dto.request.SkillRequest;
 import spring_devjob.dto.response.*;
 import spring_devjob.service.SkillService;
 
-import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -38,7 +35,7 @@ public class SkillController {
 
     @PreAuthorize("hasAuthority('FETCH_SKILL_BY_ID')")
     @GetMapping("/skills/{id}")
-    public ApiResponse<SkillResponse> fetchSkillById(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<SkillResponse> fetchSkillById(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                          @PathVariable long id){
         return ApiResponse.<SkillResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -52,7 +49,6 @@ public class SkillController {
     public ApiResponse<PageResponse<SkillResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                  @RequestParam(defaultValue = "1") int pageNo,
                                                               @RequestParam(defaultValue = "10") int pageSize,
-                                                             @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                  @RequestParam(required = false) String sortBy){
         return ApiResponse.<PageResponse<SkillResponse>>builder()
                 .code(HttpStatus.OK.value())
@@ -63,7 +59,7 @@ public class SkillController {
 
     @PreAuthorize("hasAuthority('UPDATE_SKILL')")
     @PutMapping("/skills/{id}")
-    public ApiResponse<SkillResponse> update(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<SkillResponse> update(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                  @PathVariable long id, @RequestBody SkillRequest request){
         return ApiResponse.<SkillResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -74,7 +70,7 @@ public class SkillController {
 
     @PreAuthorize("hasAuthority('DELETE_SKILL')")
     @DeleteMapping("/skills/{id}")
-    public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<Void> delete(@Min(value = 1, message = "Id phải lớn hơn 0")
                                         @PathVariable long id){
         skillService.delete(id);
         return ApiResponse.<Void>builder()

@@ -64,6 +64,7 @@ public enum ErrorCode {
     CANNOT_CHANGE_DEFAULT_ROLE(1053, "Không thể thay đổi role mặc định (USER, PRO, HR, ADMIN)", HttpStatus.BAD_REQUEST),
     USER_LOCKED(1054, "User của bạn đã bị khoá", HttpStatus.FORBIDDEN),
     USER_DISABLED(1055, "User của bạn đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
+    PASSWORD_MISMATCH(1041, "Mật khẩu nhập lại không khớp", HttpStatus.BAD_REQUEST)
     ;
 
 

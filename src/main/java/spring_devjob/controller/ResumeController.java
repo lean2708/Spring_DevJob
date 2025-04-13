@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -13,14 +11,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.ResumeRequest;
-import spring_devjob.dto.request.UpdateCVStatusRequest;
 import spring_devjob.dto.response.ApiResponse;
 import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.ResumeResponse;
 import spring_devjob.service.RestoreService;
 import spring_devjob.service.ResumeService;
 
-import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -44,7 +40,7 @@ public class ResumeController {
 
     @PreAuthorize("hasAuthority('FETCH_RESUME_BY_ID')")
     @GetMapping("/resumes/{id}")
-    public ApiResponse<ResumeResponse> fetchResume(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<ResumeResponse> fetchResume(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                        @PathVariable long id){
         return ApiResponse.<ResumeResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -58,7 +54,6 @@ public class ResumeController {
     public ApiResponse<PageResponse<ResumeResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                   @RequestParam(defaultValue = "1") int pageNo,
                                                             @RequestParam(defaultValue = "10") int pageSize,
-                                                              @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                   @RequestParam(required = false) String sortBy){
         return ApiResponse.<PageResponse<ResumeResponse>>builder()
                 .code(HttpStatus.OK.value())
@@ -69,7 +64,7 @@ public class ResumeController {
 
     @PreAuthorize("hasAuthority('UPDATE_RESUME')")
     @PutMapping("/resumes/{id}")
-    public ApiResponse<ResumeResponse> update(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<ResumeResponse> update(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                   @PathVariable long id, @RequestBody ResumeRequest request){
         return ApiResponse.<ResumeResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -80,7 +75,7 @@ public class ResumeController {
 
     @PreAuthorize("hasAuthority('DELETE_RESUME')")
     @DeleteMapping("/resumes/{id}")
-    public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<Void> delete(@Min(value = 1, message = "Id phải lớn hơn 0")
                                         @PathVariable long id){
         resumeService.delete(id);
         return ApiResponse.<Void>builder()
@@ -106,7 +101,7 @@ public class ResumeController {
             description = "API này để khôi phục resume đã xóa trước đó")
     @PreAuthorize("hasAuthority('RESTORE_RESUME')")
     @PatchMapping("/resumes/{id}/restore")
-    public ApiResponse<ResumeResponse> restoreResume(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<ResumeResponse> restoreResume(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                      @PathVariable long id) {
         return ApiResponse.<ResumeResponse>builder()
                 .code(HttpStatus.OK.value())

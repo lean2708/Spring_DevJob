@@ -10,6 +10,7 @@ import spring_devjob.repository.UserAuthCacheRepository;
 @RequiredArgsConstructor
 @Service
 public class UserAuthCacheService {
+
     private final UserAuthCacheRepository userAuthCacheRepository;
 
     public void saveUserWithPermission(UserAuthCache userAuthCache){

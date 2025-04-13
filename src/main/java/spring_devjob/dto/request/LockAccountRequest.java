@@ -10,7 +10,10 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LockAccountRequest {
 
-    @Size(min = 5, message = "Password phải từ 5 kí tự trở lên")
+    @Size(min = 6, message = "Password phải từ 6 kí tự trở lên")
     @NotBlank(message = "Password không được để trống")
     String password;
+    @Size(min = 6, message = "confirmPassword phải từ 6 kí tự trở lên")
+    @NotBlank(message = "confirmPassword không được để trống")
+    String confirmPassword;
 }
