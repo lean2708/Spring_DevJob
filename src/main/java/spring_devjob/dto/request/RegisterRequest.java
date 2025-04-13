@@ -21,11 +21,15 @@ public class RegisterRequest {
     @NotBlank(message = "Số điện thoại không được để trống")
     @Pattern(regexp = "^0[35789]\\d{8}$", message = "Số điện thoại phải có 10 số và bắt đầu bằng 0")
     String phone;
-    @Size(min = 5, message = "Password phải từ 5 kí tự trở lên")
-    @NotBlank(message = "Password không được để trống")
-    String password;
     Integer age;
     @EnumPattern(name = "gender", regexp = "FEMALE|MALE|OTHER")
     GenderEnum gender;
     String address;
+
+    @Size(min = 6, message = "Password phải từ 6 kí tự trở lên")
+    @NotBlank(message = "Password không được để trống")
+    String password;
+    @Size(min = 6, message = "confirmPassword phải từ 6 kí tự trở lên")
+    @NotBlank(message = "confirmPassword không được để trống")
+    String confirmPassword;
 }

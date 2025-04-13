@@ -30,7 +30,6 @@ public class Resume extends BaseEntity {
 
     String cvUrl;
 
-    @ColumnDefault("false")
     Boolean primaryCv;
 
     @Enumerated(EnumType.STRING)
@@ -48,6 +47,9 @@ public class Resume extends BaseEntity {
     public void prePersist() {
         if (state == null) {
             this.state = EntityStatus.ACTIVE;
+        }
+        if(primaryCv == null){
+            this.primaryCv = true;
         }
     }
 }

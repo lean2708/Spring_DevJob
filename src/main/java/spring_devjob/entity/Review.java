@@ -24,7 +24,6 @@ import spring_devjob.constants.EntityStatus;
 @NoArgsConstructor
 public class Review extends BaseEntity{
 
-    @ColumnDefault("5")
     Double rating;
 
     @Column(columnDefinition = "MEDIUMTEXT")

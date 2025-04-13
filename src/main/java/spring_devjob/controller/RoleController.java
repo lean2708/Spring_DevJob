@@ -3,8 +3,6 @@ package spring_devjob.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,7 +15,6 @@ import spring_devjob.dto.response.PageResponse;
 import spring_devjob.dto.response.RoleResponse;
 import spring_devjob.service.RoleService;
 
-import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -41,7 +38,7 @@ public class RoleController {
 
     @PreAuthorize("hasAuthority('FETCH_ROLE_BY_ID')")
     @GetMapping("/roles/{id}")
-    public ApiResponse<RoleResponse> fetchRoleById(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<RoleResponse> fetchRoleById(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                        @PathVariable long id){
         return ApiResponse.<RoleResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -55,7 +52,6 @@ public class RoleController {
     public ApiResponse<PageResponse<RoleResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                 @RequestParam(defaultValue = "1") int pageNo,
                                                              @RequestParam(defaultValue = "10") int pageSize,
-                                                            @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                 @RequestParam(required = false) String sortBy){
         return ApiResponse.<PageResponse<RoleResponse>>builder()
                 .code(HttpStatus.OK.value())
@@ -66,7 +62,7 @@ public class RoleController {
 
     @PreAuthorize("hasAuthority('UPDATE_ROLE')")
     @PutMapping("/roles/{id}")
-    public ApiResponse<RoleResponse> update(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<RoleResponse> update(@Min(value = 1, message = "Id phải lớn hơn 0")
                                             @PathVariable long id, @RequestBody RoleRequest request){
         return ApiResponse.<RoleResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -77,7 +73,7 @@ public class RoleController {
 
     @PreAuthorize("hasAuthority('DELETE_ROLE')")
     @DeleteMapping("/roles/{id}")
-    public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<Void> delete(@Min(value = 1, message = "Id phải lớn hơn 0")
                                     @PathVariable long id){
         roleService.delete(id);
         return ApiResponse.<Void>builder()

@@ -37,7 +37,6 @@ public class User extends BaseEntity {
     String password;
     String avatarUrl;
 
-    @ColumnDefault("18")
     Integer age;
     @Enumerated(EnumType.STRING)
     GenderEnum gender;

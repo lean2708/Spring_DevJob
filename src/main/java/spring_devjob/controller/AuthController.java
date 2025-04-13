@@ -3,7 +3,6 @@ package spring_devjob.controller;
 import com.nimbusds.jose.JOSEException;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,9 +14,8 @@ import spring_devjob.dto.response.TokenResponse;
 import spring_devjob.dto.response.UserResponse;
 import spring_devjob.entity.ForgotPasswordToken;
 import spring_devjob.entity.VerificationCodeEntity;
-import spring_devjob.service.AuthService;
 import spring_devjob.service.AccountRecoveryService;
-import spring_devjob.service.EntityDeactivationService;
+import spring_devjob.service.AuthService;
 
 import java.text.ParseException;
 
@@ -30,7 +28,6 @@ public class AuthController {
 
     private final AuthService authService;
     private final AccountRecoveryService accountRecoveryService;
-    private final EntityDeactivationService entityDeactivationService;
 
     @Operation(summary = "Login Google",
             description = "API này được sử dụng để login với Google")
@@ -84,7 +81,7 @@ public class AuthController {
             description = "API này được sử dụng để thay đổi password khi user đã đăng nhập")
     @PostMapping("/change-password")
     public ApiResponse<UserResponse> changePassword(@Valid @RequestBody ChangePasswordRequest request){
-        authService.changePassword(request.getOldPassword(), request.getNewPassword());
+        authService.changePassword(request);
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.OK.value())
                 .result(authService.getMyInfo())
@@ -135,7 +132,7 @@ public class AuthController {
             description = "API này được sử dụng để khóa tài khoản của người dùng")
     @PostMapping("/lock-account")
     public ApiResponse<Void> lockAccount(@Valid @RequestBody LockAccountRequest request) {
-        entityDeactivationService.lockAccount(request);
+        authService.lockAccount(request);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.OK.value())
                 .message("Tài khoản đã được khóa thành công")

@@ -33,9 +33,7 @@ public class Job extends BaseEntity {
     @Column(nullable = false)
     String name;
     String location;
-    @ColumnDefault("0")
     Double salary;
-    @ColumnDefault("0")
     Integer quantity;
     @Enumerated(EnumType.STRING)
     LevelEnum level;
@@ -45,7 +43,6 @@ public class Job extends BaseEntity {
 
     LocalDate startDate;
     LocalDate endDate;
-    @ColumnDefault("true")
     Boolean jobStatus;
 
     @Enumerated(EnumType.STRING)
@@ -70,6 +67,9 @@ public class Job extends BaseEntity {
     public void prePersist() {
         if (state == null) {
             this.state = EntityStatus.ACTIVE;
+        }
+        if(jobStatus == null){
+            this.jobStatus = true;
         }
     }
 }

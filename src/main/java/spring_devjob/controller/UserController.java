@@ -3,8 +3,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -43,7 +41,7 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('FETCH_USER_BY_ID')")
     @GetMapping("/users/{id}")
-    public ApiResponse<UserResponse> fetchUser(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<UserResponse> fetchUser(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                    @PathVariable long id){
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -57,7 +55,6 @@ public class UserController {
     public ApiResponse<PageResponse<UserResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                 @RequestParam(defaultValue = "1") int pageNo,
                                                             @RequestParam(defaultValue = "10") int pageSize,
-                                                            @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                 @RequestParam(required = false) String sortBy){
         return ApiResponse.<PageResponse<UserResponse>>builder()
                 .code(HttpStatus.OK.value())
@@ -70,7 +67,7 @@ public class UserController {
               description = "API này được sử dụng để update user (Gán company nếu người dùng là HR)")
     @PreAuthorize("hasAuthority('UPDATE_USER')")
     @PutMapping("/users/{id}")
-    public ApiResponse<UserResponse> update(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<UserResponse> update(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                 @PathVariable long id,@Valid @RequestBody UserUpdateRequest request){
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -81,7 +78,7 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('DELETE_USER')")
     @DeleteMapping("/users/{id}")
-    public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<Void> delete(@Min(value = 1, message = "Id phải lớn hơn 0")
                                         @PathVariable long id){
         userService.delete(id);
         return ApiResponse.<Void>builder()
@@ -107,7 +104,7 @@ public class UserController {
             description = "API này được sử dụng để phục hồi user đã bị xóa mềm")
     @PreAuthorize("hasAuthority('RESTORE_USER')")
     @PatchMapping("/users/{id}/restore")
-    public ApiResponse<UserResponse> restore(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<UserResponse> restore(@Min(value = 1, message = "Id phải lớn hơn 0")
                                              @PathVariable long id) {
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -120,9 +117,9 @@ public class UserController {
             description = "API này được sử dụng để lấy tất cả CV của User")
     @PreAuthorize("hasAuthority('FETCH_RESUMES_BY_USER')")
     @GetMapping("/users/{userId}/resumes")
-    public ApiResponse<PageResponse<ResumeResponse>> fetchAllByUser(@RequestParam(defaultValue = "1") int pageNo,
+    public ApiResponse<PageResponse<ResumeResponse>> fetchAllByUser(@Min(value = 1, message = "pageNo phải lớn hơn 0")
+                                                                        @RequestParam(defaultValue = "1") int pageNo,
                                                                     @RequestParam(defaultValue = "10") int pageSize,
-                                                                    @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                     @RequestParam(required = false) String sortBy,
                                                                     @Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1") @PathVariable Long userId){
         return ApiResponse.<PageResponse<ResumeResponse>>builder()
@@ -136,9 +133,9 @@ public class UserController {
             description = "API này để láy danh sách job mà người dùng đã ứng tuyển")
     @PreAuthorize("hasAuthority('FETCH_APPLIED_JOBS')")
     @GetMapping("/users/{userId}/applied-jobs")
-    public ApiResponse<PageResponse<JobResponse>> getAllAppliedJobsByUser(@RequestParam(defaultValue = "1") int pageNo,
+    public ApiResponse<PageResponse<JobResponse>> getAllAppliedJobsByUser(@Min(value = 1, message = "pageNo phải lớn hơn 0")
+                                                                              @RequestParam(defaultValue = "1") int pageNo,
                                                                           @RequestParam(defaultValue = "10") int pageSize,
-                                                                          @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                           @RequestParam(required = false) String sortBy,
                                                                           @Min(value = 1, message = "ID phải lớn hơn hoặc bằng 1") @PathVariable Long userId){
         return ApiResponse.<PageResponse<JobResponse>>builder()

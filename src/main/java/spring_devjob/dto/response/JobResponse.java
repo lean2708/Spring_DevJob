@@ -23,11 +23,9 @@ public class JobResponse extends BaseResponse {
 
     String description;
 
-    @JsonFormat(pattern = "dd/MM/yyyy")
     LocalDate startDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
     LocalDate endDate;
-    boolean jobStatus;
+    Boolean jobStatus;
 
     EntityBasic company;
 

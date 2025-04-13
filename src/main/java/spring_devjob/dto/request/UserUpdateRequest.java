@@ -16,12 +16,10 @@ import java.util.Set;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserUpdateRequest {
-    @NotBlank(message = "Name không được để trống")
     String name;
     String avatarUrl;
     Integer age;
-    @NotNull(message = "gender không được để trống")
-    @EnumPattern(name = "gender", regexp = "FEMALE|MALE|OTHER")
+
     GenderEnum gender;
     String address;
 

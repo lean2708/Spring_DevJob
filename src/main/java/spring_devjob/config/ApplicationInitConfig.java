@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 import static spring_devjob.constants.PermissionEnum.*;
 
-@Slf4j
+@Slf4j(topic = "APPLICATION-INITIALIZATION")
 @RequiredArgsConstructor
 @Configuration
 public class ApplicationInitConfig {
@@ -44,10 +44,13 @@ public class ApplicationInitConfig {
 
     @Bean
     ApplicationRunner applicationRunner(){
-        log.info("INIT APPLICATION....");
+        log.info("INIT APPLICATION STARTING....");
+
         return args ->{
 
             if (permissionRepository.count() == 0) {
+                log.info("Initializing permissions...");
+
                 List<Permission> permissionList = Arrays.stream(PermissionEnum.values())
                         .map(PermissionEnum::toPermission)
                         .collect(Collectors.toList());
@@ -56,6 +59,8 @@ public class ApplicationInitConfig {
             }
 
             if(roleRepository.count() == 0){
+                log.info("Initializing roles...");
+
                 Role userRole = roleRepository.save(Role.builder()
                         .name(RoleEnum.USER.name())
                         .description("ROLE_USER")
@@ -85,6 +90,8 @@ public class ApplicationInitConfig {
             }
 
             if (userRepository.countByEmail(ADMIN_EMAIL) == 0) {
+                log.info("Creating default admin account...");
+
                 User admin = userRepository.save(User.builder()
                         .name("Admin")
                         .email(ADMIN_EMAIL)

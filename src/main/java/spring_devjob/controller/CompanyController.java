@@ -6,16 +6,13 @@ import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import spring_devjob.dto.request.CompanyRequest;
 import spring_devjob.dto.response.*;
 import spring_devjob.service.CompanyService;
-import spring_devjob.service.JobService;
 import spring_devjob.service.RestoreService;
-import spring_devjob.service.ReviewService;
 
 import java.util.List;
 import java.util.Set;
@@ -42,7 +39,7 @@ public class CompanyController {
 
     @PreAuthorize("hasAuthority('FETCH_COMPANY_BY_ID')")
     @GetMapping("/companies/{id}")
-    public ApiResponse<CompanyResponse> fetchCompany(@Positive(message = "CompanyID phải lớn hơn 0")
+    public ApiResponse<CompanyResponse> fetchCompany(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                          @PathVariable("id") long id){
         return ApiResponse.<CompanyResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -56,7 +53,6 @@ public class CompanyController {
     public ApiResponse<PageResponse<CompanyResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                    @RequestParam(defaultValue = "1") int pageNo,
                                                                @RequestParam(defaultValue = "10") int pageSize,
-                                                               @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                    @RequestParam(required = false) String sortBy){
         return ApiResponse.<PageResponse<CompanyResponse>>builder()
                 .code(HttpStatus.OK.value())
@@ -67,7 +63,7 @@ public class CompanyController {
 
     @PreAuthorize("hasAuthority('UPDATE_COMPANY')")
     @PutMapping("/companies/{id}")
-    public ApiResponse<CompanyResponse> update(@Positive(message = "CompanyID phải lớn hơn 0")
+    public ApiResponse<CompanyResponse> update(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                    @PathVariable long id, @RequestBody CompanyRequest request){
         return ApiResponse.<CompanyResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -78,7 +74,7 @@ public class CompanyController {
 
     @PreAuthorize("hasAuthority('DELETE_COMPANY')")
     @DeleteMapping("/companies/{id}")
-    public ApiResponse<Void> delete(@Positive(message = "CompanyID phải lớn hơn 0") @PathVariable long id){
+    public ApiResponse<Void> delete(@Min(value = 1, message = "Id phải lớn hơn 0") @PathVariable long id){
         companyService.delete(id);
         return ApiResponse.<Void>builder()
                 .code(HttpStatus.NO_CONTENT.value())
@@ -103,7 +99,7 @@ public class CompanyController {
             description = "API này được sử dụng để phục hồi Company đã bị xóa mềm")
     @PreAuthorize("hasAuthority('RESTORE_COMPANY')")
     @PatchMapping("/companies/{id}/restore")
-    public ApiResponse<CompanyResponse> restore(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<CompanyResponse> restore(@Min(value = 1, message = "Id phải lớn hơn 0")
                                              @PathVariable long id) {
         return ApiResponse.<CompanyResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -119,8 +115,7 @@ public class CompanyController {
     public ApiResponse<PageResponse<CompanyResponse>> searchCompany(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                         @RequestParam(defaultValue = "1") int pageNo,
                                                                     @RequestParam(defaultValue = "10") int pageSize,
-                                                                    @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
-                                                                        @RequestParam(required = false) String sortBy,
+                                                                    @RequestParam(required = false) String sortBy,
                                                                     @RequestParam(required = false) List<String> search){
         return ApiResponse.<PageResponse<CompanyResponse>>builder()
                 .code(HttpStatus.OK.value())
@@ -152,9 +147,8 @@ public class CompanyController {
     public  ApiResponse<PageResponse<JobResponse>> getAllJobsByCompany(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                        @RequestParam(defaultValue = "1") int pageNo,
                                                                        @RequestParam(defaultValue = "10") int pageSize,
-                                                                       @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                        @RequestParam(required = false) String sortBy,
-                                                                       @Positive(message = "companyId phải lớn hơn 0") @PathVariable(value = "companyId") long companyId){
+                                                                       @Min(value = 1, message = "companyId phải lớn hơn 0") @PathVariable(value = "companyId") long companyId){
         return ApiResponse.<PageResponse<JobResponse>>builder()
                 .code(HttpStatus.OK.value())
                 .result(companyService.getAllJobsByCompany(pageNo, pageSize, sortBy, companyId))
@@ -168,9 +162,8 @@ public class CompanyController {
     public ApiResponse<PageResponse<ReviewResponse>> getReviewsByCompany(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                               @RequestParam(defaultValue = "1") int pageNo,
                                                               @RequestParam(defaultValue = "10") int pageSize,
-                                                              @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                               @RequestParam(required = false) String sortBy,
-                                                                         @Positive(message = "companyId phải lớn hơn 0")
+                                                                         @Min(value = 1, message = "companyId phải lớn hơn 0")
                                                                          @PathVariable(value = "companyId") long companyId){
         return ApiResponse.<PageResponse<ReviewResponse>>builder()
                 .code(HttpStatus.OK.value())

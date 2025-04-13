@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +44,7 @@ public class JobController {
 
     @PreAuthorize("hasAuthority('FETCH_JOB_BY_ID')")
     @GetMapping("/jobs/{id}")
-    public ApiResponse<JobResponse> fetchJob(@Positive(message = "ID phải lớn hơn 0") @PathVariable long id){
+    public ApiResponse<JobResponse> fetchJob(@Min(value = 1, message = "Id phải lớn hơn 0") @PathVariable long id){
         return ApiResponse.<JobResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Fetch Job By Id")
@@ -58,7 +57,6 @@ public class JobController {
     public ApiResponse<PageResponse<JobResponse>> fetchAll(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                                @RequestParam(defaultValue = "1") int pageNo,
                                                             @RequestParam(defaultValue = "10") int pageSize,
-                                                           @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                @RequestParam(required = false) String sortBy){
         return ApiResponse.<PageResponse<JobResponse>>builder()
                 .code(HttpStatus.OK.value())
@@ -69,7 +67,7 @@ public class JobController {
 
     @PreAuthorize("hasAuthority('UPDATE_JOB')")
     @PutMapping("/jobs/{id}")
-    public ApiResponse<JobResponse> update(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<JobResponse> update(@Min(value = 1, message = "Id phải lớn hơn 0")
                                                @PathVariable long id, @RequestBody JobUpdateRequest request){
         return ApiResponse.<JobResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -80,7 +78,7 @@ public class JobController {
 
     @PreAuthorize("hasAuthority('DELETE_JOB')")
     @DeleteMapping("/jobs/{id}")
-    public ApiResponse<Void> delete(@Positive(message = "ID phải lớn hơn 0")
+    public ApiResponse<Void> delete(@Min(value = 1, message = "Id phải lớn hơn 0")
                                         @PathVariable long id){
         jobService.delete(id);
         return ApiResponse.<Void>builder()
@@ -106,7 +104,7 @@ public class JobController {
             description = "API này để khôi phục trạng thái của Job từ INACTIVE về ACTIVE")
     @PreAuthorize("hasAuthority('RESTORE_JOB')")
     @PatchMapping("/jobs/{id}/restore")
-    public ApiResponse<JobResponse> restoreJob(@Positive(message = "ID phải lớn hơn 0") @PathVariable long id) {
+    public ApiResponse<JobResponse> restoreJob(@Min(value = 1, message = "Id phải lớn hơn 0") @PathVariable long id) {
         return ApiResponse.<JobResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Khôi phục Job thành công")
@@ -120,7 +118,6 @@ public class JobController {
     @GetMapping("/jobs/search-by-skills")
     public ApiResponse<PageResponse<JobResponse>> fetchAllBySkills(@RequestParam(defaultValue = "1") int pageNo,
                                                            @RequestParam(defaultValue = "10") int pageSize,
-                                                                   @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                        @RequestParam(required = false) String sortBy,
                                                            @RequestParam(required = false) List<String> search,
                                                            @RequestParam(required = false) List<String> skills){
@@ -137,9 +134,8 @@ public class JobController {
     @GetMapping("/jobs/{jobId}/resumes")
     public ApiResponse<PageResponse<ResumeResponse>> getResumesByJob(@RequestParam(defaultValue = "1") int pageNo,
                                                                      @RequestParam(defaultValue = "10") int pageSize,
-                                                                     @Pattern(regexp = "^(\\w+?)(-)(asc|desc)$", message = "Định dạng của sortBy phải là: field-asc hoặc field-desc")
                                                                          @RequestParam(required = false) String sortBy,
-                                                                     @Positive(message = "jobId phải lớn hơn 0")  @PathVariable(value = "jobId") long jobId){
+                                                                     @Min(value = 1, message = "jobId phải lớn hơn 0")  @PathVariable(value = "jobId") long jobId){
         return ApiResponse.<PageResponse<ResumeResponse>>builder()
                 .code(HttpStatus.OK.value())
                 .result(jobService.getResumesByJob(pageNo, pageSize, sortBy, jobId))
@@ -152,8 +148,8 @@ public class JobController {
             description = "API này để nộp CV vào Job")
     @PreAuthorize("hasAuthority('APPLY_RESUME_TO_JOB')")
     @PostMapping("/jobs/{jobId}/applications/{resumeId}")
-    public ApiResponse<ApplyResponse> applyResume(@Positive(message = "jobId phải lớn hơn 0") @PathVariable(value = "jobId") Long jobId,
-                                                  @Positive(message = "resumeId phải lớn hơn 0")  @PathVariable(value = "resumeId") Long resumeId){
+    public ApiResponse<ApplyResponse> applyResume(@Min(value = 1, message = "jobId phải lớn hơn 0") @PathVariable(value = "jobId") Long jobId,
+                                                  @Min(value = 1, message = "resumeId phải lớn hơn 0") @PathVariable(value = "resumeId") Long resumeId){
         return ApiResponse.<ApplyResponse>builder()
                 .code(HttpStatus.OK.value())
                 .result(jobHasResumeService.applyResumeToJob(jobId, resumeId))
@@ -166,7 +162,9 @@ public class JobController {
             description = "API này để cập nhật trạng thái của CV cho một công việc cụ thể (HR duyệt CV)")
     @PreAuthorize("hasAuthority('UPDATE_CV_STATUS')")
     @PatchMapping("/jobs/{jobId}/resumes/{resumeId}/status")
-    public ApiResponse<Void> updateCVStatus(@PathVariable Long jobId,
+    public ApiResponse<Void> updateCVStatus(@Min(value = 1, message = "jobId phải lớn hơn 0")
+                                                @PathVariable Long jobId,
+                                            @Min(value = 1, message = "resumeId phải lớn hơn 0")
                                             @PathVariable Long resumeId,
                                             @Valid @RequestBody UpdateCVStatusRequest request) {
         jobHasResumeService.updateCVStatus(jobId, resumeId, request.getResumeStatus());
