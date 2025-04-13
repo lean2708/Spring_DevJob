@@ -15,8 +15,8 @@ import spring_devjob.constants.EntityStatus;
 @Getter
 @Setter
 @Table(name = "tbl_review", indexes = {
-        @Index(name = "idx_company_id", columnList = "company_id"),
-        @Index(name = "idx_user_id", columnList = "user_id")
+        @Index(name = "idx_tbl_review_company_id", columnList = "company_id"),
+        @Index(name = "idx_tbl_review_user_id", columnList = "user_id")
 })
 @SQLRestriction("state = 'ACTIVE'")
 @Entity
@@ -26,7 +26,7 @@ public class Review extends BaseEntity{
 
     Double rating;
 
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @Column(columnDefinition = "TEXT")
     String comment;
 
     @Enumerated(EnumType.STRING)

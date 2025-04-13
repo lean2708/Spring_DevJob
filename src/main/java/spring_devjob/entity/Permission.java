@@ -15,7 +15,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Table(name = "tbl_permission", indexes = {
-        @Index(name = "idx_name", columnList = "name", unique = true)
+        @Index(name = "idx_tbl_permission_name", columnList = "name", unique = true)
 })
 @Entity
 @SuperBuilder

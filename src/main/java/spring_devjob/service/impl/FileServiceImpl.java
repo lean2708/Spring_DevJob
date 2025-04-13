@@ -61,6 +61,13 @@ public class FileServiceImpl implements FileService {
         String folder = determineUploadFolder(file, type);
 
         Map<String, Object> options = ObjectUtils.asMap("folder", folder);
+
+        if (type == FileType.VIDEO) {
+            options.put("resource_type", "video");
+        } else if (type == FileType.CV) {
+            options.put("resource_type", "raw");
+        }
+
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
 
         FileEntity fileEntity = FileEntity.builder()
@@ -110,7 +117,15 @@ public class FileServiceImpl implements FileService {
         FileEntity fileEntity = fileRepository.findById(publicId)
                 .orElseThrow(()-> new FileException("File không tồn tại trong hệ thống"));
 
-        cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        String resourceType = switch (FileType.valueOf(fileEntity.getType())) {
+            case IMAGE -> "image";
+            case VIDEO -> "video";
+            case CV -> "raw";
+        };
+
+        Map<String, Object> options = ObjectUtils.asMap("resource_type", resourceType);
+        cloudinary.uploader().destroy(publicId, options);
+
         fileRepository.delete(fileEntity);
         return true;
     }

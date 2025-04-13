@@ -124,28 +124,34 @@ public class EmailService {
         List<Subscriber> listSubs = this.subscriberRepository.findAll();
         if (!CollectionUtils.isEmpty(listSubs)) {
             for (Subscriber sub : listSubs) {
-                Set<Skill> skillSet = sub.getSkills().stream()
-                        .map(SubHasSkill::getSkill)
-                        .collect(Collectors.toSet());
-                if (!CollectionUtils.isEmpty(skillSet)) {
-                    Set<Job> jobSet = this.jobRepository.findBySkillsIn(skillSet);
-                    if (!CollectionUtils.isEmpty(jobSet)) {
-                        List<ResponseEmailJob> list = jobSet.stream()
-                                .map(this::convertJobToSendEmail)
-                                .collect(Collectors.toList());
 
-                        Map<String, Object> model = new HashMap<>();
-                        model.put("name", sub.getName());
-                        model.put("jobs", list);
+                Set<SubHasSkill> subSkills = sub.getSkills();
+                if (!CollectionUtils.isEmpty(subSkills)) {
+                    Set<Skill> skillSet = subSkills.stream()
+                            .map(SubHasSkill::getSkill)
+                            .collect(Collectors.toSet());
 
-                        this.sendEmail(
-                                sub.getEmail(),
-                                "Cơ hội việc làm hot đang chờ đón bạn, khám phá ngay",
-                                model,
-                                "job"
-                        );
+                    if (!CollectionUtils.isEmpty(skillSet)) {
+                        Set<Job> jobSet = this.jobRepository.findBySkillsIn(skillSet);
+                        if (!CollectionUtils.isEmpty(jobSet)) {
+                            List<ResponseEmailJob> list = jobSet.stream()
+                                    .map(this::convertJobToSendEmail)
+                                    .collect(Collectors.toList());
+
+                            Map<String, Object> model = new HashMap<>();
+                            model.put("name", sub.getName());
+                            model.put("jobs", list);
+
+                            this.sendEmail(
+                                    sub.getEmail(),
+                                    "Cơ hội việc làm hot đang chờ đón bạn, khám phá ngay",
+                                    model,
+                                    "job"
+                            );
+                        }
                     }
                 }
+
             }
         }
     }

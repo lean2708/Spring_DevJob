@@ -15,8 +15,8 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Table(name = "tbl_user_saved_job", indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id"),
-        @Index(name = "idx_job_id", columnList = "job_id")
+        @Index(name = "idx_user_saved_job_user_id", columnList = "user_id"),
+        @Index(name = "idx_user_saved_job_job_id", columnList = "job_id")
 })
 @SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor

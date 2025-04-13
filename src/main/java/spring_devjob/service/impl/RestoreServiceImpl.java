@@ -30,6 +30,7 @@ import spring_devjob.service.relationship.JobHasSkillService;
 import spring_devjob.service.relationship.SavedJobService;
 import spring_devjob.service.relationship.UserHasRoleService;
 
+import java.util.HashSet;
 import java.util.List;
 
 import static spring_devjob.constants.EntityStatus.ACTIVE;
@@ -101,8 +102,8 @@ public class RestoreServiceImpl implements RestoreService {
         if(userRepository.existsById(id)){
             throw new AppException(ErrorCode.USER_ALREADY_ACTIVE);
         }
-        if(userRepository.countById(id, EntityStatus.INACTIVE.name()) > 0){
-            throw new AppException(ErrorCode.USER_DISABLED);
+        if(userRepository.countById(id, EntityStatus.LOCKED.name()) > 0){
+            throw new AppException(ErrorCode.USER_LOCKED);
         }
 
         User user = userRepository.findUserById(id, oldStatus.name())
@@ -115,6 +116,7 @@ public class RestoreServiceImpl implements RestoreService {
 
         List<UserHasRole> userHasRoleList = userHasRoleService.getUserHasRoleByUserAndState(user.getId(), INACTIVE);
         userHasRoleList.forEach(userHasRole -> userHasRoleService.updateUserHasRole(userHasRole, ACTIVE));
+        user.setRoles(new HashSet<>(userHasRoleList));
 
         List<UserSavedJob> userSavedJobList = savedJobService.getUserSavedJobByUserAndState(user.getId(), INACTIVE);
         userSavedJobList.forEach(userSavedJob -> savedJobService.updateUserSavedJob(userSavedJob, ACTIVE));

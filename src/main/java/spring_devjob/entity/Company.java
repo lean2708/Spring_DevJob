@@ -17,7 +17,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Table(name = "tbl_company", indexes = {
-        @Index(name = "idx_name", columnList = "name", unique = true)
+        @Index(name = "idx_tbl_company_name", columnList = "name", unique = true)
 })
 @SQLRestriction("state = 'ACTIVE'")
 @SuperBuilder
@@ -27,7 +27,7 @@ import java.util.Set;
 public class Company extends BaseEntity {
     @Column(nullable = false, unique = true)
     String name;
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @Column(columnDefinition = "TEXT")
     String description;
     String address;
     String logoUrl;
