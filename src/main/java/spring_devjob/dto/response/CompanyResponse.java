@@ -19,7 +19,12 @@ public class CompanyResponse extends BaseResponse {
     String address;
     String logoUrl;
 
-    double averageRating;
-    int totalReviews;
+    Double averageRating;
+    Integer totalReviews;
+
+    String createdBy;
+    String updatedBy;
+    LocalDate createdAt;
+    LocalDate updatedAt;
 
 }

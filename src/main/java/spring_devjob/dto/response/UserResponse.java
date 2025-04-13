@@ -9,6 +9,7 @@ import lombok.experimental.SuperBuilder;
 import spring_devjob.constants.GenderEnum;
 import spring_devjob.dto.basic.EntityBasic;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 @Getter
@@ -24,6 +25,11 @@ public class UserResponse extends BaseResponse{
     @Enumerated(EnumType.STRING)
     GenderEnum gender;
     String address;
+
+    String createdBy;
+    String updatedBy;
+    LocalDate createdAt;
+    LocalDate updatedAt;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     EntityBasic company;
