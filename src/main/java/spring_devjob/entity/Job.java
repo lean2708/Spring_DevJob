@@ -6,7 +6,12 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.LevelEnum;
 import spring_devjob.entity.relationship.JobHasResume;
@@ -27,6 +32,7 @@ import java.util.Set;
 @SQLRestriction("state = 'ACTIVE'")
 @SuperBuilder
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Job extends BaseEntity {
@@ -48,6 +54,15 @@ public class Job extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @JoinColumn(name = "state", nullable = false)
     EntityStatus state;
+
+    @CreatedBy
+    String createdBy;
+    @LastModifiedBy
+    String updatedBy;
+    @CreationTimestamp
+    LocalDate createdAt;
+    @UpdateTimestamp
+    LocalDate updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)

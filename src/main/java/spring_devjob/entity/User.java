@@ -6,12 +6,18 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import spring_devjob.constants.EntityStatus;
 import spring_devjob.constants.GenderEnum;
 import spring_devjob.entity.relationship.UserHasRole;
 import spring_devjob.entity.relationship.UserSavedJob;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,6 +33,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 public class User extends BaseEntity {
     @Column(nullable = false)
     String name;
@@ -45,6 +52,15 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @JoinColumn(name = "state", nullable = false)
     EntityStatus state;
+
+    @CreatedBy
+    String createdBy;
+    @LastModifiedBy
+    String updatedBy;
+    @CreationTimestamp
+    LocalDate createdAt;
+    @UpdateTimestamp
+    LocalDate updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "company_id")

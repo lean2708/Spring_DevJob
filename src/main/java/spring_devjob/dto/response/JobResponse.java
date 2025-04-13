@@ -27,6 +27,11 @@ public class JobResponse extends BaseResponse {
     LocalDate endDate;
     Boolean jobStatus;
 
+    String createdBy;
+    String updatedBy;
+    LocalDate createdAt;
+    LocalDate updatedAt;
+
     EntityBasic company;
 
     Set<EntityBasic> skills;
