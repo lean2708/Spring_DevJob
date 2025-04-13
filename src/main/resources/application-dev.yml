@@ -6,15 +6,21 @@ spring:
     activate:
       on-profile: dev
 
+# Max Size Upload
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
 # Database
   datasource:
-    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/devjob}
-    username: ${DATABASE_USERNAME:root}
-    password: ${DATABASE_PASSWORD:123456}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
       naming:

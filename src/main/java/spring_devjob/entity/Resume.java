@@ -17,7 +17,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Table(name = "tbl_resume", indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id")
+        @Index(name = "idx_tbl_resume_user_id", columnList = "user_id")
 })
 @SQLRestriction("state = 'ACTIVE'")
 @Entity

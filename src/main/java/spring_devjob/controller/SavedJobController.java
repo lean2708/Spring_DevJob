@@ -38,6 +38,7 @@ public class SavedJobController {
     }
 
     @PreAuthorize("hasAuthority('GET_SAVED_JOBS')")
+    @Operation(summary = "Fetched all saved jobs By User")
     @GetMapping("/saved-jobs")
     public ApiResponse<PageResponse<JobResponse>> getSavedJobs(@Min(value = 1, message = "pageNo phải lớn hơn 0")
                                                            @RequestParam(defaultValue = "1") int pageNo,
@@ -46,11 +47,12 @@ public class SavedJobController {
         return ApiResponse.<PageResponse<JobResponse>>builder()
                 .code(HttpStatus.OK.value())
                 .result(savedJobService.getSavedJobs(pageNo, pageSize, sortBy))
-                .message("Fetched all saved jobs with pagination")
+                .message("Fetched all saved jobs By User")
                 .build();
     }
 
     @PreAuthorize("hasAuthority('REMOVE_SAVED_JOB')")
+    @Operation(summary = "Remove a saved Job for a User")
     @DeleteMapping("/saved-jobs/{jobId}")
     public ApiResponse<Void> removeSaveJob(@Min(value = 1, message = "jobId phải lớn hơn 0") @PathVariable long jobId) {
         savedJobService.removeSaveJob(jobId);

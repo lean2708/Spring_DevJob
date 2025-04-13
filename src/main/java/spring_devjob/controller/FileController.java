@@ -53,9 +53,9 @@ public class FileController {
 
 
     @PreAuthorize("hasAuthority('DELETE_FILE')")
-    @DeleteMapping("/delete/{publicId}")
-    public ResponseEntity<?> delete(@PathVariable String publicId) throws Exception {
-        boolean isDeleted = fileService.deleteFile(publicId);
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> delete(@RequestParam String id) throws Exception {
+        boolean isDeleted = fileService.deleteFile(id);
         if (isDeleted){
             ApiResponse<Object> apiResponse = ApiResponse.builder()
                     .code(HttpStatus.OK.value())

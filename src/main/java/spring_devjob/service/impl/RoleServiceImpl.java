@@ -48,6 +48,7 @@ public class RoleServiceImpl implements RoleService {
         }
 
         Role role = roleMapper.toRole(request);
+        roleRepository.save(role);
 
         if(!CollectionUtils.isEmpty(request.getPermissions())){
             Set<Permission> permissionSet = permissionRepository.findAllByNameIn(request.getPermissions());
@@ -59,7 +60,7 @@ public class RoleServiceImpl implements RoleService {
             role.setPermissions(new HashSet<>(roleHasPermissionRepository.saveAll(roleHasPermissions)));
         }
 
-        return roleMapper.toRoleResponse(roleRepository.save(role));
+        return roleMapper.toRoleResponse(role);
     }
 
     @Override

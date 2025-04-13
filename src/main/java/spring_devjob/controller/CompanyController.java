@@ -124,7 +124,7 @@ public class CompanyController {
                 .build();
     }
 
-    @Operation(summary = "Fetched top-rated companies",
+    @Operation(summary = "Fetch top-rated companies",
               description = "Lọc danh sách công ty có rating >= x, sắp xếp giảm dần theo rating.")
     @PreAuthorize("hasAuthority('FETCH_TOP_RATED_COMPANIES')")
     @GetMapping("/companies/top-rated")

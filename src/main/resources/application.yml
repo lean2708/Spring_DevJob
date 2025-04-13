@@ -7,7 +7,9 @@ spring:
   application:
     name: Spring_DevJob
   profiles:
-    active: dev
+    active: @spring.profiles.active@
+
+
 
 app:
   resume:
@@ -21,3 +23,4 @@ app:
   recover-account:
     verification-code:
       expiration-minutes: 10
+

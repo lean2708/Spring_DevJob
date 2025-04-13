@@ -13,8 +13,8 @@ import spring_devjob.entity.User;
 @Getter
 @Setter
 @Table(name = "tbl_user_has_role", indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id"),
-        @Index(name = "idx_role_id", columnList = "role_id")
+        @Index(name = "idx_user_has_role_user_id", columnList = "user_id"),
+        @Index(name = "idx_user_has_role_role_id", columnList = "role_id")
 })
 @SQLRestriction("state = 'ACTIVE'")
 @NoArgsConstructor
