@@ -12,8 +12,9 @@ import spring_devjob.dto.request.*;
 import spring_devjob.dto.response.ApiResponse;
 import spring_devjob.dto.response.TokenResponse;
 import spring_devjob.dto.response.UserResponse;
+import spring_devjob.dto.response.VerificationCodeResponse;
 import spring_devjob.entity.ForgotPasswordToken;
-import spring_devjob.entity.VerificationCodeEntity;
+import spring_devjob.entity.RedisVerificationCode;
 import spring_devjob.service.AccountRecoveryService;
 import spring_devjob.service.AuthService;
 
@@ -102,8 +103,8 @@ public class AuthController {
     @Operation(summary = "Forgot Password",
             description = "API này được sử dụng để quên mật khẩu")
     @PostMapping("/forgot-password")
-    public ApiResponse<VerificationCodeEntity> forgotPassword(@Valid @RequestBody EmailRequest request) {
-        return ApiResponse.<VerificationCodeEntity>builder()
+    public ApiResponse<VerificationCodeResponse> forgotPassword(@Valid @RequestBody EmailRequest request) {
+        return ApiResponse.<VerificationCodeResponse>builder()
                 .code(HttpStatus.OK.value())
                 .result(accountRecoveryService.forgotPassword(request))
                 .message("Mã xác nhận đã được gửi vào email của bạn")
@@ -142,8 +143,8 @@ public class AuthController {
     @Operation(summary = "Recover Account",
             description = "API này được sử dụng để khôi phục tài khoản")
     @PostMapping("/recover-account")
-    public ApiResponse<VerificationCodeEntity> recoverAccount(@Valid @RequestBody EmailRequest request) {
-        return ApiResponse.<VerificationCodeEntity>builder()
+    public ApiResponse<VerificationCodeResponse> recoverAccount(@Valid @RequestBody EmailRequest request) {
+        return ApiResponse.<VerificationCodeResponse>builder()
                 .code(HttpStatus.OK.value())
                 .result(accountRecoveryService.recoverAccount(request.getEmail()))
                 .message("Mã xác nhận đã được gửi vào email của bạn")
