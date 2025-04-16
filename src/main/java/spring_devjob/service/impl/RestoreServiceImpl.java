@@ -33,8 +33,7 @@ import spring_devjob.service.relationship.UserHasRoleService;
 import java.util.HashSet;
 import java.util.List;
 
-import static spring_devjob.constants.EntityStatus.ACTIVE;
-import static spring_devjob.constants.EntityStatus.INACTIVE;
+import static spring_devjob.constants.EntityStatus.*;
 
 @Slf4j(topic = "RESTORE-SERVICE")
 @RequiredArgsConstructor
@@ -102,8 +101,12 @@ public class RestoreServiceImpl implements RestoreService {
         if(userRepository.existsById(id)){
             throw new AppException(ErrorCode.USER_ALREADY_ACTIVE);
         }
-        if(userRepository.countById(id, EntityStatus.LOCKED.name()) > 0){
+        if(oldStatus !=  LOCKED && userRepository.countById(id, LOCKED.name()) > 0){
             throw new AppException(ErrorCode.USER_LOCKED);
+        }
+
+        if(oldStatus !=  INACTIVE && userRepository.countById(id, INACTIVE.name()) > 0){
+            throw new AppException(ErrorCode.USER_DISABLED);
         }
 
         User user = userRepository.findUserById(id, oldStatus.name())

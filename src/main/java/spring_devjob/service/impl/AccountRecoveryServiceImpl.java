@@ -13,22 +13,23 @@ import spring_devjob.constants.TokenType;
 import spring_devjob.constants.VerificationType;
 import spring_devjob.dto.request.EmailRequest;
 import spring_devjob.dto.request.ResetPasswordRequest;
+import spring_devjob.dto.response.VerificationCodeResponse;
 import spring_devjob.entity.ForgotPasswordToken;
 import spring_devjob.entity.User;
-import spring_devjob.entity.VerificationCodeEntity;
+import spring_devjob.entity.RedisVerificationCode;
 import spring_devjob.exception.AppException;
 import spring_devjob.exception.ErrorCode;
 import spring_devjob.repository.ForgotPasswordTokenRepository;
 import spring_devjob.repository.UserRepository;
-import spring_devjob.repository.VerificationCodeRepository;
-import spring_devjob.service.AccountRecoveryService;
-import spring_devjob.service.EmailService;
-import spring_devjob.service.RestoreService;
-import spring_devjob.service.TokenService;
+import spring_devjob.repository.RedisVerificationCodeRepository;
+import spring_devjob.service.*;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.Optional;
+
+import static spring_devjob.constants.VerificationType.FORGOT_PASSWORD;
+import static spring_devjob.constants.VerificationType.RECOVER_ACCOUNT;
 
 @Service
 @Slf4j(topic = "ACCOUNT-RECOVERY-SERVICE")
@@ -36,69 +37,43 @@ import java.util.Optional;
 public class AccountRecoveryServiceImpl implements AccountRecoveryService {
 
     private final UserRepository userRepository;
-    private final VerificationCodeRepository verificationCodeRepository;
+    private final RedisVerificationCodeRepository verificationCodeRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final ForgotPasswordTokenRepository forgotPasswordTokenRepository;
     private final TokenService tokenService;
     private final RestoreService restoreService;
+    private final RedisVerificationCodeService redisVerificationCodeService;
 
     @Value("${jwt.reset.expiry-in-minutes}")
     private long resetTokenExpiration;
-    @Value("${app.forgot-password.verification-code.expiration-minutes}")
-    private long forgotPasswordExpiration;
-    @Value("${app.recover-account.verification-code.expiration-minutes}")
-    private long recoverAccountExpiration;
-
 
     @Override
-    public VerificationCodeEntity forgotPassword(EmailRequest request){
+    public VerificationCodeResponse forgotPassword(EmailRequest request){
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        String verificationCode = generateVerificationCode();
         try {
-            emailService.sendPasswordResetCode(user, verificationCode);
+            RedisVerificationCode redisVerificationCode = redisVerificationCodeService
+                    .saveVerificationCode(user.getEmail(), FORGOT_PASSWORD);
 
-            LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(forgotPasswordExpiration);
+            emailService.sendPasswordResetCode(user, redisVerificationCode.getVerificationCode());
 
-            VerificationCodeEntity verificationCodeEntity = VerificationCodeEntity.builder()
-                    .email(user.getEmail())
-                    .verificationCode(verificationCode)
-                    .expirationTime(expirationTime)
-                    .type(VerificationType.FORGOT_PASSWORD)
+            return VerificationCodeResponse.builder()
+                    .email(redisVerificationCode.getEmail())
+                    .verificationCode(redisVerificationCode.getVerificationCode())
+                    .expirationTime(redisVerificationCode.getExpirationTime())
                     .build();
-
-            return saveVerificationCode(verificationCodeEntity);
         } catch (Exception e) {
             log.error("Lỗi gửi email: ", e);
             throw new AppException(ErrorCode.EMAIL_SEND_FAILED);
         }
     }
 
-    private VerificationCodeEntity saveVerificationCode(VerificationCodeEntity code){
-        Optional<VerificationCodeEntity> entityOptional = verificationCodeRepository
-                .findByEmailAndType(code.getEmail(), code.getType());
-
-        if (entityOptional.isPresent()) {
-            VerificationCodeEntity entity = entityOptional.get();
-            entity.setVerificationCode(code.getVerificationCode());
-            entity.setExpirationTime(code.getExpirationTime());
-            return verificationCodeRepository.save(entity);
-        }
-
-        return verificationCodeRepository.save(code);
-    }
-
     @Override
     public ForgotPasswordToken verifyForgotPasswordCode(String email, String verificationCode) throws JOSEException {
-            VerificationCodeEntity verificationCodeEntity = verificationCodeRepository
-                    .findByEmailAndVerificationCode(email, verificationCode, VerificationType.FORGOT_PASSWORD)
-                    .orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_CODE_NOT_FOUND));
-
-            if (verificationCodeEntity.getExpirationTime().isBefore(LocalDateTime.now())) {
-                throw new AppException(ErrorCode.VERIFICATION_CODE_EXPIRED);
-            }
+        RedisVerificationCode redisVerificationCode = redisVerificationCodeService
+                .getVerificationCode(email, FORGOT_PASSWORD, verificationCode);
 
             User user = userRepository.findByEmail(email).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -110,7 +85,7 @@ public class AccountRecoveryServiceImpl implements AccountRecoveryService {
                     .expiryTime(LocalDateTime.now().plusMinutes(resetTokenExpiration))
                     .build();
 
-            verificationCodeRepository.delete(verificationCodeEntity);
+            verificationCodeRepository.delete(redisVerificationCode);
 
             return forgotPasswordTokenRepository.save(token);
     }
@@ -143,7 +118,7 @@ public class AccountRecoveryServiceImpl implements AccountRecoveryService {
     }
 
     @Override
-    public VerificationCodeEntity recoverAccount(String email) {
+    public VerificationCodeResponse recoverAccount(String email) {
         if(userRepository.countByEmailAndState(email, EntityStatus.ACTIVE.name()) > 0){
             throw new AppException(ErrorCode.USER_ALREADY_ACTIVE);
         }
@@ -154,20 +129,17 @@ public class AccountRecoveryServiceImpl implements AccountRecoveryService {
         User user = userRepository.findUserByEmail(email, EntityStatus.LOCKED.name())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        String verificationCode = generateVerificationCode();
         try {
-            emailService.sendAccountRecoveryCode(user, verificationCode);
+            RedisVerificationCode redisVerificationCode = redisVerificationCodeService
+                    .saveVerificationCode(user.getEmail(), RECOVER_ACCOUNT);
 
-            LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(recoverAccountExpiration);
+            emailService.sendAccountRecoveryCode(user, redisVerificationCode.getVerificationCode());
 
-            VerificationCodeEntity verificationCodeEntity = VerificationCodeEntity.builder()
-                    .email(user.getEmail())
-                    .verificationCode(verificationCode)
-                    .expirationTime(expirationTime)
-                    .type(VerificationType.RECOVER_ACCOUNT)
+            return VerificationCodeResponse.builder()
+                    .email(redisVerificationCode.getEmail())
+                    .verificationCode(redisVerificationCode.getVerificationCode())
+                    .expirationTime(redisVerificationCode.getExpirationTime())
                     .build();
-
-            return saveVerificationCode(verificationCodeEntity);
         } catch (Exception e) {
             log.error("Lỗi gửi email: ", e);
             throw new AppException(ErrorCode.EMAIL_SEND_FAILED);
@@ -177,24 +149,14 @@ public class AccountRecoveryServiceImpl implements AccountRecoveryService {
     @Transactional
     @Override
     public void verifyRecoverAccountCode(String email, String verificationCode) {
-        VerificationCodeEntity verificationCodeEntity = verificationCodeRepository
-                .findByEmailAndVerificationCode(email, verificationCode, VerificationType.RECOVER_ACCOUNT)
-                .orElseThrow(() -> new AppException(ErrorCode.VERIFICATION_CODE_NOT_FOUND));
-
-        if (verificationCodeEntity.getExpirationTime().isBefore(LocalDateTime.now())) {
-            throw new AppException(ErrorCode.VERIFICATION_CODE_EXPIRED);
-        }
+        RedisVerificationCode redisVerificationCode = redisVerificationCodeService
+                .getVerificationCode(email, RECOVER_ACCOUNT, verificationCode);
 
         User user = userRepository.findUserByEmail(email, EntityStatus.LOCKED.name())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         restoreService.restoreUser(user.getId(), EntityStatus.LOCKED);
 
-        verificationCodeRepository.delete(verificationCodeEntity);
-    }
-
-
-    private String generateVerificationCode() {
-        return String.format("%06d", (int) (Math.random() * 1000000));
+        verificationCodeRepository.delete(redisVerificationCode);
     }
 }

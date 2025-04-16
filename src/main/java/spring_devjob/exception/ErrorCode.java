@@ -24,7 +24,7 @@ public enum ErrorCode {
     ROLE_NOT_EXISTED(1014, "Role không tồn tại trong hệ thống", HttpStatus.NOT_FOUND),
     PERMISSION_NOT_EXISTED(1016, "Permission không tồn tại trong hệ thống", HttpStatus.NOT_FOUND),
     EMAIL_SEND_FAILED(1017, "Lỗi khi gửi email", HttpStatus.BAD_REQUEST),
-    VERIFICATION_CODE_NOT_FOUND(1018, "Mã xác nhận không hợp lệ", HttpStatus.NOT_FOUND),
+    VERIFICATION_CODE_NOT_FOUND(1018, "Mã xác minh không tồn tại", HttpStatus.NOT_FOUND),
     VERIFICATION_CODE_EXPIRED(1019, "Mã xác nhận đã hết hạn", HttpStatus.BAD_REQUEST),
     INVALID_PAYMENT_AMOUNT(1020, "Số tiền thanh toán không đúng hoặc không được hỗ trợ. (30000, 79000, 169000, hoặc 349000)", HttpStatus.BAD_REQUEST),
     USER_NOT_REGISTERED(1021, "Người dùng chưa được đăng ký", HttpStatus.BAD_REQUEST),
@@ -44,12 +44,10 @@ public enum ErrorCode {
     TOKEN_TYPE_INVALID(1035, "Loại token không hợp lệ", HttpStatus.UNAUTHORIZED),
     EMAIL_EXISTED(1036, "Email đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
     EMAIL_DISABLED(1037, "Email của bạn đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
-    EMAIL_LOCKED(1037, "Email của bạn đã bị khoá", HttpStatus.FORBIDDEN),
-    PHONE_EXISTED(1038, "Phone đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
-    PHONE_DISABLED(1039, "Phone của bạn đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
-    PHONE_LOCKED(1037, "Phone của bạn đã bị khoá", HttpStatus.FORBIDDEN),
-    REVIEW_NOT_EXISTED(1040, "Review không tồn tại trong hệ thống", HttpStatus.NOT_FOUND),
-    REVIEW_NOT_FOUND(1041, "Không tìm thấy review nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND),
+    EMAIL_LOCKED(1038, "Email của bạn đã bị khoá", HttpStatus.FORBIDDEN),
+    PHONE_EXISTED(1039, "Phone đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
+    PHONE_DISABLED(1040, "Phone của bạn đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
+    PHONE_LOCKED(1041, "Phone của bạn đã bị khoá", HttpStatus.FORBIDDEN),
     JOB_ALREADY_EXISTS_IN_COMPANY(1042, "Job đã tồn tại trong công ty", HttpStatus.BAD_REQUEST),
     COMPANY_MISMATCH(1043, "Company phải trùng với công ty của job hiện tại", HttpStatus.BAD_REQUEST),
     JOB_NOT_SAVED(1044, "Job chưa được user lưu", HttpStatus.BAD_REQUEST),
@@ -63,8 +61,12 @@ public enum ErrorCode {
     RESUME_ALREADY_ACTIVE(1052, "Resume đã hoạt động", HttpStatus.BAD_REQUEST),
     CANNOT_CHANGE_DEFAULT_ROLE(1053, "Không thể thay đổi role mặc định (USER, PRO, HR, ADMIN)", HttpStatus.BAD_REQUEST),
     USER_LOCKED(1054, "User của bạn đã bị khoá", HttpStatus.FORBIDDEN),
-    USER_DISABLED(1055, "User của bạn đã bị vô hiệu hóa", HttpStatus.FORBIDDEN),
-    PASSWORD_MISMATCH(1041, "Mật khẩu nhập lại không khớp", HttpStatus.BAD_REQUEST)
+    USER_DISABLED(1055, "User của bạn đã bị vô hiệu hóa bởi Admin", HttpStatus.FORBIDDEN),
+    PASSWORD_MISMATCH(1056, "Mật khẩu nhập lại không khớp", HttpStatus.BAD_REQUEST),
+    CODE_TYPE_INVALID(1057, "Loại verificationCode không hợp lệ", HttpStatus.UNAUTHORIZED),
+    VERIFICATION_CODE_INVALID(1058, "Mã xác minh không đúng. Vui lòng thử lại.", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_EXISTED(1059, "Review không tồn tại trong hệ thống", HttpStatus.NOT_FOUND),
+    REVIEW_NOT_FOUND(1060, "Không tìm thấy review nào với danh sách ID đã cung cấp", HttpStatus.NOT_FOUND)
     ;
 
 
