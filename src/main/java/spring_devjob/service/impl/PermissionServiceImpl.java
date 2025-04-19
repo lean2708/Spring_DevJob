@@ -36,7 +36,7 @@ public class PermissionServiceImpl implements PermissionService {
     public PageResponse<PermissionResponse> fetchAllPermissions(int pageNo, int pageSize,  String sortBy){
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, Permission.class);
 
         Page<Permission> permissionPage = permissionRepository.findAll(pageable);
 

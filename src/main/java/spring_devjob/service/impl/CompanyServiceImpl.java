@@ -78,7 +78,7 @@ public class CompanyServiceImpl implements CompanyService {
     public PageResponse<CompanyResponse> fetchAllCompanies(int pageNo, int pageSize, String sortBy){
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, Company.class);
 
         Page<Company> companyPage = companyRepository.findAll(pageable);
 
@@ -221,7 +221,7 @@ public class CompanyServiceImpl implements CompanyService {
     public PageResponse<JobResponse> getAllJobsByCompany(int pageNo, int pageSize, String sortBy, long companyId){
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, Job.class);
 
         Company companyDB = findActiveCompanyById(companyId);
 
@@ -245,7 +245,7 @@ public class CompanyServiceImpl implements CompanyService {
     public PageResponse<ReviewResponse> getReviewsByCompany(int pageNo, int pageSize, String sortBy, long companyId) {
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, Review.class);
 
         Company company = companyRepository.findById(companyId).
                 orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));

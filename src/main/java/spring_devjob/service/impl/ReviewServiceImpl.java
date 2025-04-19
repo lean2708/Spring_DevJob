@@ -72,7 +72,7 @@ public class ReviewServiceImpl implements ReviewService {
     public PageResponse<ReviewResponse> fetchAllReviews(int pageNo, int pageSize, String sortBy) {
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, Review.class);
 
         Page<Review> reviewPage = reviewRepository.findAll(pageable);
 
