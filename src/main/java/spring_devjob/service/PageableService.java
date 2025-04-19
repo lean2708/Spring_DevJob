@@ -30,7 +30,7 @@ public class PageableService {
         return false;
     }
 
-    public Pageable createPageable(int pageNo, int pageSize, String sortBy) {
+    public Pageable createPageable(int pageNo, int pageSize, String sortBy, Class<?> clazz) {
         // sap xep
         List<Sort.Order> sorts = new ArrayList<>();
         if (StringUtils.hasLength(sortBy)) {
@@ -39,7 +39,7 @@ public class PageableService {
             if (!matcher.find()) {
                 throw new AppException(ErrorCode.INVALID_SORT_FORMAT);
             }
-            if (!isValidField(User.class, matcher.group(1))) {
+            if (!isValidField(clazz, matcher.group(1))) {
                 throw new AppException(ErrorCode.INVALID_SORT_FIELD);
             }
             Sort.Direction sortDirection = matcher.group(3).equalsIgnoreCase("asc")

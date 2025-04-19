@@ -176,7 +176,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     public PageResponse<SubscriberResponse> fetchAllSubscribers(int pageNo, int pageSize, String sortBy){
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, Subscriber.class);
 
         Page<Subscriber> subscriberPage = subscriberRepository.findAll(pageable);
 

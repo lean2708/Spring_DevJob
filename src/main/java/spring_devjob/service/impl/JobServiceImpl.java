@@ -93,7 +93,7 @@ public class JobServiceImpl implements JobService {
     public PageResponse<JobResponse> fetchAllJobs(int pageNo, int pageSize, String sortBy){
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, Job.class);
 
         Page<Job> jobPage = jobRepository.findAll(pageable);
 
@@ -263,7 +263,7 @@ public class JobServiceImpl implements JobService {
     public PageResponse<ResumeResponse> getResumesByJob(int pageNo, int pageSize, String sortBy, long jobId){
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, Resume.class);
 
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_EXISTED));

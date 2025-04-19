@@ -75,7 +75,7 @@ public class RoleServiceImpl implements RoleService {
     public PageResponse<RoleResponse> fetchAllRoles(int pageNo, int pageSize, String sortBy){
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, Role.class);
 
         Page<Role> rolePage = roleRepository.findAll(pageable);
 

@@ -54,7 +54,7 @@ public class ResumeServiceImpl implements ResumeService {
     public PageResponse<ResumeResponse> getAllResumes(int pageNo, int pageSize, String sortBy){
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, Resume.class);
 
         Page<Resume> resumePage = resumeRepository.findAll(pageable);
 

@@ -48,7 +48,7 @@ public class SavedJobService {
     public PageResponse<JobResponse> getSavedJobs(int pageNo, int pageSize, String sortBy) {
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, UserSavedJob.class);
 
         User user = userRepository.findByEmail(currentUserService.getCurrentUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));

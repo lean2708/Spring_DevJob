@@ -53,7 +53,7 @@ public class SkillServiceImpl implements SkillService {
     public PageResponse<SkillResponse> fetchAllSkills(int pageNo, int pageSize, String sortBy){
         pageNo = pageNo - 1;
 
-        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy);
+        Pageable pageable = pageableService.createPageable(pageNo, pageSize, sortBy, Skill.class);
 
         Page<Skill> skillPage = skillRepository.findAll(pageable);
 
