@@ -35,6 +35,7 @@ import java.util.Set;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 public class User extends BaseEntity {
+
     @Column(nullable = false)
     String name;
     @Column(unique = true, nullable = false)

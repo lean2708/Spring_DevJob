@@ -6,11 +6,7 @@ spring:
     activate:
       on-profile: dev
 
-# Max Size Upload
-  servlet:
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
+
 
 # Database
   datasource:

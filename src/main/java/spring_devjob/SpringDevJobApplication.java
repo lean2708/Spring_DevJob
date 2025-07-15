@@ -17,6 +17,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableFeignClients
 @SpringBootApplication
 public class SpringDevJobApplication {
+
 	public static void main(String[] args) {
 		Dotenv dotenv = Dotenv.configure()
 				.directory(System.getProperty("user.dir"))

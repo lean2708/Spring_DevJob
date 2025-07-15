@@ -18,6 +18,4 @@ COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-COPY .env /app/.env
-
 ENTRYPOINT ["java", "-jar", "app.jar"]
