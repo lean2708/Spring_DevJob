@@ -11,7 +11,6 @@ services:
       POSTGRES_DB: devjob
     volumes:
       - devjob_data:/var/lib/postgresql/data
-      - ./initdb.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - '5436:5432'
     networks:
