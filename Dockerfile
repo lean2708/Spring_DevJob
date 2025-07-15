@@ -15,6 +15,7 @@ WORKDIR /app
 
 # Copy file JAR từ bước build vào container
 COPY --from=build /app/target/*.jar app.jar
+COPY .env /app/.env
 
 EXPOSE 8080
 
